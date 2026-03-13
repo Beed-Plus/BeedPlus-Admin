@@ -16,7 +16,17 @@ const navConfig = [
   {
     items: [
       { label: 'Dashboard', path: '/dashboard',          icon: DashboardIcon },
-      { label: 'Users',     path: '/dashboard/users',    icon: UsersIcon },
+      {
+        label: 'Users',
+        path: '/dashboard/users',
+        icon: UsersIcon,
+        children: [
+          { label: 'All',      path: '/dashboard/users' },
+          { label: 'Approved', path: '/dashboard/users/approved' },
+          { label: 'Pending',  path: '/dashboard/users/pending' },
+          { label: 'Rejected', path: '/dashboard/users/rejected' },
+        ],
+      },
       { label: 'Posts',     path: '/dashboard/posts',    icon: PostsIcon },
       { label: 'Countries', path: '/dashboard/countries', icon: CountryIcon },
     ],

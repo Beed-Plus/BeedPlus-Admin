@@ -47,3 +47,22 @@ html:hover::-webkit-scrollbar-thumb {
 .scrollbar-thin:hover::-webkit-scrollbar-thumb {
   background: rgba(0, 0, 0, 0.12);
 }
+
+/* Select dropdown scrollbar */
+select {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.12) transparent;
+}
+select::-webkit-scrollbar { width: 3px; }
+select::-webkit-scrollbar-track { background: transparent; }
+select::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.12); border-radius: 9999px; }
+
+/* react-day-picker overrides */
+.rdp-root {
+  --rdp-accent-color: #f97316;
+  --rdp-accent-background-color: #fff7ed;
+  font-family: inherit;
+}
+.dark .rdp-root {
+  --rdp-accent-background-color: rgba(249, 115, 22, 0.1);
+}

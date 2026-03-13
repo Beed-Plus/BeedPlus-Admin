@@ -5,6 +5,7 @@ import LoginPage from '../pages/auth/LoginPage'
 import DashboardPage from '../pages/dashboard/DashboardPage'
 import UsersPage from '../pages/dashboard/users/UsersPage'
 import UserDetailPage from '../pages/dashboard/users/UserDetailPage'
+import UsersStatusPage from '../pages/dashboard/users/UsersStatusPage'
 import PostsPage from '../pages/dashboard/posts/PostsPage'
 import PostDetailPage from '../pages/dashboard/posts/PostDetailPage'
 import CategoriesUsersPage from '../pages/dashboard/categories/CategoriesUsersPage'
@@ -33,6 +34,9 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <DashboardPage /> },
       { path: 'users', element: <UsersPage /> },
+      { path: 'users/approved', element: <UsersStatusPage status="approved" /> },
+      { path: 'users/pending',  element: <UsersStatusPage status="pending" /> },
+      { path: 'users/rejected', element: <UsersStatusPage status="rejected" /> },
       { path: 'users/:id', element: <UserDetailPage /> },
       { path: 'posts', element: <PostsPage /> },
       { path: 'posts/:id', element: <PostDetailPage /> },

@@ -8,19 +8,25 @@ import UserTable from '../../../components/dashboard/users/UserTable'
 
 const PAGE_SIZE = 15
 
-export default function UsersPage() {
+const STATUS_META = {
+  approved: { label: 'Approved Users', color: 'bg-emerald-50 text-emerald-600', dot: 'bg-emerald-400', description: 'Users who have been approved and have full platform access.' },
+  pending:  { label: 'Pending Users',  color: 'bg-amber-50 text-amber-600',   dot: 'bg-amber-400',   description: 'Users awaiting review and approval.' },
+  rejected: { label: 'Rejected Users', color: 'bg-red-50 text-red-500',       dot: 'bg-red-400',     description: 'Users whose access has been denied or revoked.' },
+}
+
+export default function UsersStatusPage({ status }) {
   const { auth } = useAuth()
   const token = auth?.token
+  const meta = STATUS_META[status] ?? STATUS_META.approved
 
   const [users, setUsers]           = useState([])
   const [pagination, setPagination] = useState({ total: 0, page: 1, pages: 1 })
   const [loading, setLoading]       = useState(true)
   const [error, setError]           = useState(null)
 
-  const [page, setPage]                     = useState(1)
-  const [category, setCategory]             = useState('')
-  const [country, setCountry]               = useState('')
-  const [approvalStatus, setApprovalStatus] = useState('')
+  const [page, setPage]       = useState(1)
+  const [category, setCategory] = useState('')
+  const [country, setCountry]   = useState('')
 
   const [categories, setCategories] = useState([])
   const [countries, setCountries]   = useState([])
@@ -37,10 +43,8 @@ export default function UsersPage() {
       .catch(() => {})
   }, [])
 
-  // Fetch users on page / filter change
   useEffect(() => {
     let cancelled = false
-
     async function load() {
       setLoading(true)
       setError(null)
@@ -49,9 +53,9 @@ export default function UsersPage() {
           {
             page,
             limit: PAGE_SIZE,
-            ...(category       ? { category }       : {}),
-            ...(country        ? { country }        : {}),
-            ...(approvalStatus ? { approvalStatus } : {}),
+            approvalStatus: status,
+            ...(category ? { category } : {}),
+            ...(country  ? { country }  : {}),
           },
           token,
         )
@@ -64,10 +68,9 @@ export default function UsersPage() {
         if (!cancelled) setLoading(false)
       }
     }
-
     load()
     return () => { cancelled = true }
-  }, [page, category, country, approvalStatus, token])
+  }, [page, category, country, status, token])
 
   function handleFilter(setter) {
     return (val) => { setter(val); setPage(1) }
@@ -78,36 +81,28 @@ export default function UsersPage() {
       {/* Header */}
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-black text-gray-900">User Management</h1>
-          <p className="mt-1 text-sm text-gray-400">
-            Manage, audit, and monitor all registered users in the Beed+ ecosystem.
-          </p>
+          <h1 className="text-2xl font-black text-gray-900 dark:text-white">{meta.label}</h1>
+          <p className="mt-1 text-sm text-gray-400 dark:text-gray-500">{meta.description}</p>
         </div>
         {!loading && !error && (
-          <span className="mt-1 inline-flex items-center gap-1.5 rounded-full bg-orange-50 px-3 py-1 text-sm font-semibold text-orange-500">
-            <span className="h-1.5 w-1.5 rounded-full bg-orange-400" />
+          <span className={`mt-1 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-semibold ${meta.color}`}>
+            <span className={`h-1.5 w-1.5 rounded-full ${meta.dot}`} />
             {pagination.total.toLocaleString()} users
           </span>
         )}
       </div>
 
-      {/* Tab bar */}
-      <div className="border-b border-gray-200">
-        <button className="relative pb-3 text-sm font-semibold text-orange-500 after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-full after:bg-orange-500">
-          All Users
-        </button>
-      </div>
-
-      {/* Filters */}
+      {/* Filters — no status filter (it's fixed by the route) */}
       <UserFilters
         category={category}
         country={country}
-        approvalStatus={approvalStatus}
+        approvalStatus=""
         categories={categories}
         countries={countries}
         onCategoryChange={handleFilter(setCategory)}
         onCountryChange={handleFilter(setCountry)}
-        onApprovalStatusChange={handleFilter(setApprovalStatus)}
+        onApprovalStatusChange={() => {}}
+        hideStatusFilter
       />
 
       {/* Error */}

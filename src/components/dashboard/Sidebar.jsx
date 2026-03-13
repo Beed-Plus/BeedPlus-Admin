@@ -1,9 +1,80 @@
-import { NavLink } from 'react-router-dom'
+import { NavLink, useLocation } from 'react-router-dom'
+import { useState } from 'react'
 import navConfig from './navConfig'
 import BeedLogo from '../auth/BeedLogo'
 import { useAuth } from '../../hooks/useAuth'
 
-function NavItem({ label, path, icon: Icon, collapsed }) {
+const STATUS_COLORS = {
+  all:      'bg-gray-400',
+  approved: 'bg-emerald-400',
+  pending:  'bg-amber-400',
+  rejected: 'bg-red-400',
+}
+
+function NavItem({ label, path, icon: Icon, collapsed, children }) {
+  const location = useLocation()
+  const hasChildren = children?.length > 0
+  const isChildActive = hasChildren && children.some((c) => location.pathname.startsWith(c.path))
+  const [open, setOpen] = useState(() => isChildActive)
+
+  if (hasChildren) {
+    return (
+      <div>
+        <button
+          onClick={() => setOpen((o) => !o)}
+          title={collapsed ? label : undefined}
+          className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all ${
+            collapsed ? 'lg:justify-center lg:px-0' : ''
+          } ${
+            isChildActive || open
+              ? 'text-orange-500'
+              : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100'
+          }`}
+        >
+          <Icon className="h-5 w-5 shrink-0" />
+          <span className={`flex-1 truncate text-left transition-all ${collapsed ? 'lg:hidden' : ''}`}>{label}</span>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className={`h-3.5 w-3.5 shrink-0 transition-transform duration-200 ${open ? 'rotate-180' : ''} ${collapsed ? 'lg:hidden' : ''}`}
+            fill="none" viewBox="0 0 24 24" stroke="currentColor"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+
+        {open && (
+          <div className={`mt-0.5 pl-4 ${collapsed ? 'lg:hidden' : ''}`}>
+            <div className="relative">
+              <div className="absolute left-0 top-1 bottom-1 w-px bg-gray-200 dark:bg-gray-700" />
+              <div className="flex flex-col gap-0.5 pl-3">
+                {children.map((child) => {
+                  const dot = STATUS_COLORS[child.label.toLowerCase()] ?? 'bg-gray-400'
+                  return (
+                    <NavLink
+                      key={child.path}
+                      to={child.path}
+                      end
+                      className={({ isActive }) =>
+                        `flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium transition-all ${
+                          isActive
+                            ? 'bg-orange-50 dark:bg-orange-500/10 text-orange-500'
+                            : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-800 dark:hover:text-gray-100'
+                        }`
+                      }
+                    >
+                      <span className={`h-2 w-2 shrink-0 rounded-full ${dot}`} />
+                      {child.label}
+                    </NavLink>
+                  )
+                })}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    )
+  }
+
   return (
     <NavLink
       to={path}
