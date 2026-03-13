@@ -15,7 +15,7 @@ export default function Input({
   return (
     <div className="flex flex-col gap-1.5">
       {label && (
-        <label htmlFor={id} className="text-sm font-medium text-gray-700">
+        <label htmlFor={id} className="text-sm font-medium text-gray-700 dark:text-gray-300">
           {label}
         </label>
       )}
@@ -26,7 +26,7 @@ export default function Input({
           placeholder={placeholder}
           value={value}
           onChange={onChange}
-          className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-800 placeholder-gray-400 outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition"
+          className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-3 text-sm text-gray-800 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-600 outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/30 transition"
         />
         {isPassword && (
           <button

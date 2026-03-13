@@ -1,6 +1,6 @@
 function ProgressBar({ value }) {
   return (
-    <div className="h-2 w-full rounded-full bg-orange-100">
+    <div className="h-2 w-full rounded-full bg-orange-100 dark:bg-orange-500/20">
       <div
         className="h-2 rounded-full bg-orange-500 transition-all"
         style={{ width: `${value}%` }}
@@ -13,16 +13,16 @@ export default function AnalyticsCard() {
   return (
     <div className="relative">
       {/* Main card */}
-      <div className="rounded-2xl bg-white/90 backdrop-blur-sm shadow-xl p-6 w-80">
+      <div className="rounded-2xl bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-xl p-6 w-80">
         <div className="flex items-center gap-3 mb-5">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-100">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-100 dark:bg-orange-500/20">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
             </svg>
           </div>
           <div>
-            <p className="text-sm font-semibold text-gray-800">Real-time Analytics</p>
-            <p className="text-xs text-gray-400">Monitoring system performance</p>
+            <p className="text-sm font-semibold text-gray-800 dark:text-gray-100">Real-time Analytics</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500">Monitoring system performance</p>
           </div>
         </div>
 
@@ -34,12 +34,12 @@ export default function AnalyticsCard() {
 
         <div className="flex gap-6">
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400">Active Users</p>
-            <p className="text-xl font-bold text-gray-800">12.4k</p>
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">Active Users</p>
+            <p className="text-xl font-bold text-gray-800 dark:text-white">12.4k</p>
           </div>
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400">System Load</p>
-            <p className="text-xl font-bold text-gray-800">24%</p>
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">System Load</p>
+            <p className="text-xl font-bold text-gray-800 dark:text-white">24%</p>
           </div>
         </div>
       </div>

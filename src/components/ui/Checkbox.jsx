@@ -8,7 +8,7 @@ export default function Checkbox({ id, label, checked, onChange }) {
         onChange={onChange}
         className="h-4 w-4 rounded border-gray-300 accent-orange-500 cursor-pointer"
       />
-      <span className="text-sm text-gray-600">{label}</span>
+      <span className="text-sm text-gray-600 dark:text-gray-400">{label}</span>
     </label>
   )
 }

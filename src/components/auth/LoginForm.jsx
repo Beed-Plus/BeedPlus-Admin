@@ -38,8 +38,8 @@ export default function LoginForm() {
       <BeedLogo />
 
       <div className="flex flex-col gap-2">
-        <h1 className="text-3xl font-black text-gray-900">Welcome back</h1>
-        <p className="text-sm text-gray-500">
+        <h1 className="text-3xl font-black text-gray-900 dark:text-white">Welcome back</h1>
+        <p className="text-sm text-gray-500 dark:text-gray-400">
           Log in to your admin dashboard to manage your workspace.
         </p>
       </div>
@@ -72,7 +72,7 @@ export default function LoginForm() {
         />
 
         {error && (
-          <div className="flex items-start gap-2.5 rounded-xl border border-red-100 bg-red-50 px-4 py-3">
+          <div className="flex items-start gap-2.5 rounded-xl border border-red-100 dark:border-red-900 bg-red-50 dark:bg-red-950/40 px-4 py-3">
             <svg xmlns="http://www.w3.org/2000/svg" className="mt-0.5 h-4 w-4 shrink-0 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
