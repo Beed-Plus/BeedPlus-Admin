@@ -1,6 +1,7 @@
 import { NavLink } from 'react-router-dom'
 import navConfig from './navConfig'
 import BeedLogo from '../auth/BeedLogo'
+import { useAuth } from '../../hooks/useAuth'
 
 function NavItem({ label, path, icon: Icon, collapsed }) {
   return (
@@ -25,6 +26,17 @@ function NavItem({ label, path, icon: Icon, collapsed }) {
 }
 
 export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose, dark, onThemeToggle }) {
+  const { auth } = useAuth()
+  const user = auth?.user
+  const displayName = user?.name ?? user?.username ?? user?.email ?? 'Admin'
+  const role = user?.role ?? 'Admin'
+  const initials = displayName
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0].toUpperCase())
+    .join('')
+
   return (
     <>
       {/* Mobile backdrop */}
@@ -139,17 +151,17 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
 
         {/* User profile */}
         <div
-          title={collapsed ? 'Alex Rivera' : undefined}
+          title={collapsed ? displayName : undefined}
           className={`mt-2 flex items-center rounded-xl px-3 py-2 transition-all ${
             collapsed ? 'lg:justify-center lg:px-0' : 'gap-3'
           }`}
         >
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-orange-400 text-sm font-bold text-white">
-            AR
+            {initials}
           </div>
           <div className={`min-w-0 transition-all ${collapsed ? 'lg:hidden' : ''}`}>
-            <p className="truncate text-sm font-semibold text-gray-800 dark:text-gray-100">Alex Rivera</p>
-            <p className="text-xs text-gray-400">Super Admin</p>
+            <p className="truncate text-sm font-semibold text-gray-800 dark:text-gray-100">{displayName}</p>
+            <p className="truncate text-xs text-gray-400 capitalize">{role.replace('_', ' ')}</p>
           </div>
         </div>
       </aside>
