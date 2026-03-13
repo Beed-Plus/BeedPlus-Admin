@@ -14,6 +14,26 @@ const STATUS_META = {
   rejected: { label: 'Rejected Users', color: 'bg-red-50 text-red-500',       dot: 'bg-red-400',     description: 'Users whose access has been denied or revoked.' },
 }
 
+function applyFilters(users, { search, followerSort }) {
+  let result = users
+  if (search) {
+    const lower = search.toLowerCase()
+    result = result.filter((u) => {
+      const username = (u.instagram?.instagramUsername ?? u.instagramUsername ?? '').toLowerCase()
+      const email    = (u.email ?? '').toLowerCase()
+      return username.includes(lower) || email.includes(lower)
+    })
+  }
+  if (followerSort) {
+    result = [...result].sort((a, b) => {
+      const af = a.instagram?.followersCount ?? 0
+      const bf = b.instagram?.followersCount ?? 0
+      return followerSort === 'desc' ? bf - af : af - bf
+    })
+  }
+  return result
+}
+
 export default function UsersStatusPage({ status }) {
   const { auth } = useAuth()
   const token = auth?.token
@@ -24,9 +44,11 @@ export default function UsersStatusPage({ status }) {
   const [loading, setLoading]       = useState(true)
   const [error, setError]           = useState(null)
 
-  const [page, setPage]       = useState(1)
-  const [category, setCategory] = useState('')
-  const [country, setCountry]   = useState('')
+  const [page, setPage]             = useState(1)
+  const [search, setSearch]             = useState('')
+  const [followerSort, setFollowerSort] = useState('')
+  const [category, setCategory]     = useState('')
+  const [country, setCountry]       = useState('')
 
   const [categories, setCategories] = useState([])
   const [countries, setCountries]   = useState([])
@@ -76,6 +98,8 @@ export default function UsersStatusPage({ status }) {
     return (val) => { setter(val); setPage(1) }
   }
 
+  const visibleUsers = applyFilters(users, { search, followerSort })
+
   return (
     <div className="flex flex-col gap-6">
       {/* Header */}
@@ -94,11 +118,15 @@ export default function UsersStatusPage({ status }) {
 
       {/* Filters — no status filter (it's fixed by the route) */}
       <UserFilters
+        search={search}
         category={category}
         country={country}
         approvalStatus=""
         categories={categories}
         countries={countries}
+        followerSort={followerSort}
+        onSearchChange={setSearch}
+        onFollowerSortChange={setFollowerSort}
         onCategoryChange={handleFilter(setCategory)}
         onCountryChange={handleFilter(setCountry)}
         onApprovalStatusChange={() => {}}
@@ -114,7 +142,7 @@ export default function UsersStatusPage({ status }) {
 
       {/* Table */}
       <UserTable
-        users={users}
+        users={visibleUsers}
         loading={loading}
         currentPage={pagination.page ?? page}
         totalPages={pagination.pages ?? 1}

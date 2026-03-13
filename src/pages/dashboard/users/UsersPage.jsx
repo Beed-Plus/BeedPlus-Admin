@@ -8,6 +8,26 @@ import UserTable from '../../../components/dashboard/users/UserTable'
 
 const PAGE_SIZE = 15
 
+function applyFilters(users, { search, followerSort }) {
+  let result = users
+  if (search) {
+    const lower = search.toLowerCase()
+    result = result.filter((u) => {
+      const username = (u.instagram?.instagramUsername ?? u.instagramUsername ?? '').toLowerCase()
+      const email    = (u.email ?? '').toLowerCase()
+      return username.includes(lower) || email.includes(lower)
+    })
+  }
+  if (followerSort) {
+    result = [...result].sort((a, b) => {
+      const af = a.instagram?.followersCount ?? 0
+      const bf = b.instagram?.followersCount ?? 0
+      return followerSort === 'desc' ? bf - af : af - bf
+    })
+  }
+  return result
+}
+
 export default function UsersPage() {
   const { auth } = useAuth()
   const token = auth?.token
@@ -18,6 +38,8 @@ export default function UsersPage() {
   const [error, setError]           = useState(null)
 
   const [page, setPage]                     = useState(1)
+  const [search, setSearch]                 = useState('')
+  const [followerSort, setFollowerSort]     = useState('')
   const [category, setCategory]             = useState('')
   const [country, setCountry]               = useState('')
   const [approvalStatus, setApprovalStatus] = useState('')
@@ -37,7 +59,6 @@ export default function UsersPage() {
       .catch(() => {})
   }, [])
 
-  // Fetch users on page / filter change
   useEffect(() => {
     let cancelled = false
 
@@ -73,6 +94,8 @@ export default function UsersPage() {
     return (val) => { setter(val); setPage(1) }
   }
 
+  const visibleUsers = applyFilters(users, { search, followerSort })
+
   return (
     <div className="flex flex-col gap-6">
       {/* Header */}
@@ -100,11 +123,15 @@ export default function UsersPage() {
 
       {/* Filters */}
       <UserFilters
+        search={search}
         category={category}
         country={country}
         approvalStatus={approvalStatus}
         categories={categories}
         countries={countries}
+        followerSort={followerSort}
+        onSearchChange={setSearch}
+        onFollowerSortChange={setFollowerSort}
         onCategoryChange={handleFilter(setCategory)}
         onCountryChange={handleFilter(setCountry)}
         onApprovalStatusChange={handleFilter(setApprovalStatus)}
@@ -119,7 +146,7 @@ export default function UsersPage() {
 
       {/* Table */}
       <UserTable
-        users={users}
+        users={visibleUsers}
         loading={loading}
         currentPage={pagination.page ?? page}
         totalPages={pagination.pages ?? 1}
