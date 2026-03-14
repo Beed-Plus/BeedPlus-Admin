@@ -14,6 +14,7 @@ import SubCategoriesPage from '../pages/dashboard/categories/SubCategoriesPage'
 import TopCreatorsPage from '../pages/dashboard/rankings/TopCreatorsPage'
 import TopHitsPage from '../pages/dashboard/rankings/TopHitsPage'
 import PostRankingsPage from '../pages/dashboard/rankings/PostRankingsPage'
+import PostRankingDetailPage from '../pages/dashboard/rankings/PostRankingDetailPage'
 import EmailPage from '../pages/dashboard/email/EmailPage'
 import AdminPage from '../pages/dashboard/admin/AdminPage'
 import CountriesPage from '../pages/dashboard/countries/CountriesPage'
@@ -50,6 +51,7 @@ const router = createBrowserRouter([
       { path: 'rankings/top-creators', element: <TopCreatorsPage /> },
       { path: 'rankings/top-hits', element: <TopHitsPage /> },
       { path: 'rankings/posts', element: <PostRankingsPage /> },
+      { path: 'rankings/posts/:id', element: <PostRankingDetailPage /> },
       { path: 'email', element: <EmailPage /> },
       { path: 'admin', element: <AdminPage /> },
       { path: 'countries', element: <CountriesPage /> },

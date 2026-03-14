@@ -448,7 +448,7 @@ export default function PostRankingsPage() {
                       {/* View */}
                       <td className="px-4 py-4">
                         <button
-                          onClick={() => navigate(`/dashboard/posts/${item.instagramMediaId}`, { state: { post: item } })}
+                          onClick={() => navigate(`/dashboard/rankings/posts/${item.instagramMediaId}`, { state: { post: item } })}
                           className="rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-1.5 text-xs font-semibold text-gray-600 dark:text-gray-300 hover:border-orange-300 hover:text-orange-500 dark:hover:border-orange-500/50 dark:hover:text-orange-400 transition"
                         >
                           View
