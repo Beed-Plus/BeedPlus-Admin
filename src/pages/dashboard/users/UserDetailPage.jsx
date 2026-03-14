@@ -22,6 +22,11 @@ function fmt(n) {
   return n.toLocaleString()
 }
 
+function fmtBeedScore(n) {
+  if (n == null) return '—'
+  return Number(n).toFixed(10)
+}
+
 function fmtDate(iso) {
   if (!iso) return '—'
   return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
@@ -592,7 +597,7 @@ export default function UserDetailPage() {
                       <td className="px-6 py-4">
                         {post.beedPlusScore != null ? (
                           <span className="inline-flex rounded-full bg-orange-50 px-2.5 py-0.5 text-xs font-bold text-orange-500">
-                            {fmt(post.beedPlusScore)}
+                            {fmtBeedScore(post.beedPlusScore)}
                           </span>
                         ) : <span className="text-gray-300 text-sm">—</span>}
                       </td>

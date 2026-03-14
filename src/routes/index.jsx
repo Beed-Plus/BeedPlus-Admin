@@ -8,6 +8,7 @@ import UserDetailPage from '../pages/dashboard/users/UserDetailPage'
 import UsersStatusPage from '../pages/dashboard/users/UsersStatusPage'
 import PostsPage from '../pages/dashboard/posts/PostsPage'
 import PostDetailPage from '../pages/dashboard/posts/PostDetailPage'
+import ComparePostsPage from '../pages/dashboard/posts/ComparePostsPage'
 import CategoriesUsersPage from '../pages/dashboard/categories/CategoriesUsersPage'
 import CategoriesPostsPage from '../pages/dashboard/categories/CategoriesPostsPage'
 import SubCategoriesPage from '../pages/dashboard/categories/SubCategoriesPage'
@@ -44,6 +45,7 @@ const router = createBrowserRouter([
       { path: 'users/rejected', element: <UsersStatusPage status="rejected" /> },
       { path: 'users/:id', element: <UserDetailPage /> },
       { path: 'posts', element: <PostsPage /> },
+      { path: 'posts/compare', element: <ComparePostsPage /> },
       { path: 'posts/:id', element: <PostDetailPage /> },
       { path: 'categories/users', element: <CategoriesUsersPage /> },
       { path: 'categories/posts', element: <CategoriesPostsPage /> },

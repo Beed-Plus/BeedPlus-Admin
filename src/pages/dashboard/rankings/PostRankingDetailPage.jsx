@@ -7,6 +7,11 @@ function fmt(n) {
   return n.toLocaleString()
 }
 
+function fmtBeedScore(n) {
+  if (n == null) return '—'
+  return Number(n).toFixed(10)
+}
+
 function fmtDate(iso) {
   if (!iso) return '—'
   return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
@@ -34,6 +39,8 @@ export default function PostRankingDetailPage() {
   const { state } = useLocation()
   const item = state?.post
 
+  console.log("post item", item)
+
   if (!item) {
     return (
       <div className="flex flex-col items-center justify-center gap-4 py-24 text-center">
@@ -42,7 +49,7 @@ export default function PostRankingDetailPage() {
           onClick={() => navigate('/dashboard/rankings/posts')}
           className="rounded-xl bg-orange-500 px-5 py-2.5 text-sm font-semibold text-white hover:bg-orange-600 transition"
         >
-          Back to Rankings
+          Back to Media Charts
         </button>
       </div>
     )
@@ -53,10 +60,12 @@ export default function PostRankingDetailPage() {
     media = {}, userData = {},
   } = item
 
+  const { archivedLifetimes = [], ...dailyInsights } = insights
+
   const cats = Array.isArray(category) ? category : [category].filter(Boolean)
 
-  // Collect all insight keys
-  const insightEntries = Object.entries(insights).filter(([, v]) => v !== undefined && v !== null)
+  // Collect all insight keys (excluding archivedLifetimes)
+  const insightEntries = Object.entries(dailyInsights).filter(([, v]) => v !== undefined && v !== null)
 
   // Known labels for common insight keys
   const INSIGHT_LABELS = {
@@ -92,7 +101,7 @@ export default function PostRankingDetailPage() {
         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
         </svg>
-        Post Rankings
+        Media Charts
       </button>
 
       {/* Post card */}
@@ -168,10 +177,10 @@ export default function PostRankingDetailPage() {
       {/* Score + rank strip */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
         <InsightCard label="Beed+ Score" value={
-          <span className="text-orange-500">{fmt(beedPlusScore)}</span>
+          <span className="text-orange-500">{fmtBeedScore(beedPlusScore)}</span>
         } />
         <InsightCard label="Rank" value={rank ? `#${rank}` : '—'} />
-        <InsightCard label="Ranking Date" value={fmtDate(item.date ?? item.rankingDate)} />
+        <InsightCard label="Ranking Date" value={fmtDate(item.date ?? item.rankingDate ?? item.updatedAt)} />
       </div>
 
       {/* Daily insights */}
@@ -191,6 +200,40 @@ export default function PostRankingDetailPage() {
           No daily insights available for this post.
         </div>
       )}
+
+      {/* Chart */}
+      <h2 className="text-base font-bold text-gray-900 dark:text-white">Chart</h2>
+      <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm overflow-hidden">
+        {archivedLifetimes.length === 0 ? (
+          <div className="px-6 py-10 text-center text-sm text-gray-400">
+            No archived lifetime data available.
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[700px]">
+              <thead>
+                <tr className="border-b border-gray-100 dark:border-gray-800 bg-gray-50/60 dark:bg-gray-800/50">
+                  {['Date', 'Views', 'Reach', 'Interactions', 'Shares', 'Saved'].map((h) => (
+                    <th key={h} className="px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-widest text-gray-400">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {archivedLifetimes.map((row, i) => (
+                  <tr key={i} className="border-b border-gray-50 dark:border-gray-800/50 last:border-0">
+                    <td className="px-5 py-3.5 text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">{fmtDate(row.createdAt)}</td>
+                    <td className="px-5 py-3.5 text-sm text-gray-600 dark:text-gray-400">{fmt(row.views)}</td>
+                    <td className="px-5 py-3.5 text-sm text-gray-600 dark:text-gray-400">{fmt(row.reach)}</td>
+                    <td className="px-5 py-3.5 text-sm text-gray-600 dark:text-gray-400">{fmt(row.totalInteractions)}</td>
+                    <td className="px-5 py-3.5 text-sm text-gray-600 dark:text-gray-400">{fmt(row.shares)}</td>
+                    <td className="px-5 py-3.5 text-sm text-gray-600 dark:text-gray-400">{fmt(row.saved)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
     </div>
   )
 }

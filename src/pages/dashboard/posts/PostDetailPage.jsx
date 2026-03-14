@@ -18,6 +18,11 @@ function fmt(n) {
   return n.toLocaleString()
 }
 
+function fmtBeedScore(n) {
+  if (n == null) return '—'
+  return Number(n).toFixed(10)
+}
+
 function fmtDate(iso) {
   if (!iso) return '—'
   return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
@@ -67,10 +72,12 @@ function InsightRow({ label, value, color = 'text-gray-700' }) {
 }
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
-function ScoreIcon(p)   { return <svg {...p} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg> }
-function RankIcon(p)    { return <svg {...p} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg> }
-function ClickIcon(p)   { return <svg {...p} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5" /></svg> }
-function ViewsIcon(p)   { return <svg {...p} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg> }
+function ScoreIcon(p)    { return <svg {...p} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg> }
+function RankIcon(p)     { return <svg {...p} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg> }
+function ClickIcon(p)    { return <svg {...p} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5" /></svg> }
+function ViewsIcon(p)    { return <svg {...p} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg> }
+function LikesIcon(p)    { return <svg {...p} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg> }
+function CommentsIcon(p) { return <svg {...p} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg> }
 
 // ─── Skeleton ─────────────────────────────────────────────────────────────────
 function PageSkeleton() {
@@ -108,6 +115,8 @@ export default function PostDetailPage() {
   const [post, setPost]       = useState(location.state?.post ?? null)
   const [loading, setLoading] = useState(!location.state?.post)
   const [error, setError]     = useState(null)
+
+  console.log("POST", post)
 
   // Only fetch if we didn't receive post via navigation state
   useEffect(() => {
@@ -157,12 +166,39 @@ export default function PostDetailPage() {
   const profilePic  = post.userData?.profilePicture
   const cats        = Array.isArray(post.category) ? post.category : [post.category].filter(Boolean)
 
+  const DAILY_LABELS = {
+    daily_views:             'Daily Views',
+    daily_reach:             'Daily Reach',
+    daily_totalInteractions: 'Daily Interactions',
+    daily_shares:            'Daily Shares',
+    daily_saved:             'Daily Saved',
+    daily_likes:             'Daily Likes',
+    daily_comments:          'Daily Comments',
+    daily_impressions:       'Daily Impressions',
+  }
+
+  const dailyEntries = Object.entries(post.insights ?? {})
+    .filter(([k, v]) => k.startsWith('daily_') && v !== undefined && v !== null)
+    .map(([k, v]) => ({ key: k, label: DAILY_LABELS[k] ?? k.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()), value: v }))
+
   return (
     <div className="flex flex-col gap-6">
       <Breadcrumb crumbs={CRUMBS} />
 
       {/* Main card: thumbnail + details */}
       <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-sm">
+        {/* Card top row */}
+        <div className="flex items-center justify-end mb-4">
+          <button
+            onClick={() => navigate('/dashboard/posts/compare', { state: { postA: post } })}
+            className="inline-flex items-center gap-1.5 rounded-xl border border-orange-200 dark:border-orange-500/30 bg-orange-50 dark:bg-orange-500/10 px-3 py-1.5 text-xs font-semibold text-orange-500 hover:bg-orange-100 dark:hover:bg-orange-500/20 transition"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+            </svg>
+            Compare
+          </button>
+        </div>
         <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
 
           {/* Thumbnail */}
@@ -235,7 +271,7 @@ export default function PostDetailPage() {
 
       {/* Stat cards */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <StatCard label="Beed+ Score"  value={fmt(post.beedPlusScore)}           sub="Overall score"    iconBg="bg-orange-50"  icon={(p) => <ScoreIcon {...p} className="h-5 w-5 text-orange-500" />} />
+        <StatCard label="Beed+ Score"  value={fmtBeedScore(post.beedPlusScore)}           sub="Overall score"    iconBg="bg-orange-50"  icon={(p) => <ScoreIcon {...p} className="h-5 w-5 text-orange-500" />} />
         <StatCard label="Current Rank" value={post.currentRank ? `#${post.currentRank}` : '—'} sub="Overall ranking" iconBg="bg-violet-50"  icon={(p) => <RankIcon {...p} className="h-5 w-5 text-violet-500" />} />
         <StatCard label="Clicks"       value={fmt(post.clicks)}                  sub="Total clicks"     iconBg="bg-blue-50"    icon={(p) => <ClickIcon {...p} className="h-5 w-5 text-blue-500" />} />
         <StatCard label="Views"        value={fmt(post.insights?.views)}         sub="From insights"    iconBg="bg-teal-50"    icon={(p) => <ViewsIcon {...p} className="h-5 w-5 text-teal-500" />} />
@@ -253,6 +289,8 @@ export default function PostDetailPage() {
             <InsightRow label="Total Interactions"  value={post.insights?.totalInteractions} color="text-orange-500" />
             <InsightRow label="Shares"              value={post.insights?.shares} />
             <InsightRow label="Saved"               value={post.insights?.saved} />
+            <InsightRow label="Likes"               value={post.insights?.likes} />
+            <InsightRow label="Comments"            value={post.insights?.commentsCount} />
             <InsightRow label="Category Rank"       value={post.categoryRank ? `#${post.categoryRank}` : null} />
           </div>
         </div>
@@ -283,6 +321,21 @@ export default function PostDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* Daily Insights */}
+      {dailyEntries.length > 0 && (
+        <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-sm">
+          <p className="mb-4 text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">Daily Insights</p>
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+            {dailyEntries.map(({ key, label, value }) => (
+              <div key={key} className="rounded-xl border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50 p-4">
+                <p className="text-[11px] font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">{label}</p>
+                <p className="mt-1.5 text-xl font-black text-gray-900 dark:text-white">{fmt(value)}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Back button */}
       <div>

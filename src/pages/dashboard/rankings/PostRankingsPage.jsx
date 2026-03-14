@@ -13,6 +13,11 @@ function fmt(n) {
   return n.toLocaleString()
 }
 
+function fmtBeedScore(n) {
+  if (n == null) return '—'
+  return Number(n).toFixed(10)
+}
+
 function fmtDate(iso) {
   if (!iso) return '—'
   return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
@@ -431,7 +436,7 @@ export default function PostRankingsPage() {
                       {/* Beed+ Score */}
                       <td className="px-4 py-4">
                         <span className="inline-flex items-center rounded-full bg-orange-50 px-2.5 py-0.5 text-xs font-bold text-orange-500">
-                          {fmt(item.beedPlusScore)}
+                          {fmtBeedScore(item.beedPlusScore)}
                         </span>
                       </td>
 
@@ -448,7 +453,7 @@ export default function PostRankingsPage() {
                       {/* View */}
                       <td className="px-4 py-4">
                         <button
-                          onClick={() => navigate(`/dashboard/rankings/posts/${item.instagramMediaId}`, { state: { post: item } })}
+                          onClick={() => navigate(`/dashboard/rankings/posts/${item.instagramMediaId}`, { state: { post: { ...item, rankingDate: data?.date } } })}
                           className="rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-1.5 text-xs font-semibold text-gray-600 dark:text-gray-300 hover:border-orange-300 hover:text-orange-500 dark:hover:border-orange-500/50 dark:hover:text-orange-400 transition"
                         >
                           View
