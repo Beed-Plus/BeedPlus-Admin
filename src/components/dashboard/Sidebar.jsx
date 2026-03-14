@@ -1,4 +1,4 @@
-import { NavLink, useLocation } from 'react-router-dom'
+import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 import navConfig from './navConfig'
 import BeedLogo from '../auth/BeedLogo'
@@ -97,7 +97,13 @@ function NavItem({ label, path, icon: Icon, collapsed, children }) {
 }
 
 export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose, dark, onThemeToggle }) {
-  const { auth } = useAuth()
+  const { auth, logout } = useAuth()
+  const navigate = useNavigate()
+
+  function handleLogout() {
+    logout()
+    navigate('/login')
+  }
   const user = auth?.user
   const displayName = user?.name ?? user?.username ?? user?.email ?? 'Admin'
   const role = user?.role ?? 'Admin'
@@ -220,20 +226,26 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
           </button>
         </div>
 
-        {/* User profile */}
-        <div
+        {/* User profile + logout */}
+        <div className={`mt-2 flex items-center rounded-xl px-3 py-2 transition-all ${collapsed ? 'lg:justify-center lg:px-0' : 'gap-3'}`}
           title={collapsed ? displayName : undefined}
-          className={`mt-2 flex items-center rounded-xl px-3 py-2 transition-all ${
-            collapsed ? 'lg:justify-center lg:px-0' : 'gap-3'
-          }`}
         >
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-orange-400 text-sm font-bold text-white">
             {initials}
           </div>
-          <div className={`min-w-0 transition-all ${collapsed ? 'lg:hidden' : ''}`}>
+          <div className={`min-w-0 flex-1 transition-all ${collapsed ? 'lg:hidden' : ''}`}>
             <p className="truncate text-sm font-semibold text-gray-800 dark:text-gray-100">{displayName}</p>
             <p className="truncate text-xs text-gray-400 capitalize">{role.replace('_', ' ')}</p>
           </div>
+          <button
+            onClick={handleLogout}
+            title="Sign out"
+            className={`shrink-0 flex h-7 w-7 items-center justify-center rounded-lg text-gray-400 hover:bg-red-50 dark:hover:bg-red-500/10 hover:text-red-500 transition ${collapsed ? 'lg:hidden' : ''}`}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+          </button>
         </div>
       </aside>
     </>

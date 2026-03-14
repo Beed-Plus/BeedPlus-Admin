@@ -63,17 +63,17 @@ export default function DashboardPage() {
   }, [token])
 
   const STAT_CARDS = [
-    { label: 'Total Users',    value: fmt(stats.users),         icon: UsersIcon },
-    { label: 'Total Posts',    value: fmt(stats.posts),         icon: PostsIcon },
-    { label: 'Categories',     value: fmt(stats.categories),    icon: CategoriesIcon },
-    { label: 'Sub-Categories', value: fmt(stats.subCategories), icon: SubCategoriesIcon },
+    { label: 'Total Users',    value: fmt(stats.users),         icon: UsersIcon,         href: '/dashboard/users' },
+    { label: 'Total Posts',    value: fmt(stats.posts),         icon: PostsIcon,         href: '/dashboard/posts' },
+    { label: 'Categories',     value: fmt(stats.categories),    icon: CategoriesIcon,    href: '/dashboard/categories/posts' },
+    { label: 'Sub-Categories', value: fmt(stats.subCategories), icon: SubCategoriesIcon, href: '/dashboard/sub-categories' },
   ]
 
   return (
     <div className="flex flex-col gap-8">
       {/* Header */}
       <div>
-        <h1 className="text-xl font-black text-gray-900 sm:text-2xl">Dashboard Overview</h1>
+        <h1 className="text-xl text-gray-400 sm:text-2xl">Dashboard Overview</h1>
         <p className="mt-1 text-sm text-gray-400">
           Welcome back, here's what's happening with Beed+ today.
         </p>

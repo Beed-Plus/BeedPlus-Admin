@@ -1,4 +1,4 @@
-import { createBrowserRouter } from 'react-router-dom'
+import { createBrowserRouter, Navigate } from 'react-router-dom'
 import AuthLayout from '../layouts/AuthLayout'
 import DashboardLayout from '../layouts/DashboardLayout'
 import LoginPage from '../pages/auth/LoginPage'
@@ -18,14 +18,18 @@ import EmailPage from '../pages/dashboard/email/EmailPage'
 import AdminPage from '../pages/dashboard/admin/AdminPage'
 import CountriesPage from '../pages/dashboard/countries/CountriesPage'
 import ProtectedRoute from '../components/router/ProtectedRoute'
+import GuestRoute from '../components/router/GuestRoute'
 
 const router = createBrowserRouter([
   {
     path: '/',
-    element: <AuthLayout />,
+    element: <Navigate to="/dashboard" replace />,
+  },
+  {
+    path: '/login',
+    element: <GuestRoute><AuthLayout /></GuestRoute>,
     children: [
       { index: true, element: <LoginPage /> },
-      { path: 'login', element: <LoginPage /> },
     ],
   },
   {

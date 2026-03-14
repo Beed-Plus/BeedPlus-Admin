@@ -78,12 +78,10 @@ const FALLBACK = {
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
-function timeAgo(iso) {
-  const diff = Math.floor((Date.now() - new Date(iso)) / 1000)
-  if (diff < 60)    return `${diff}s ago`
-  if (diff < 3600)  return `${Math.floor(diff / 60)}m ago`
-  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`
-  return `${Math.floor(diff / 86400)}d ago`
+function fmtDateTime(iso) {
+  if (!iso) return '—'
+  const d = new Date(iso)
+  return d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
 }
 
 function displayName(activity) {
@@ -92,21 +90,6 @@ function displayName(activity) {
   return u.instagram?.instagramUsername
     ? `@${u.instagram.instagramUsername}`
     : u.email ?? 'System Auto Job'
-}
-
-function initials(activity) {
-  const name = displayName(activity).replace('@', '')
-  return name.slice(0, 2).toUpperCase()
-}
-
-// Avatar background colours cycled by index
-const AVATAR_COLORS = [
-  'bg-orange-400', 'bg-purple-400', 'bg-blue-400',
-  'bg-green-400',  'bg-amber-400',  'bg-pink-400',
-]
-
-function avatarColor(idx) {
-  return AVATAR_COLORS[idx % AVATAR_COLORS.length]
 }
 
 function metaLine(activity) {
@@ -121,12 +104,11 @@ function metaLine(activity) {
 function SkeletonRow() {
   return (
     <div className="flex items-center gap-4 px-6 py-4 border-b border-gray-50 dark:border-gray-800/50 last:border-0">
-      <div className="h-9 w-9 rounded-full bg-gray-100 dark:bg-gray-800 animate-pulse shrink-0" />
       <div className="flex-1 space-y-2">
         <div className="h-3 w-32 rounded bg-gray-100 dark:bg-gray-800 animate-pulse" />
         <div className="h-3 w-48 rounded bg-gray-100 dark:bg-gray-800 animate-pulse" />
       </div>
-      <div className="h-3 w-12 rounded bg-gray-100 dark:bg-gray-800 animate-pulse" />
+      <div className="h-3 w-28 rounded bg-gray-100 dark:bg-gray-800 animate-pulse" />
     </div>
   )
 }
@@ -204,21 +186,16 @@ export default function RecentActivity() {
                 </tr>
               </thead>
               <tbody>
-                {activities.map((row, idx) => {
+                {activities.map((row) => {
                   const cfg  = TYPE_CONFIG[row.type] ?? FALLBACK
                   const meta = metaLine(row)
                   return (
                     <tr key={row._id} className="border-b border-gray-50 dark:border-gray-800/50 last:border-0 hover:bg-gray-50/40 dark:hover:bg-gray-800/40 transition-colors">
                       {/* User */}
                       <td className="px-6 py-3.5">
-                        <div className="flex items-center gap-3">
-                          <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-white text-xs font-bold ${avatarColor(idx)}`}>
-                            {initials(row)}
-                          </div>
-                          <span className="text-sm font-semibold text-gray-800 dark:text-gray-100 whitespace-nowrap">
-                            {displayName(row)}
-                          </span>
-                        </div>
+                        <span className="text-sm font-semibold text-gray-800 dark:text-gray-100 whitespace-nowrap">
+                          {displayName(row)}
+                        </span>
                       </td>
                       {/* Activity badge */}
                       <td className="px-6 py-3.5">
@@ -233,7 +210,7 @@ export default function RecentActivity() {
                       </td>
                       {/* Time */}
                       <td className="px-6 py-3.5 text-xs text-gray-400 dark:text-gray-500 text-right whitespace-nowrap">
-                        {timeAgo(row.createdAt)}
+                        {fmtDateTime(row.createdAt)}
                       </td>
                     </tr>
                   )
@@ -244,15 +221,11 @@ export default function RecentActivity() {
 
           {/* Mobile card list */}
           <ul className="sm:hidden divide-y divide-gray-50 dark:divide-gray-800">
-            {activities.map((row, idx) => {
+            {activities.map((row) => {
               const cfg  = TYPE_CONFIG[row.type] ?? FALLBACK
               const meta = metaLine(row)
               return (
                 <li key={row._id} className="flex items-start gap-3 px-4 py-3.5">
-                  {/* Avatar */}
-                  <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-white text-xs font-bold ${avatarColor(idx)}`}>
-                    {initials(row)}
-                  </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <p className="text-sm font-semibold text-gray-800 dark:text-gray-100 truncate">{displayName(row)}</p>
@@ -263,7 +236,7 @@ export default function RecentActivity() {
                     </div>
                     {meta && <p className="mt-0.5 text-xs text-gray-400 dark:text-gray-500">{meta}</p>}
                   </div>
-                  <span className="shrink-0 text-xs text-gray-400 dark:text-gray-500 whitespace-nowrap pt-0.5">{timeAgo(row.createdAt)}</span>
+                  <span className="shrink-0 text-xs text-gray-400 dark:text-gray-500 whitespace-nowrap pt-0.5">{fmtDateTime(row.createdAt)}</span>
                 </li>
               )
             })}
