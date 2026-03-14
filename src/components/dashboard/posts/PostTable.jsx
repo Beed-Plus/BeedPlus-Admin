@@ -67,7 +67,6 @@ function SkeletonRow() {
       <td className="px-6 py-4"><div className="h-3 w-24 rounded bg-gray-100 dark:bg-gray-800 animate-pulse" /></td>
       <td className="px-6 py-4"><div className="h-5 w-20 rounded-full bg-gray-100 dark:bg-gray-800 animate-pulse" /></td>
       <td className="px-6 py-4"><div className="h-5 w-14 rounded-full bg-gray-100 dark:bg-gray-800 animate-pulse" /></td>
-      <td className="px-6 py-4"><div className="h-3 w-8 rounded bg-gray-100 dark:bg-gray-800 animate-pulse" /></td>
       <td className="px-6 py-4"><div className="h-3 w-20 rounded bg-gray-100 dark:bg-gray-800 animate-pulse" /></td>
       <td className="px-6 py-4" />
     </tr>
@@ -88,8 +87,8 @@ export default function PostTable({ posts, loading, currentPage, totalItems, onP
               <th className={COL}>Post</th>
               <th className={COL}>Creator</th>
               <th className={COL}>Category</th>
-              <th className={COL}>Beed+ Score</th>
-              <th className={COL}>Rank</th>
+              {/* <th className={COL}>Beed+ Score</th> */}
+              {/* <th className={COL}>Rank</th> */}
               <th className={COL}>Submitted</th>
               <th className={`${COL} text-right`}>Actions</th>
             </tr>
@@ -99,7 +98,7 @@ export default function PostTable({ posts, loading, currentPage, totalItems, onP
 
             {!loading && posts.length === 0 && (
               <tr>
-                <td colSpan={7} className="px-6 py-16 text-center text-sm text-gray-400 dark:text-gray-500">
+                <td colSpan={5} className="px-6 py-16 text-center text-sm text-gray-400 dark:text-gray-500">
                   No posts found
                 </td>
               </tr>
@@ -161,10 +160,10 @@ export default function PostTable({ posts, loading, currentPage, totalItems, onP
                   </td>
 
                   {/* Beed+ Score */}
-                  <td className="px-6 py-4">{fmtScore(post.beedPlusScore)}</td>
+                  {/* <td className="px-6 py-4">{fmtScore(post.beedPlusScore)}</td> */}
 
                   {/* Rank */}
-                  <td className="px-6 py-4">{fmtRank(post.currentRank)}</td>
+                  {/* <td className="px-6 py-4">{fmtRank(post.currentRank)}</td> */}
 
                   {/* Submitted */}
                   <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">{fmtDate(post.createdAt)}</td>
