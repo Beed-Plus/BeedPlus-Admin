@@ -4,6 +4,20 @@ import { countriesApi } from '../../../utils/countriesApi'
 import UserWorldMap from '../../../components/dashboard/countries/UserWorldMap'
 
 const COL = 'px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-widest text-gray-400'
+
+function CountryFlag({ code, size = 20 }) {
+  if (!code || code.length !== 2) return null
+  return (
+    <img
+      src={`https://flagcdn.com/w${size}/${code.toLowerCase()}.png`}
+      srcSet={`https://flagcdn.com/w${size * 2}/${code.toLowerCase()}.png 2x`}
+      width={size}
+      alt={code}
+      className="rounded-sm object-cover shrink-0"
+      style={{ height: size * 0.75 }}
+    />
+  )
+}
 const INPUT = 'w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm text-gray-800 outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition'
 
 function StatusBadge({ active }) {
@@ -61,9 +75,12 @@ function CountryModal({ country, onClose, onSaved }) {
       <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={onClose} />
       <div className="relative w-full max-w-md rounded-2xl bg-white dark:bg-gray-900 p-6 shadow-xl">
         <div className="mb-5 flex items-center justify-between">
-          <div>
-            <p className="text-sm font-bold text-gray-800 dark:text-gray-100">{isEdit ? 'Edit Country' : 'Add Country'}</p>
-            <p className="text-xs text-gray-400 dark:text-gray-500">{isEdit ? 'Update country details' : 'Add a new supported country'}</p>
+          <div className="flex items-center gap-2">
+            <CountryFlag code={isEdit ? country.code : code} size={28} />
+            <div>
+              <p className="text-sm font-bold text-gray-800 dark:text-gray-100">{isEdit ? 'Edit Country' : 'Add Country'}</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500">{isEdit ? 'Update country details' : 'Add a new supported country'}</p>
+            </div>
           </div>
           <button onClick={onClose} className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -309,7 +326,10 @@ export default function CountriesPage() {
               {!loading && filtered.map((country) => (
                 <tr key={country._id} className="border-b border-gray-50 dark:border-gray-800/50 last:border-0 hover:bg-gray-50/40 dark:hover:bg-gray-800/40 transition-colors">
                   <td className="px-6 py-4">
-                    <span className="text-sm font-semibold text-gray-800 dark:text-gray-100">{country.name}</span>
+                    <div className="flex items-center gap-2.5">
+                      <CountryFlag code={country.code} size={20} />
+                      <span className="text-sm font-semibold text-gray-800 dark:text-gray-100">{country.name}</span>
+                    </div>
                   </td>
                   <td className="px-6 py-4">
                     <span className="inline-flex items-center rounded-full bg-blue-50 dark:bg-blue-500/10 px-2.5 py-0.5 text-xs font-bold text-blue-500">
