@@ -50,22 +50,24 @@ export default function PostsPage() {
     return [...set].sort()
   }, [allPosts])
 
-  // Filtered list
+  // Filtered list (latest first)
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
-    return allPosts.filter((p) => {
-      if (filterType && p.media?.mediaType?.toUpperCase() !== filterType) return false
-      if (filterCategory) {
-        const cats = Array.isArray(p.category) ? p.category : [p.category].filter(Boolean)
-        if (!cats.includes(filterCategory)) return false
-      }
-      if (q) {
-        const caption  = (p.media?.caption ?? '').toLowerCase()
-        const username = (p.instagramUsername ?? p.userData?.username ?? '').toLowerCase()
-        if (!caption.includes(q) && !username.includes(q)) return false
-      }
-      return true
-    })
+    return allPosts
+      .filter((p) => {
+        if (filterType && p.media?.mediaType?.toUpperCase() !== filterType) return false
+        if (filterCategory) {
+          const cats = Array.isArray(p.category) ? p.category : [p.category].filter(Boolean)
+          if (!cats.includes(filterCategory)) return false
+        }
+        if (q) {
+          const caption  = (p.media?.caption ?? '').toLowerCase()
+          const username = (p.instagramUsername ?? p.userData?.username ?? '').toLowerCase()
+          if (!caption.includes(q) && !username.includes(q)) return false
+        }
+        return true
+      })
+      .sort((a, b) => new Date(b.createdAt ?? 0) - new Date(a.createdAt ?? 0))
   }, [allPosts, search, filterCategory, filterType])
 
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE)

@@ -63,6 +63,47 @@ select::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.12); border-radius
   --rdp-accent-background-color: #fff7ed;
   font-family: inherit;
 }
+
+/* Dark mode */
 .dark .rdp-root {
-  --rdp-accent-background-color: rgba(249, 115, 22, 0.1);
+  --rdp-accent-color: #f97316;
+  --rdp-accent-background-color: rgba(249, 115, 22, 0.15);
+  color: #f3f4f6;
+}
+.dark .rdp-month_caption,
+.dark .rdp-caption_label {
+  color: #f3f4f6;
+}
+.dark .rdp-weekday {
+  color: #9ca3af;
+}
+.dark .rdp-day_button {
+  color: #e5e7eb;
+}
+.dark .rdp-day_button:hover:not([disabled]) {
+  background-color: #374151;
+  color: #fff;
+}
+.dark .rdp-selected .rdp-day_button {
+  color: #fff;
+}
+.dark .rdp-outside .rdp-day_button {
+  color: #4b5563;
+}
+.dark .rdp-disabled .rdp-day_button {
+  color: #374151;
+}
+.dark .rdp-nav button,
+.dark .rdp-button_previous,
+.dark .rdp-button_next {
+  color: #9ca3af;
+}
+.dark .rdp-nav button:hover,
+.dark .rdp-button_previous:hover,
+.dark .rdp-button_next:hover {
+  background-color: #374151;
+  color: #fff;
+}
+.dark .rdp-range_middle .rdp-day_button {
+  color: #f97316;
 }
