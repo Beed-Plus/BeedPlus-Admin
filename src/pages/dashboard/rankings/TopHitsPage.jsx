@@ -82,7 +82,7 @@ export default function TopHitsPage() {
       )}
 
       {/* Featured post */}
-      {!loading && topPost && <TopPostCard post={topPost} />}
+      {/* {!loading && topPost && <TopPostCard post={topPost} />} */}
 
       {/* Rankings table */}
       <TopHitsTable hits={topHits} loading={loading} />
