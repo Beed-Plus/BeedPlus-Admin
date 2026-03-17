@@ -78,14 +78,10 @@ export default function UserTable({ users: initialUsers, loading, currentPage, t
   const { auth } = useAuth()
   const token = auth?.token
 
-  // local copy so we can optimistically update approval status
   const [localUsers, setLocalUsers] = useState(null)
+  const [confirmDelete, setConfirmDelete] = useState(null) // user object pending deletion
+  const [deleting, setDeleting] = useState(false)
   const displayUsers = localUsers ?? initialUsers
-
-  // sync when parent refreshes
-  if (localUsers && initialUsers !== displayUsers) {
-    // parent pushed new data — reset local override
-  }
 
   async function handleAction(action, user) {
     if (action === 'View Profile') {
@@ -93,7 +89,6 @@ export default function UserTable({ users: initialUsers, loading, currentPage, t
     } else if (action === 'Approve User') {
       try {
         await usersApi.approveUser(user._id, token)
-        // optimistic: mark as approved in local list
         setLocalUsers((prev) =>
           (prev ?? initialUsers).map((u) =>
             u._id === user._id
@@ -106,6 +101,22 @@ export default function UserTable({ users: initialUsers, loading, currentPage, t
       }
     } else if (action === 'Suspend User') {
       alert('Suspend endpoint not yet available.')
+    } else if (action === 'Delete User') {
+      setConfirmDelete(user)
+    }
+  }
+
+  async function confirmDeleteUser() {
+    if (!confirmDelete) return
+    setDeleting(true)
+    try {
+      await usersApi.deleteUser(confirmDelete._id, token)
+      setLocalUsers((prev) => (prev ?? initialUsers).filter((u) => u._id !== confirmDelete._id))
+      setConfirmDelete(null)
+    } catch (err) {
+      alert(`Delete failed: ${err.message}`)
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -207,6 +218,43 @@ export default function UserTable({ users: initialUsers, loading, currentPage, t
           onPageChange={onPageChange}
         />
       </div>
+
+      {/* Delete confirmation modal */}
+      {confirmDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => !deleting && setConfirmDelete(null)} />
+          <div className="relative w-full max-w-sm rounded-2xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 shadow-2xl p-6 flex flex-col gap-4">
+            {/* Icon */}
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-50 dark:bg-red-500/10 mx-auto">
+              <svg className="h-6 w-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M9 7h6m2 0H7m2-3h6a1 1 0 011 1v1H8V5a1 1 0 011-1z" />
+              </svg>
+            </div>
+            <div className="text-center">
+              <h3 className="text-base font-bold text-gray-900 dark:text-gray-100">Delete User?</h3>
+              <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                <span className="font-semibold text-gray-700 dark:text-gray-200">{displayName(confirmDelete)}</span> will be permanently removed. This cannot be undone.
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setConfirmDelete(null)}
+                disabled={deleting}
+                className="flex-1 rounded-xl border border-gray-200 dark:border-gray-700 py-2.5 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDeleteUser}
+                disabled={deleting}
+                className="flex-1 rounded-xl bg-red-500 py-2.5 text-sm font-semibold text-white hover:bg-red-600 transition disabled:opacity-60"
+              >
+                {deleting ? 'Deleting…' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
