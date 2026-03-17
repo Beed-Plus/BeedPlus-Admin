@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useAuth } from '../../../hooks/useAuth'
 import { usersApi } from '../../../utils/usersApi'
 import { categoriesApi } from '../../../utils/categoriesApi'
@@ -36,6 +36,7 @@ export default function UsersPage() {
   const [pagination, setPagination] = useState({ total: 0, page: 1, pages: 1 })
   const [loading, setLoading]       = useState(true)
   const [error, setError]           = useState(null)
+  const [retryKey, setRetryKey]     = useState(0)
 
   const [page, setPage]                     = useState(1)
   const [search, setSearch]                 = useState('')
@@ -65,36 +66,53 @@ export default function UsersPage() {
     async function load() {
       setLoading(true)
       setError(null)
-      try {
-        const res = await usersApi.getUsers(
-          {
-            page,
-            limit: PAGE_SIZE,
-            ...(category       ? { category }       : {}),
-            ...(country        ? { country }        : {}),
-            ...(approvalStatus ? { approvalStatus } : {}),
-          },
-          token,
-        )
-        if (cancelled) return
-        setUsers(res?.users ?? [])
-        setPagination(res?.pagination ?? { total: 0, page: 1, pages: 1 })
-      } catch (err) {
-        if (!cancelled) setError(err.message ?? 'Failed to load users')
-      } finally {
-        if (!cancelled) setLoading(false)
+
+      let lastErr = null
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        try {
+          const res = await usersApi.getUsers(
+            {
+              page,
+              limit: PAGE_SIZE,
+              ...(category       ? { category }       : {}),
+              ...(country        ? { country }        : {}),
+              ...(approvalStatus ? { approvalStatus } : {}),
+            },
+            token,
+          )
+          if (cancelled) return
+          setUsers(res?.users ?? [])
+          setPagination(res?.pagination ?? { total: 0, page: 1, pages: 1 })
+          setLoading(false)
+          return // success
+        } catch (err) {
+          if (cancelled) return
+          lastErr = err
+          if (attempt < 3) {
+            // wait before next attempt: 1s, then 2s
+            await new Promise((r) => setTimeout(r, attempt * 1000))
+            if (cancelled) return
+          }
+        }
       }
+
+      // all attempts exhausted
+      setError(lastErr?.message ?? 'Failed to load users')
+      setLoading(false)
     }
 
     load()
     return () => { cancelled = true }
-  }, [page, category, country, approvalStatus, token])
+  }, [page, category, country, approvalStatus, token, retryKey])
 
   function handleFilter(setter) {
     return (val) => { setter(val); setPage(1) }
   }
 
-  const visibleUsers = applyFilters(users, { search, followerSort })
+  const visibleUsers = useMemo(
+    () => applyFilters(users, { search, followerSort }),
+    [users, search, followerSort],
+  )
 
   return (
     <div className="flex flex-col gap-6">
@@ -139,8 +157,14 @@ export default function UsersPage() {
 
       {/* Error */}
       {error && (
-        <div className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-600">
-          {error}
+        <div className="flex items-center justify-between gap-4 rounded-xl border border-red-100 bg-red-50 dark:bg-red-500/10 dark:border-red-500/20 px-4 py-3">
+          <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+          <button
+            onClick={() => setRetryKey((k) => k + 1)}
+            className="shrink-0 rounded-lg bg-red-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-600 transition"
+          >
+            Retry
+          </button>
         </div>
       )}
 

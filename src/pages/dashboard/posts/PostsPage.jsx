@@ -104,7 +104,8 @@ export default function PostsPage() {
           Filter by
         </div>
 
-        {/* Search */}
+        {/* Search */}\
+        
         <input
           type="text"
           value={search}
