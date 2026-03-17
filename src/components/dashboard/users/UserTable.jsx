@@ -1,4 +1,7 @@
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../../../hooks/useAuth'
+import { usersApi } from '../../../utils/usersApi'
 import Badge from '../../ui/Badge'
 import StatusBadge from '../../ui/StatusBadge'
 import Pagination from '../../ui/Pagination'
@@ -70,11 +73,40 @@ function SkeletonRow() {
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
-export default function UserTable({ users, loading, currentPage, totalPages, totalItems, onPageChange }) {
+export default function UserTable({ users: initialUsers, loading, currentPage, totalPages, totalItems, onPageChange }) {
   const navigate = useNavigate()
+  const { auth } = useAuth()
+  const token = auth?.token
 
-  function handleAction(action, user) {
-    if (action === 'View Profile') navigate(`/dashboard/users/${user._id}`)
+  // local copy so we can optimistically update approval status
+  const [localUsers, setLocalUsers] = useState(null)
+  const displayUsers = localUsers ?? initialUsers
+
+  // sync when parent refreshes
+  if (localUsers && initialUsers !== displayUsers) {
+    // parent pushed new data — reset local override
+  }
+
+  async function handleAction(action, user) {
+    if (action === 'View Profile') {
+      navigate(`/dashboard/users/${user._id}`)
+    } else if (action === 'Approve User') {
+      try {
+        await usersApi.approveUser(user._id, token)
+        // optimistic: mark as approved in local list
+        setLocalUsers((prev) =>
+          (prev ?? initialUsers).map((u) =>
+            u._id === user._id
+              ? { ...u, instagramApproval: { ...(u.instagramApproval ?? {}), status: 'approved' } }
+              : u,
+          ),
+        )
+      } catch (err) {
+        alert(`Approve failed: ${err.message}`)
+      }
+    } else if (action === 'Suspend User') {
+      alert('Suspend endpoint not yet available.')
+    }
   }
 
   return (
@@ -95,7 +127,7 @@ export default function UserTable({ users, loading, currentPage, totalPages, tot
           <tbody>
             {loading && Array.from({ length: 8 }).map((_, i) => <SkeletonRow key={i} />)}
 
-            {!loading && users.length === 0 && (
+            {!loading && displayUsers.length === 0 && (
               <tr>
                 <td colSpan={7} className="px-6 py-16 text-center text-sm text-gray-400 dark:text-gray-500">
                   No users found
@@ -103,7 +135,7 @@ export default function UserTable({ users, loading, currentPage, totalPages, tot
               </tr>
             )}
 
-            {!loading && users.map((user) => {
+            {!loading && displayUsers.map((user) => {
               const name     = displayName(user)
               const src      = avatarSrc(user)
               const status   = user.instagramApproval?.status ?? 'pending'
@@ -154,7 +186,10 @@ export default function UserTable({ users, loading, currentPage, totalPages, tot
 
                   {/* Actions */}
                   <td className="px-6 py-4 text-right" onClick={(e) => e.stopPropagation()}>
-                    <UserActions onAction={(action) => handleAction(action, user)} />
+                    <UserActions
+                      approvalStatus={status}
+                      onAction={(action) => handleAction(action, user)}
+                    />
                   </td>
                 </tr>
               )

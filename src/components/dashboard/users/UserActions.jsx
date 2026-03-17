@@ -1,9 +1,15 @@
 import { useState, useRef, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 
-const ACTIONS = ['View Profile', 'Edit User', 'Suspend User', 'Delete User']
+export default function UserActions({ onAction, approvalStatus }) {
+  const isApproved = approvalStatus === 'approved'
 
-export default function UserActions({ onAction }) {
+  const ACTIONS = [
+    'View Profile',
+    ...(!isApproved ? ['Approve User'] : []),
+    ...(isApproved  ? ['Suspend User'] : []),
+    'Delete User',
+  ]
   const [open, setOpen]       = useState(false)
   const [dropPos, setDropPos] = useState({ top: 0, right: 0 })
   const btnRef      = useRef(null)
@@ -55,7 +61,10 @@ export default function UserActions({ onAction }) {
               key={action}
               onClick={() => { onAction?.(action); setOpen(false) }}
               className={`w-full px-4 py-2 text-left text-sm transition hover:bg-gray-50 dark:hover:bg-gray-800 ${
-                action === 'Delete User' ? 'text-red-500' : 'text-gray-700 dark:text-gray-200'
+                action === 'Delete User'   ? 'text-red-500' :
+                action === 'Approve User'  ? 'text-green-600 dark:text-green-400 font-medium' :
+                action === 'Suspend User'  ? 'text-amber-500 dark:text-amber-400' :
+                'text-gray-700 dark:text-gray-200'
               }`}
             >
               {action}
