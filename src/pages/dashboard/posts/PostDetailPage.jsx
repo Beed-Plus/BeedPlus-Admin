@@ -132,17 +132,15 @@ export default function PostDetailPage() {
 
   console.log("POST", post)
 
-  // Only fetch if we didn't receive post via navigation stateda
+  // Only fetch if we didn't receive post via navigation state
   useEffect(() => {
     if (post) return
     let cancelled = false
     setLoading(true)
-    instagramApi.getAllSubmittedMediaForAdmin(token)
+    instagramApi.getMediaByIdForAdmin(id, token)
       .then((res) => {
         if (cancelled) return
-        const all = Array.isArray(res) ? res : []
-        const found = all.find((p) => p._id === id)
-        if (found) setPost(found)
+        if (res?._id) setPost(res)
         else setError('Post not found')
       })
       .catch((err) => {

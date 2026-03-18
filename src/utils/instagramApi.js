@@ -19,6 +19,10 @@ export const instagramApi = {
   getSubmittedMedia: (id, token) =>
     apiFetch(`${IG}/submitted-media/${id}`, { token }),
 
+  /** GET /api/instagram/admin/media/:id  (admin) — full data including dailyInsights */
+  getMediaByIdForAdmin: (id, token) =>
+    apiFetch(`${IG}/admin/media/${id}`, { token }),
+
   /** GET /api/instagram/daily-top-100  (public) */
   getDailyTop100: () =>
     apiFetch(`${IG}/daily-top-100`),
