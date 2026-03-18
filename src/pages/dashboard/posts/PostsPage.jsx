@@ -17,6 +17,7 @@ export default function PostsPage() {
   const [loading, setLoading]   = useState(true)
   const [error, setError]       = useState(null)
   const [page, setPage]         = useState(1)
+  const [retryKey, setRetryKey] = useState(0)
 
   // Filters
   const [search, setSearch]         = useState('')
@@ -25,20 +26,36 @@ export default function PostsPage() {
 
   useEffect(() => {
     let cancelled = false
-    setLoading(true)
-    setError(null)
-    instagramApi.getAllSubmittedMediaForAdmin(token)
-      .then((res) => {
-        if (!cancelled) setAllPosts(Array.isArray(res) ? res : [])
-      })
-      .catch((err) => {
-        if (!cancelled) setError(err.message ?? 'Failed to load posts')
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false)
-      })
+
+    async function load() {
+      setLoading(true)
+      setError(null)
+
+      let lastErr = null
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        try {
+          const res = await instagramApi.getAllSubmittedMediaForAdmin(token)
+          if (cancelled) return
+          setAllPosts(Array.isArray(res) ? res : [])
+          setLoading(false)
+          return
+        } catch (err) {
+          if (cancelled) return
+          lastErr = err
+          if (attempt < 3) {
+            await new Promise((r) => setTimeout(r, attempt * 1000))
+            if (cancelled) return
+          }
+        }
+      }
+
+      setError(lastErr?.message ?? 'Failed to load posts')
+      setLoading(false)
+    }
+
+    load()
     return () => { cancelled = true }
-  }, [token])
+  }, [token, retryKey])
 
   // Unique categories from all posts
   const categories = useMemo(() => {
@@ -139,8 +156,14 @@ export default function PostsPage() {
 
       {/* Error */}
       {error && (
-        <div className="rounded-2xl border border-red-100 bg-red-50 px-5 py-4 text-sm text-red-500">
-          {error}
+        <div className="flex items-center justify-between gap-4 rounded-xl border border-red-100 bg-red-50 dark:bg-red-500/10 dark:border-red-500/20 px-4 py-3">
+          <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+          <button
+            onClick={() => setRetryKey((k) => k + 1)}
+            className="shrink-0 rounded-lg bg-red-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-600 transition"
+          >
+            Retry
+          </button>
         </div>
       )}
 
