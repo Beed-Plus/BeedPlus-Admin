@@ -203,6 +203,19 @@ export default function PostRankingsPage() {
 
   const totalPosts = allRankings.length
 
+  // Country-filtered counts per tab (for chips)
+  const filteredAllCount = filterCountry
+    ? allRankings.filter((r) => r.userData?.country === filterCountry).length
+    : allRankings.length
+  const filteredCatCounts = categories.map((cat) =>
+    filterCountry
+      ? (cat.rankings ?? []).filter((r) => r.userData?.country === filterCountry).length
+      : (cat.rankings?.length ?? 0)
+  )
+  const countryTotal = filterCountry
+    ? allRankings.filter((r) => r.userData?.country === filterCountry).length
+    : allRankings.length
+
   const availableDates = allDays.map((d) => toInputDate(d.date)).filter(Boolean)
 
   // Close calendar on outside click (but not when clicking the trigger button itself)
@@ -294,19 +307,39 @@ export default function PostRankingsPage() {
           <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">Total Ranked Posts</p>
           <p className="mt-1 text-2xl font-black text-orange-500">{loading ? '...' : fmt(totalPosts)}</p>
         </div>
-        <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 shadow-sm sm:col-span-1 col-span-2 flex flex-col gap-1.5">
-          <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">Filter by Country</p>
-          <select
-            value={filterCountry}
-            onChange={(e) => { setFilterCountry(e.target.value); setPage(1) }}
-            disabled={loading || availableCountries.length === 0}
-            className="mt-1 w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-1.5 text-sm text-gray-700 dark:text-gray-200 outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition cursor-pointer disabled:opacity-40"
-          >
-            <option value="">All Countries</option>
-            {availableCountries.map((c) => (
-              <option key={c} value={c}>{c}</option>
-            ))}
-          </select>
+        <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 shadow-sm sm:col-span-1 col-span-2">
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">Country</p>
+            {filterCountry && (
+              <button
+                onClick={() => { setFilterCountry(''); setPage(1) }}
+                className="text-[11px] font-semibold text-orange-500 hover:text-orange-600 transition"
+              >
+                Clear
+              </button>
+            )}
+          </div>
+          <div className="flex items-end justify-between gap-3">
+            <div>
+              <p className="text-2xl font-black text-gray-900 dark:text-white">
+                {loading ? '...' : filterCountry ? countryTotal : availableCountries.length}
+              </p>
+              <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+                {filterCountry ? 'posts matched' : 'countries'}
+              </p>
+            </div>
+            <select
+              value={filterCountry}
+              onChange={(e) => { setFilterCountry(e.target.value); setPage(1) }}
+              disabled={loading || availableCountries.length === 0}
+              className="flex-1 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-3 py-1.5 text-sm text-gray-700 dark:text-gray-200 outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition cursor-pointer disabled:opacity-40"
+            >
+              <option value="">All Countries</option>
+              {availableCountries.map((c) => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
 
@@ -336,7 +369,7 @@ export default function PostRankingsPage() {
                 <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${
                   activeTab === 0 ? 'bg-orange-50 text-orange-500' : 'bg-gray-100 dark:bg-gray-800 text-gray-400'
                 }`}>
-                  {allRankings.length}
+                  {filteredAllCount}
                 </span>
               </button>
 
@@ -355,7 +388,7 @@ export default function PostRankingsPage() {
                   <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${
                     idx + 1 === activeTab ? 'bg-orange-50 text-orange-500' : 'bg-gray-100 dark:bg-gray-800 text-gray-400'
                   }`}>
-                    {cat.rankings?.length ?? 0}
+                    {filteredCatCounts[idx]}
                   </span>
                 </button>
               ))}
