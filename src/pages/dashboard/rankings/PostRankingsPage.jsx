@@ -137,6 +137,7 @@ export default function PostRankingsPage() {
   const [activeTab, setActiveTab]   = useState(0)        // 0 = All, 1+ = category idx
   const [page, setPage]             = useState(1)
   const [calendarOpen, setCalendarOpen] = useState(false)
+  const [filterCountry, setFilterCountry] = useState('')
 
   console.log("data", data)
   
@@ -184,9 +185,19 @@ export default function PostRankingsPage() {
     .flatMap((c) => c.rankings)
     .sort((a, b) => (a.rank ?? Infinity) - (b.rank ?? Infinity))
 
-  // What the current tab shows
+  // Unique countries from current day's rankings
+  const availableCountries = useMemo(() => {
+    const set = new Set()
+    allRankings.forEach((r) => { if (r.userData?.country) set.add(r.userData.country) })
+    return [...set].sort()
+  }, [allRankings])
+
+  // What the current tab shows, filtered by country
   const isAllTab = activeTab === 0
-  const rankings = isAllTab ? allRankings : (categories[activeTab - 1]?.rankings ?? [])
+  const tabRankings = isAllTab ? allRankings : (categories[activeTab - 1]?.rankings ?? [])
+  const rankings = filterCountry
+    ? tabRankings.filter((r) => r.userData?.country === filterCountry)
+    : tabRankings
   const totalPages = Math.ceil(rankings.length / PAGE_SIZE)
   const paged      = rankings
 
@@ -283,11 +294,19 @@ export default function PostRankingsPage() {
           <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">Total Ranked Posts</p>
           <p className="mt-1 text-2xl font-black text-orange-500">{loading ? '...' : fmt(totalPosts)}</p>
         </div>
-        <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 shadow-sm sm:col-span-1 col-span-2">
-          <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">Active Category</p>
-          <p className="mt-1 text-2xl font-black text-gray-900 dark:text-white truncate">
-            {loading ? '...' : (isAllTab ? 'All' : (categories[activeTab - 1]?.category ?? '—'))}
-          </p>
+        <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 shadow-sm sm:col-span-1 col-span-2 flex flex-col gap-1.5">
+          <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">Filter by Country</p>
+          <select
+            value={filterCountry}
+            onChange={(e) => { setFilterCountry(e.target.value); setPage(1) }}
+            disabled={loading || availableCountries.length === 0}
+            className="mt-1 w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-1.5 text-sm text-gray-700 dark:text-gray-200 outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition cursor-pointer disabled:opacity-40"
+          >
+            <option value="">All Countries</option>
+            {availableCountries.map((c) => (
+              <option key={c} value={c}>{c}</option>
+            ))}
+          </select>
         </div>
       </div>
 
@@ -369,7 +388,7 @@ export default function PostRankingsPage() {
                 )}
 
                 {!loading && paged.map((item, idx) => {
-                  const rank       = item.rank ?? ((page - 1) * PAGE_SIZE + idx + 1)
+                  const rank       = (!isAllTab || filterCountry) ? idx + 1 : (item.rank ?? idx + 1)
                   const caption    = item.media?.caption
                   const thumb      = item.media?.thumbnailUrl
                   const permalink  = item.media?.permalink
