@@ -5,9 +5,7 @@ import PostTable from '../../../components/dashboard/posts/PostTable'
 
 const PAGE_SIZE = 15
 
-const MEDIA_TYPES = ['IMAGE', 'VIDEO', 'CAROUSEL_ALBUM', 'REELS']
-
-const SELECT = 'rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-600 dark:text-gray-300 outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition cursor-pointer'
+const SELECT ='rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-600 dark:text-gray-300 outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition cursor-pointer'
 
 export default function PostsPage() {
   const { auth } = useAuth()
@@ -22,9 +20,9 @@ export default function PostsPage() {
   console.log("all posts", allPosts)
 
   // Filters
-  const [search, setSearch]         = useState('')
-  const [filterCategory, setCategory] = useState('')
-  const [filterType, setType]       = useState('')
+  const [search, setSearch]             = useState('')
+  const [filterCategory, setCategory]   = useState('')
+  const [filterSubCategory, setSubCategory] = useState('')
 
   useEffect(() => {
     let cancelled = false
@@ -69,15 +67,32 @@ export default function PostsPage() {
     return [...set].sort()
   }, [allPosts])
 
+  // Unique sub-categories (filtered by active category if set)
+  const subCategories = useMemo(() => {
+    const set = new Set()
+    allPosts.forEach((p) => {
+      if (filterCategory) {
+        const cats = Array.isArray(p.category) ? p.category : [p.category].filter(Boolean)
+        if (!cats.includes(filterCategory)) return
+      }
+      const sub = p.subCategory?.name ?? p.subCategory
+      if (sub) set.add(sub)
+    })
+    return [...set].sort()
+  }, [allPosts, filterCategory])
+
   // Filtered list (latest first)
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
     return allPosts
       .filter((p) => {
-        if (filterType && p.media?.mediaType?.toUpperCase() !== filterType) return false
         if (filterCategory) {
           const cats = Array.isArray(p.category) ? p.category : [p.category].filter(Boolean)
           if (!cats.includes(filterCategory)) return false
+        }
+        if (filterSubCategory) {
+          const sub = p.subCategory?.name ?? p.subCategory
+          if (sub !== filterSubCategory) return false
         }
         if (q) {
           const username = (p.instagramUsername ?? p.userData?.username ?? '').toLowerCase()
@@ -86,7 +101,7 @@ export default function PostsPage() {
         return true
       })
       .sort((a, b) => new Date(b.createdAt ?? 0) - new Date(a.createdAt ?? 0))
-  }, [allPosts, search, filterCategory, filterType])
+  }, [allPosts, search, filterCategory, filterSubCategory])
 
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE)
   const paged = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
@@ -95,7 +110,7 @@ export default function PostsPage() {
     return (val) => { setter(val); setPage(1) }
   }
 
-  const anyFilter = search || filterCategory || filterType
+  const anyFilter = search || filterCategory || filterSubCategory
 
   return (
     <div className="flex flex-col gap-6">
@@ -114,16 +129,7 @@ export default function PostsPage() {
 
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-3">
-        {/* Filter icon */}
-        <div className="flex items-center gap-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm font-medium text-gray-500 dark:text-gray-400">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L13 13.414V19a1 1 0 01-.553.894l-4 2A1 1 0 017 21v-7.586L3.293 6.707A1 1 0 013 6V4z" />
-          </svg>
-          Filter by
-        </div>
-
-        {/* Search */}\
-        
+        {/* Search */}
         <input
           type="text"
           autoComplete="off"
@@ -134,21 +140,33 @@ export default function PostsPage() {
         />
 
         {/* Category */}
-        <select value={filterCategory} onChange={(e) => handleFilter(setCategory)(e.target.value)} className={SELECT}>
+        <select
+          value={filterCategory}
+          onChange={(e) => { handleFilter(setCategory)(e.target.value); setSubCategory('') }}
+          className={SELECT}
+        >
           <option value="">All Categories</option>
           {categories.map((c) => <option key={c} value={c}>{c}</option>)}
         </select>
 
-        {/* Media type */}
-        <select value={filterType} onChange={(e) => handleFilter(setType)(e.target.value)} className={SELECT}>
-          <option value="">All Types</option>
-          {MEDIA_TYPES.map((t) => <option key={t} value={t}>{t.charAt(0) + t.slice(1).toLowerCase().replace('_', ' ')}</option>)}
-        </select>
+        {/* Sub-Category */}
+        <input
+          type="text"
+          list="subcategory-list"
+          autoComplete="off"
+          value={filterSubCategory}
+          onChange={(e) => handleFilter(setSubCategory)(e.target.value)}
+          placeholder="Sub-Category…"
+          className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-600 dark:text-gray-300 outline-none placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition w-44"
+        />
+        <datalist id="subcategory-list">
+          {subCategories.map((s) => <option key={s} value={s} />)}
+        </datalist>
 
         {/* Clear */}
         {anyFilter && (
           <button
-            onClick={() => { setSearch(''); setCategory(''); setType(''); setPage(1) }}
+            onClick={() => { setSearch(''); setCategory(''); setSubCategory(''); setPage(1) }}
             className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-400 dark:text-gray-500 hover:border-red-200 hover:text-red-400 transition"
           >
             Clear

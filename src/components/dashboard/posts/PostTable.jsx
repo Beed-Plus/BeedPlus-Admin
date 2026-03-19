@@ -126,8 +126,13 @@ export default function PostTable({ posts, loading, currentPage, totalItems, onP
                         <p className="text-sm font-semibold text-gray-800 dark:text-gray-100 leading-snug">
                           {truncate(caption)}
                         </p>
-                        <div className="mt-0.5">
+                        <div className="mt-0.5 flex items-center gap-1.5 flex-wrap">
                           <MediaTypeBadge type={type} />
+                          {country && (
+                            <span className="inline-flex items-center rounded-full bg-gray-100 dark:bg-gray-800 px-2 py-0.5 text-[11px] font-medium text-gray-500 dark:text-gray-400">
+                              {country}
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>
