@@ -66,7 +66,7 @@ function SkeletonRow() {
       </td>
       <td className="px-6 py-4"><div className="h-3 w-24 rounded bg-gray-100 dark:bg-gray-800 animate-pulse" /></td>
       <td className="px-6 py-4"><div className="h-5 w-20 rounded-full bg-gray-100 dark:bg-gray-800 animate-pulse" /></td>
-      <td className="px-6 py-4"><div className="h-5 w-14 rounded-full bg-gray-100 dark:bg-gray-800 animate-pulse" /></td>
+      <td className="px-6 py-4"><div className="h-5 w-16 rounded-full bg-gray-100 dark:bg-gray-800 animate-pulse" /></td>
       <td className="px-6 py-4"><div className="h-3 w-20 rounded bg-gray-100 dark:bg-gray-800 animate-pulse" /></td>
       <td className="px-6 py-4" />
     </tr>
@@ -87,8 +87,7 @@ export default function PostTable({ posts, loading, currentPage, totalItems, onP
               <th className={COL}>Post</th>
               <th className={COL}>Creator</th>
               <th className={COL}>Category</th>
-              {/* <th className={COL}>Beed+ Score</th> */}
-              {/* <th className={COL}>Rank</th> */}
+              <th className={COL}>Sub-Category</th>
               <th className={COL}>Submitted</th>
               <th className={`${COL} text-right`}>Actions</th>
             </tr>
@@ -111,6 +110,7 @@ export default function PostTable({ posts, loading, currentPage, totalItems, onP
               const username  = post.instagramUsername || post.userData?.username
               const country   = post.userData?.country
               const cats      = Array.isArray(post.category) ? post.category : [post.category].filter(Boolean)
+              const subCat    = post.subCategory?.name ?? post.subCategory ?? null
 
               return (
                 <tr
@@ -159,11 +159,13 @@ export default function PostTable({ posts, loading, currentPage, totalItems, onP
                     </div>
                   </td>
 
-                  {/* Beed+ Score */}
-                  {/* <td className="px-6 py-4">{fmtScore(post.beedPlusScore)}</td> */}
-
-                  {/* Rank */}
-                  {/* <td className="px-6 py-4">{fmtRank(post.currentRank)}</td> */}
+                  {/* Sub-Category */}
+                  <td className="px-6 py-4">
+                    {subCat
+                      ? <span className="inline-flex items-center rounded-full bg-blue-50 dark:bg-blue-500/10 px-2.5 py-0.5 text-xs font-medium text-blue-600 dark:text-blue-400">{subCat}</span>
+                      : <span className="text-gray-300 dark:text-gray-600">—</span>
+                    }
+                  </td>
 
                   {/* Submitted */}
                   <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">{fmtDate(post.createdAt)}</td>

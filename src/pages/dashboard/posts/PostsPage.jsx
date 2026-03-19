@@ -19,6 +19,8 @@ export default function PostsPage() {
   const [page, setPage]         = useState(1)
   const [retryKey, setRetryKey] = useState(0)
 
+  console.log("all posts", allPosts)
+
   // Filters
   const [search, setSearch]         = useState('')
   const [filterCategory, setCategory] = useState('')
