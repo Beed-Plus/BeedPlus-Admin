@@ -1,4 +1,7 @@
+import { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
+
+const PAGE_SIZE = 5
 
 function fmt(n) {
   if (!n && n !== 0) return '—'
@@ -34,10 +37,63 @@ function InsightCard({ label, value, sub }) {
   )
 }
 
+function TablePager({ page, total, onChange }) {
+  const totalPages = Math.ceil(total / PAGE_SIZE)
+  if (totalPages <= 1) return null
+  const from = (page - 1) * PAGE_SIZE + 1
+  const to   = Math.min(page * PAGE_SIZE, total)
+
+  return (
+    <div className="flex items-center justify-between border-t border-gray-100 dark:border-gray-800 px-6 py-3">
+      <p className="text-sm text-gray-400 dark:text-gray-500">
+        <span className="font-bold text-gray-700 dark:text-gray-300">{from}–{to}</span>
+        {' '}of{' '}
+        <span className="font-bold text-gray-700 dark:text-gray-300">{total}</span>
+      </p>
+      <div className="flex items-center gap-1">
+        <button
+          onClick={() => onChange(page - 1)}
+          disabled={page === 1}
+          className="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 dark:border-gray-700 text-gray-400 hover:border-orange-300 hover:text-orange-500 transition disabled:opacity-40 disabled:cursor-not-allowed"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+        {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+          <button
+            key={p}
+            onClick={() => onChange(p)}
+            className={`flex h-8 w-8 items-center justify-center rounded-lg text-sm font-medium transition ${
+              p === page
+                ? 'bg-orange-500 text-white'
+                : 'border border-gray-200 dark:border-gray-700 text-gray-500 hover:border-orange-300 hover:text-orange-500'
+            }`}
+          >
+            {p}
+          </button>
+        ))}
+        <button
+          onClick={() => onChange(page + 1)}
+          disabled={page === totalPages}
+          className="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 dark:border-gray-700 text-gray-400 hover:border-orange-300 hover:text-orange-500 transition disabled:opacity-40 disabled:cursor-not-allowed"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  )
+}
+
 export default function PostRankingDetailPage() {
   const navigate = useNavigate()
   const { state } = useLocation()
   const item = state?.post
+
+  const [dailyPage, setDailyPage]    = useState(1)
+  const [archivedPage, setArchivedPage] = useState(1)
 
   console.log("post item", item)
 
@@ -60,36 +116,15 @@ export default function PostRankingDetailPage() {
     media = {}, userData = {},
   } = item
 
-  const { archivedLifetimes = [], ...dailyInsights } = insights
+  const { archivedLifetimes = [], dailyInsights = [] } = insights
 
   const cats = Array.isArray(category) ? category : [category].filter(Boolean)
 
-  // Collect all insight keys (excluding archivedLifetimes)
-  const insightEntries = Object.entries(dailyInsights).filter(([, v]) => v !== undefined && v !== null)
+  const dailyRows    = [...dailyInsights].reverse()
+  const archivedRows = [...archivedLifetimes].reverse()
 
-  // Known labels for common insight keys
-  const INSIGHT_LABELS = {
-    daily_views:             { label: 'Daily Views' },
-    daily_totalInteractions: { label: 'Daily Interactions' },
-    daily_likes:             { label: 'Daily Likes' },
-    daily_comments:          { label: 'Daily Comments' },
-    daily_shares:            { label: 'Daily Shares' },
-    daily_saves:             { label: 'Daily Saves' },
-    daily_reach:             { label: 'Daily Reach' },
-    daily_impressions:       { label: 'Daily Impressions' },
-    views:                   { label: 'Total Views' },
-    totalInteractions:       { label: 'Total Interactions' },
-    likes:                   { label: 'Likes' },
-    comments:                { label: 'Comments' },
-    shares:                  { label: 'Shares' },
-    saves:                   { label: 'Saves' },
-    reach:                   { label: 'Reach' },
-    impressions:             { label: 'Impressions' },
-  }
-
-  function labelFor(key) {
-    return INSIGHT_LABELS[key]?.label ?? key.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
-  }
+  const dailyPage_rows    = dailyRows.slice((dailyPage - 1) * PAGE_SIZE, dailyPage * PAGE_SIZE)
+  const archivedPage_rows = archivedRows.slice((archivedPage - 1) * PAGE_SIZE, archivedPage * PAGE_SIZE)
 
   return (
     <div className="flex flex-col gap-6">
@@ -184,54 +219,78 @@ export default function PostRankingDetailPage() {
       </div>
 
       {/* Daily insights */}
-      {insightEntries.length > 0 && (
-        <>
-          <h2 className="text-base font-bold text-gray-900 dark:text-white">Daily Insights</h2>
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-            {insightEntries.map(([key, value]) => (
-              <InsightCard key={key} label={labelFor(key)} value={fmt(value)} />
-            ))}
+      <h2 className="text-base font-bold text-gray-900 dark:text-white">Daily Insights</h2>
+      <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm overflow-hidden">
+        {dailyRows.length === 0 ? (
+          <div className="px-6 py-10 text-center text-sm text-gray-400">
+            No daily insights available for this post.
           </div>
-        </>
-      )}
-
-      {insightEntries.length === 0 && (
-        <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 px-6 py-10 text-center text-sm text-gray-400 shadow-sm">
-          No daily insights available for this post.
-        </div>
-      )}
+        ) : (
+          <>
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[700px]">
+                <thead>
+                  <tr className="border-b border-gray-100 dark:border-gray-800 bg-gray-50/60 dark:bg-gray-800/50">
+                    {['Date', 'Views', 'Reach', 'Interactions', 'Likes', 'Comments', 'Shares', 'Saved'].map((h) => (
+                      <th key={h} className="px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-widest text-gray-400">{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {dailyPage_rows.map((row, i) => (
+                    <tr key={i} className="border-b border-gray-50 dark:border-gray-800/50 last:border-0">
+                      <td className="px-5 py-3.5 text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">{fmtDate(row.date)}</td>
+                      <td className="px-5 py-3.5 text-sm text-gray-600 dark:text-gray-400">{fmt(row.views)}</td>
+                      <td className="px-5 py-3.5 text-sm text-gray-600 dark:text-gray-400">{fmt(row.reach)}</td>
+                      <td className="px-5 py-3.5 text-sm text-gray-600 dark:text-gray-400">{fmt(row.totalInteractions)}</td>
+                      <td className="px-5 py-3.5 text-sm text-gray-600 dark:text-gray-400">{fmt(row.likes)}</td>
+                      <td className="px-5 py-3.5 text-sm text-gray-600 dark:text-gray-400">{fmt(row.commentsCount ?? row.comments)}</td>
+                      <td className="px-5 py-3.5 text-sm text-gray-600 dark:text-gray-400">{fmt(row.shares)}</td>
+                      <td className="px-5 py-3.5 text-sm text-gray-600 dark:text-gray-400">{fmt(row.saved)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <TablePager page={dailyPage} total={dailyRows.length} onChange={setDailyPage} />
+          </>
+        )}
+      </div>
 
       {/* Chart */}
       <h2 className="text-base font-bold text-gray-900 dark:text-white">Chart</h2>
       <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm overflow-hidden">
-        {archivedLifetimes.length === 0 ? (
+        {archivedRows.length === 0 ? (
           <div className="px-6 py-10 text-center text-sm text-gray-400">
             No archived lifetime data available.
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[700px]">
-              <thead>
-                <tr className="border-b border-gray-100 dark:border-gray-800 bg-gray-50/60 dark:bg-gray-800/50">
-                  {['Date', 'Views', 'Reach', 'Interactions', 'Shares', 'Saved'].map((h) => (
-                    <th key={h} className="px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-widest text-gray-400">{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {archivedLifetimes.map((row, i) => (
-                  <tr key={i} className="border-b border-gray-50 dark:border-gray-800/50 last:border-0">
-                    <td className="px-5 py-3.5 text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">{fmtDate(row.createdAt)}</td>
-                    <td className="px-5 py-3.5 text-sm text-gray-600 dark:text-gray-400">{fmt(row.views)}</td>
-                    <td className="px-5 py-3.5 text-sm text-gray-600 dark:text-gray-400">{fmt(row.reach)}</td>
-                    <td className="px-5 py-3.5 text-sm text-gray-600 dark:text-gray-400">{fmt(row.totalInteractions)}</td>
-                    <td className="px-5 py-3.5 text-sm text-gray-600 dark:text-gray-400">{fmt(row.shares)}</td>
-                    <td className="px-5 py-3.5 text-sm text-gray-600 dark:text-gray-400">{fmt(row.saved)}</td>
+          <>
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[700px]">
+                <thead>
+                  <tr className="border-b border-gray-100 dark:border-gray-800 bg-gray-50/60 dark:bg-gray-800/50">
+                    {['Date', 'Views', 'Reach', 'Interactions', 'Shares', 'Saved'].map((h) => (
+                      <th key={h} className="px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-widest text-gray-400">{h}</th>
+                    ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {archivedPage_rows.map((row, i) => (
+                    <tr key={i} className="border-b border-gray-50 dark:border-gray-800/50 last:border-0">
+                      <td className="px-5 py-3.5 text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">{fmtDate(row.datetime ?? row.createdAt)}</td>
+                      <td className="px-5 py-3.5 text-sm text-gray-600 dark:text-gray-400">{fmt(row.views)}</td>
+                      <td className="px-5 py-3.5 text-sm text-gray-600 dark:text-gray-400">{fmt(row.reach)}</td>
+                      <td className="px-5 py-3.5 text-sm text-gray-600 dark:text-gray-400">{fmt(row.totalInteractions)}</td>
+                      <td className="px-5 py-3.5 text-sm text-gray-600 dark:text-gray-400">{fmt(row.shares)}</td>
+                      <td className="px-5 py-3.5 text-sm text-gray-600 dark:text-gray-400">{fmt(row.saved)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <TablePager page={archivedPage} total={archivedRows.length} onChange={setArchivedPage} />
+          </>
         )}
       </div>
     </div>
