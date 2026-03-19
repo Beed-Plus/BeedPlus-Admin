@@ -307,40 +307,65 @@ export default function PostRankingsPage() {
 
       {/* Stat strip */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-        <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 shadow-sm">
-          <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">Categories</p>
-          <p className="mt-1 text-2xl font-black text-gray-900 dark:text-white">{loading ? '...' : categories.length}</p>
-        </div>
-        <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 shadow-sm">
-          <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">Total Countries</p>
-          <p className="mt-1 text-2xl font-black text-gray-900 dark:text-white">{loading ? '...' : availableCountries.length}</p>
-        </div>
-        <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 shadow-sm">
-          <div className="flex items-center justify-between mb-3">
-            <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">Total Post</p>
-            {filterCountry && (
-              <button
-                onClick={() => { setFilterCountry(''); setPage(1) }}
-                className="text-[11px] font-semibold text-orange-500 hover:text-orange-600 transition"
-              >
-                Clear
-              </button>
-            )}
+
+        {/* Categories card */}
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-violet-500 to-violet-600 p-5 shadow-lg shadow-violet-200 dark:shadow-violet-900/30">
+          <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-white/10" />
+          <div className="absolute -right-1 bottom-3 h-12 w-12 rounded-full bg-white/5" />
+          <div className="relative">
+            <div className="mb-3 inline-flex h-9 w-9 items-center justify-center rounded-xl bg-white/20">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4.5 w-4.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+              </svg>
+            </div>
+            <p className="text-3xl font-black text-white">{loading ? '…' : categories.length}</p>
+            <p className="mt-1 text-xs font-semibold text-violet-200 uppercase tracking-widest">Categories</p>
           </div>
-          <div className="flex items-end justify-between gap-3">
-            <div>
-              <p className="text-2xl font-black text-gray-900 dark:text-white">
-                {loading ? '...' : filterCountry ? countryTotal : totalPosts}
-              </p>
-              <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
-                {filterCountry ? 'posts' : 'total posts'}
-              </p>
+        </div>
+
+        {/* Total Countries card */}
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-sky-500 to-sky-600 p-5 shadow-lg shadow-sky-200 dark:shadow-sky-900/30">
+          <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-white/10" />
+          <div className="absolute -right-1 bottom-3 h-12 w-12 rounded-full bg-white/5" />
+          <div className="relative">
+            <div className="mb-3 inline-flex h-9 w-9 items-center justify-center rounded-xl bg-white/20">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4.5 w-4.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 004 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <p className="text-3xl font-black text-white">{loading ? '…' : availableCountries.length}</p>
+            <p className="mt-1 text-xs font-semibold text-sky-200 uppercase tracking-widest">Countries</p>
+          </div>
+        </div>
+
+        {/* Country filter card */}
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-orange-500 to-orange-600 p-5 shadow-lg shadow-orange-200 dark:shadow-orange-900/30">
+          <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-white/10" />
+          <div className="absolute -right-1 bottom-3 h-12 w-12 rounded-full bg-white/5" />
+          <div className="relative flex flex-col h-full gap-3">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-3xl font-black text-white">
+                  {loading ? '…' : filterCountry ? countryTotal : totalPosts}
+                </p>
+                <p className="mt-0.5 text-xs font-semibold text-orange-200 uppercase tracking-widest">
+                  {filterCountry ? 'posts matched' : 'total posts'}
+                </p>
+              </div>
+              {filterCountry && (
+                <button
+                  onClick={() => { setFilterCountry(''); setPage(1) }}
+                  className="rounded-lg bg-white/20 px-2.5 py-1 text-[11px] font-bold text-white hover:bg-white/30 transition"
+                >
+                  Clear
+                </button>
+              )}
             </div>
             <select
               value={filterCountry}
               onChange={(e) => { setFilterCountry(e.target.value); setPage(1) }}
               disabled={loading || availableCountries.length === 0}
-              className="flex-1 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-3 py-1.5 text-sm text-gray-700 dark:text-gray-200 outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition cursor-pointer disabled:opacity-40"
+              className="w-full rounded-xl border-0 bg-white/20 px-3 py-2 text-xs font-semibold text-white placeholder-white/60 outline-none focus:bg-white/30 focus:ring-2 focus:ring-white/40 transition cursor-pointer disabled:opacity-40 [&>option]:text-gray-800 [&>option]:bg-white"
             >
               <option value="">All Countries</option>
               {availableCountries.map((c) => (
@@ -349,6 +374,7 @@ export default function PostRankingsPage() {
             </select>
           </div>
         </div>
+
       </div>
 
       {/* Error */}
