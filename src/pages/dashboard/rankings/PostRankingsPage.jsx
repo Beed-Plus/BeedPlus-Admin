@@ -186,7 +186,7 @@ export default function PostRankingsPage() {
   const isAllTab = activeTab === 0
   const rankings = isAllTab ? allRankings : (categories[activeTab - 1]?.rankings ?? [])
   const totalPages = Math.ceil(rankings.length / PAGE_SIZE)
-  const paged      = rankings.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+  const paged      = rankings
 
   const totalPosts = allRankings.length
 
@@ -466,45 +466,6 @@ export default function PostRankingsPage() {
             </table>
           </div>
 
-          {/* Pagination */}
-          {!loading && totalPages > 1 && (
-            <div className="flex items-center justify-between border-t border-gray-100 dark:border-gray-800 px-6 py-4">
-              <p className="text-sm text-gray-400 dark:text-gray-500">
-                Showing {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, rankings.length)} of {rankings.length}
-              </p>
-              <div className="flex items-center gap-1">
-                <button
-                  onClick={() => setPage((p) => p - 1)}
-                  disabled={page === 1}
-                  className="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 dark:border-gray-700 text-gray-400 dark:text-gray-500 transition hover:border-orange-300 hover:text-orange-500 disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                  </svg>
-                </button>
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-                  <button
-                    key={p}
-                    onClick={() => setPage(p)}
-                    className={`flex h-8 w-8 items-center justify-center rounded-lg text-sm font-medium transition ${
-                      p === page ? 'bg-orange-500 text-white' : 'border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:border-orange-300 hover:text-orange-500'
-                    }`}
-                  >
-                    {p}
-                  </button>
-                ))}
-                <button
-                  onClick={() => setPage((p) => p + 1)}
-                  disabled={page === totalPages}
-                  className="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 dark:border-gray-700 text-gray-400 dark:text-gray-500 transition hover:border-orange-300 hover:text-orange-500 disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-          )}
         </div>
       )}
     </div>
