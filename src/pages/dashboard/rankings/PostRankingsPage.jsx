@@ -151,10 +151,10 @@ export default function PostRankingsPage() {
 
     async function load() {
       try {
-        // Fetch latest rankings + all available dates in parallel
+        // Fetch latest rankings (critical) + available dates (non-critical) in parallel
         const [res, datesRes] = await Promise.all([
           instagramApi.getDailyTop100(),
-          instagramApi.getRankingDates(),
+          instagramApi.getRankingDates().catch(() => null),
         ])
         if (cancelled) return
         const rawRankings = res?.rankings ?? []
@@ -192,7 +192,6 @@ export default function PostRankingsPage() {
       setActiveTab(0)
       setPage(1)
     } catch (err) {
-      // silently ignore — calendar just won't switch
       console.error('Failed to load rankings for date:', err)
     } finally {
       setDateLoading(false)
