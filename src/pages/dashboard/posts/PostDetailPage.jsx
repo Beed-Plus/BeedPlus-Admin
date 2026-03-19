@@ -106,6 +106,8 @@ function PageSkeleton() {
   )
 }
 
+const PAGE_SIZE = 5
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export default function PostDetailPage() {
   const { id } = useParams()
@@ -114,11 +116,13 @@ export default function PostDetailPage() {
   const { auth } = useAuth()
   const token = auth?.token
 
-  const [post, setPost]       = useState(location.state?.post ?? null)
-  const [loading, setLoading] = useState(!location.state?.post)
+  const [post, setPost]       = useState(null)
+  const [loading, setLoading] = useState(true)
   const [error, setError]     = useState(null)
   const [dateRange, setDateRange]         = useState(undefined)
   const [pickerOpen, setPickerOpen]       = useState(false)
+  const [dailyPage, setDailyPage]         = useState(1)
+  const [archivedPage, setArchivedPage]   = useState(1)
   const pickerRef = useRef(null)
 
   useEffect(() => {
@@ -130,17 +134,14 @@ export default function PostDetailPage() {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [pickerOpen])
 
-  console.log("POST", post)
-
-  // Only fetch if we didn't receive post via navigation state
+  // Always fetch full data so dailyInsights (excluded from list endpoint) are included
   useEffect(() => {
-    if (post) return
     let cancelled = false
     setLoading(true)
     instagramApi.getMediaByIdForAdmin(id, token)
       .then((res) => {
         if (cancelled) return
-        if (res?._id) setPost(res)
+        if (res?.media?._id) setPost(res.media)
         else setError('Post not found')
       })
       .catch((err) => {
@@ -150,7 +151,7 @@ export default function PostDetailPage() {
         if (!cancelled) setLoading(false)
       })
     return () => { cancelled = true }
-  }, [id, token, post])
+  }, [id, token])
 
   if (loading) return <PageSkeleton />
 
@@ -193,6 +194,10 @@ export default function PostDetailPage() {
     .filter(([k, v]) => k.startsWith('daily_') && v !== undefined && v !== null)
     .map(([k, v]) => ({ key: k, label: DAILY_LABELS[k] ?? k.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()), value: v }))
 
+  const archivedRows     = [...(post.insights?.archivedLifetimes ?? [])].reverse()
+  const archivedPageRows = archivedRows.slice((archivedPage - 1) * PAGE_SIZE, archivedPage * PAGE_SIZE)
+  const totalArchivedPages = Math.ceil(archivedRows.length / PAGE_SIZE)
+
   const allDailyRows = [...(post.insights?.dailyInsights ?? [])].reverse()
   const filteredDailyRows = (() => {
     if (!dateRange?.from) return allDailyRows
@@ -203,6 +208,9 @@ export default function PostDetailPage() {
       return d >= from && d <= to
     })
   })()
+
+  const totalDailyPages  = Math.ceil(filteredDailyRows.length / PAGE_SIZE)
+  const pagedDailyRows   = filteredDailyRows.slice((dailyPage - 1) * PAGE_SIZE, dailyPage * PAGE_SIZE)
 
   const rangeAgg = dateRange?.from && filteredDailyRows.length > 0
     ? filteredDailyRows.reduce((acc, row) => ({
@@ -240,7 +248,7 @@ export default function PostDetailPage() {
                 : 'Filter by date range'}
               {dateRange?.from && (
                 <span
-                  onClick={(e) => { e.stopPropagation(); setDateRange(undefined) }}
+                  onClick={(e) => { e.stopPropagation(); setDateRange(undefined); setDailyPage(1) }}
                   className="ml-1 text-gray-400 hover:text-red-400 transition"
                 >✕</span>
               )}
@@ -252,6 +260,7 @@ export default function PostDetailPage() {
                   selected={dateRange}
                   onSelect={(range) => {
                     setDateRange(range)
+                    setDailyPage(1)
                     if (range?.from && range?.to && range.from.toDateString() !== range.to.toDateString()) setPickerOpen(false)
                   }}
                 />
@@ -450,31 +459,159 @@ export default function PostDetailPage() {
             No entries found for the selected date range.
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[700px]">
-              <thead>
-                <tr className="border-b border-gray-100 dark:border-gray-800 bg-gray-50/60 dark:bg-gray-800/50">
-                  {['Date', 'Views', 'Reach', 'Interactions', 'Likes', 'Comments', 'Shares', 'Saved'].map((h) => (
-                    <th key={h} className="px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-widest text-gray-400">{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {filteredDailyRows.map((row, i) => (
-                  <tr key={i} className="border-b border-gray-50 dark:border-gray-800/50 last:border-0 hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors">
-                    <td className="px-5 py-3.5 text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">{fmtDate(row.date)}</td>
-                    <td className="px-5 py-3.5 text-sm text-gray-700 dark:text-gray-300 font-medium">{fmt(row.views)}</td>
-                    <td className="px-5 py-3.5 text-sm text-gray-600 dark:text-gray-400">{fmt(row.reach)}</td>
-                    <td className="px-5 py-3.5 text-sm text-orange-500 font-semibold">{fmt(row.totalInteractions)}</td>
-                    <td className="px-5 py-3.5 text-sm text-gray-600 dark:text-gray-400">{fmt(row.likes)}</td>
-                    <td className="px-5 py-3.5 text-sm text-gray-600 dark:text-gray-400">{fmt(row.comments ?? row.commentsCount)}</td>
-                    <td className="px-5 py-3.5 text-sm text-gray-600 dark:text-gray-400">{fmt(row.shares)}</td>
-                    <td className="px-5 py-3.5 text-sm text-gray-600 dark:text-gray-400">{fmt(row.saved)}</td>
+          <>
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[700px]">
+                <thead>
+                  <tr className="border-b border-gray-100 dark:border-gray-800 bg-gray-50/60 dark:bg-gray-800/50">
+                    {['Date', 'Views', 'Reach', 'Interactions', 'Likes', 'Comments', 'Shares', 'Saved'].map((h) => (
+                      <th key={h} className="px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-widest text-gray-400">{h}</th>
+                    ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {pagedDailyRows.map((row, i) => (
+                    <tr key={i} className="border-b border-gray-50 dark:border-gray-800/50 last:border-0 hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors">
+                      <td className="px-5 py-3.5 text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">{fmtDate(row.date)}</td>
+                      <td className="px-5 py-3.5 text-sm text-gray-700 dark:text-gray-300 font-medium">{fmt(row.views)}</td>
+                      <td className="px-5 py-3.5 text-sm text-gray-600 dark:text-gray-400">{fmt(row.reach)}</td>
+                      <td className="px-5 py-3.5 text-sm text-orange-500 font-semibold">{fmt(row.totalInteractions)}</td>
+                      <td className="px-5 py-3.5 text-sm text-gray-600 dark:text-gray-400">{fmt(row.likes)}</td>
+                      <td className="px-5 py-3.5 text-sm text-gray-600 dark:text-gray-400">{fmt(row.comments ?? row.commentsCount)}</td>
+                      <td className="px-5 py-3.5 text-sm text-gray-600 dark:text-gray-400">{fmt(row.shares)}</td>
+                      <td className="px-5 py-3.5 text-sm text-gray-600 dark:text-gray-400">{fmt(row.saved)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {totalDailyPages > 1 && (
+              <div className="flex items-center justify-between border-t border-gray-100 dark:border-gray-800 px-6 py-3">
+                <p className="text-sm text-gray-400 dark:text-gray-500">
+                  <span className="font-bold text-gray-700 dark:text-gray-300">
+                    {(dailyPage - 1) * PAGE_SIZE + 1}–{Math.min(dailyPage * PAGE_SIZE, filteredDailyRows.length)}
+                  </span>
+                  {' '}of{' '}
+                  <span className="font-bold text-gray-700 dark:text-gray-300">{filteredDailyRows.length}</span>
+                </p>
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => setDailyPage((p) => p - 1)}
+                    disabled={dailyPage === 1}
+                    className="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 dark:border-gray-700 text-gray-400 hover:border-orange-300 hover:text-orange-500 transition disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                  </button>
+                  {Array.from({ length: totalDailyPages }, (_, i) => i + 1).map((p) => (
+                    <button
+                      key={p}
+                      onClick={() => setDailyPage(p)}
+                      className={`flex h-8 w-8 items-center justify-center rounded-lg text-sm font-medium transition ${
+                        p === dailyPage
+                          ? 'bg-orange-500 text-white'
+                          : 'border border-gray-200 dark:border-gray-700 text-gray-500 hover:border-orange-300 hover:text-orange-500'
+                      }`}
+                    >
+                      {p}
+                    </button>
+                  ))}
+                  <button
+                    onClick={() => setDailyPage((p) => p + 1)}
+                    disabled={dailyPage === totalDailyPages}
+                    className="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 dark:border-gray-700 text-gray-400 hover:border-orange-300 hover:text-orange-500 transition disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+
+      {/* Archived Lifetimes */}
+      <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm overflow-hidden">
+        <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-800">
+          <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">Archived Lifetime Snapshots</p>
+        </div>
+        {archivedRows.length === 0 ? (
+          <div className="px-6 py-10 text-center text-sm text-gray-400 dark:text-gray-500">
+            No archived lifetime data available for this post.
           </div>
+        ) : (
+          <>
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[700px]">
+                <thead>
+                  <tr className="border-b border-gray-100 dark:border-gray-800 bg-gray-50/60 dark:bg-gray-800/50">
+                    {['Date', 'Views', 'Reach', 'Interactions', 'Shares', 'Saved'].map((h) => (
+                      <th key={h} className="px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-widest text-gray-400">{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {archivedPageRows.map((row, i) => (
+                    <tr key={i} className="border-b border-gray-50 dark:border-gray-800/50 last:border-0 hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors">
+                      <td className="px-5 py-3.5 text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">{fmtDate(row.datetime ?? row.createdAt)}</td>
+                      <td className="px-5 py-3.5 text-sm text-gray-700 dark:text-gray-300 font-medium">{fmt(row.views)}</td>
+                      <td className="px-5 py-3.5 text-sm text-gray-600 dark:text-gray-400">{fmt(row.reach)}</td>
+                      <td className="px-5 py-3.5 text-sm text-orange-500 font-semibold">{fmt(row.totalInteractions)}</td>
+                      <td className="px-5 py-3.5 text-sm text-gray-600 dark:text-gray-400">{fmt(row.shares)}</td>
+                      <td className="px-5 py-3.5 text-sm text-gray-600 dark:text-gray-400">{fmt(row.saved)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {totalArchivedPages > 1 && (
+              <div className="flex items-center justify-between border-t border-gray-100 dark:border-gray-800 px-6 py-3">
+                <p className="text-sm text-gray-400 dark:text-gray-500">
+                  <span className="font-bold text-gray-700 dark:text-gray-300">
+                    {(archivedPage - 1) * PAGE_SIZE + 1}–{Math.min(archivedPage * PAGE_SIZE, archivedRows.length)}
+                  </span>
+                  {' '}of{' '}
+                  <span className="font-bold text-gray-700 dark:text-gray-300">{archivedRows.length}</span>
+                </p>
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => setArchivedPage((p) => p - 1)}
+                    disabled={archivedPage === 1}
+                    className="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 dark:border-gray-700 text-gray-400 hover:border-orange-300 hover:text-orange-500 transition disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                  </button>
+                  {Array.from({ length: totalArchivedPages }, (_, i) => i + 1).map((p) => (
+                    <button
+                      key={p}
+                      onClick={() => setArchivedPage(p)}
+                      className={`flex h-8 w-8 items-center justify-center rounded-lg text-sm font-medium transition ${
+                        p === archivedPage
+                          ? 'bg-orange-500 text-white'
+                          : 'border border-gray-200 dark:border-gray-700 text-gray-500 hover:border-orange-300 hover:text-orange-500'
+                      }`}
+                    >
+                      {p}
+                    </button>
+                  ))}
+                  <button
+                    onClick={() => setArchivedPage((p) => p + 1)}
+                    disabled={archivedPage === totalArchivedPages}
+                    className="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 dark:border-gray-700 text-gray-400 hover:border-orange-300 hover:text-orange-500 transition disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            )}
+          </>
         )}
       </div>
 
