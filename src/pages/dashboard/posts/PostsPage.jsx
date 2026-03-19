@@ -78,9 +78,8 @@ export default function PostsPage() {
           if (!cats.includes(filterCategory)) return false
         }
         if (q) {
-          const caption  = (p.media?.caption ?? '').toLowerCase()
           const username = (p.instagramUsername ?? p.userData?.username ?? '').toLowerCase()
-          if (!caption.includes(q) && !username.includes(q)) return false
+          if (!username.includes(q)) return false
         }
         return true
       })
@@ -128,7 +127,7 @@ export default function PostsPage() {
           autoComplete="off"
           value={search}
           onChange={(e) => { setSearch(e.target.value); setPage(1) }}
-          placeholder="Caption or username…"
+          placeholder="Search Username…"
           className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-600 dark:text-gray-300 outline-none placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition w-48"
         />
 
