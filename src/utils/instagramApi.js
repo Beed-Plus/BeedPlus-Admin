@@ -27,6 +27,14 @@ export const instagramApi = {
   getDailyTop100: () =>
     apiFetch(`${IG}/daily-top-100`),
 
+  /** GET /api/instagram/ranking-dates  (public) */
+  getRankingDates: () =>
+    apiFetch(`${IG}/ranking-dates`),
+
+  /** GET /api/instagram/rankings-by-date/:date  (public) */
+  getRankingsByDate: (date) =>
+    apiFetch(`${IG}/rankings-by-date/${date}`),
+
   /** GET /api/instagram/daily-top-10  (public) */
   getDailyTop10: () =>
     apiFetch(`${IG}/daily-top-10`),

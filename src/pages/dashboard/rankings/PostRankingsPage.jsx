@@ -142,6 +142,7 @@ export default function PostRankingsPage() {
   console.log("data", data)
   
   const [retryCount, setRetryCount] = useState(0)
+  const [dateLoading, setDateLoading] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -150,14 +151,18 @@ export default function PostRankingsPage() {
 
     async function load() {
       try {
-        const res = await instagramApi.getDailyTop100()
+        // Fetch latest rankings + all available dates in parallel
+        const [res, datesRes] = await Promise.all([
+          instagramApi.getDailyTop100(),
+          instagramApi.getRankingDates(),
+        ])
         if (cancelled) return
-        const days = Array.isArray(res?.days) ? res.days : (Array.isArray(res) ? res : null)
-        const latestDay = days ? days[days.length - 1] : res
-        const rawRankings = latestDay?.rankings ?? []
+        const rawRankings = res?.rankings ?? []
         const categories = groupByCategory(rawRankings)
-        setAllDays(days ?? (latestDay ? [latestDay] : []))
-        setData({ date: latestDay?.date ?? null, categories })
+        // Build allDays from the dates list so the calendar knows all available days
+        const allDatesObjs = (datesRes?.dates ?? []).map((d) => ({ date: d }))
+        setAllDays(allDatesObjs.length > 0 ? allDatesObjs : [{ date: res?.date }])
+        setData({ date: res?.date ?? null, categories })
         setActiveTab(0)
         setPage(1)
       } catch (err) {
@@ -177,14 +182,21 @@ export default function PostRankingsPage() {
     return () => { cancelled = true }
   }, [retryCount])
 
-  function selectDate(iso) {  // iso = YYYY-MM-DD
-    if (!iso || allDays.length === 0) return
-    const match = allDays.find((d) => toInputDate(d.date) === iso)
-    if (!match) return
-    const categories = groupByCategory(match.rankings ?? [])
-    setData({ date: match.date, categories })
-    setActiveTab(0)
-    setPage(1)
+  async function selectDate(iso) {  // iso = YYYY-MM-DD
+    if (!iso) return
+    setDateLoading(true)
+    try {
+      const res = await instagramApi.getRankingsByDate(iso)
+      const categories = groupByCategory(res?.rankings ?? [])
+      setData({ date: res?.date ?? iso, categories })
+      setActiveTab(0)
+      setPage(1)
+    } catch (err) {
+      // silently ignore — calendar just won't switch
+      console.error('Failed to load rankings for date:', err)
+    } finally {
+      setDateLoading(false)
+    }
   }
 
   // Tabs: "All" + one per category
@@ -273,7 +285,7 @@ export default function PostRankingsPage() {
 
             {/* Date value */}
             <span className={`flex-1 text-sm ${data?.date ? 'text-gray-800 dark:text-gray-100' : 'text-gray-400 dark:text-gray-500'}`}>
-              {data?.date ? fmtDate(data.date) : 'Select date'}
+              {dateLoading ? 'Loading…' : data?.date ? fmtDate(data.date) : 'Select date'}
             </span>
 
             {/* Dropdown chevron */}
