@@ -298,7 +298,7 @@ export default function PostRankingsPage() {
       </div>
 
       {/* Stat strip */}
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 shadow-sm">
           <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">Categories</p>
           <p className="mt-1 text-2xl font-black text-gray-900 dark:text-white">{loading ? '...' : categories.length}</p>
@@ -307,7 +307,11 @@ export default function PostRankingsPage() {
           <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">Total Ranked Posts</p>
           <p className="mt-1 text-2xl font-black text-orange-500">{loading ? '...' : fmt(totalPosts)}</p>
         </div>
-        <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 shadow-sm sm:col-span-1 col-span-2">
+        <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 shadow-sm">
+          <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">Total Countries</p>
+          <p className="mt-1 text-2xl font-black text-gray-900 dark:text-white">{loading ? '...' : availableCountries.length}</p>
+        </div>
+        <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 shadow-sm">
           <div className="flex items-center justify-between mb-3">
             <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">Country</p>
             {filterCountry && (
@@ -320,14 +324,14 @@ export default function PostRankingsPage() {
             )}
           </div>
           <div className="flex items-end justify-between gap-3">
-            <div>
-              <p className="text-2xl font-black text-gray-900 dark:text-white">
-                {loading ? '...' : filterCountry ? countryTotal : availableCountries.length}
-              </p>
-              <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
-                {filterCountry ? 'posts matched' : 'countries'}
-              </p>
-            </div>
+            {filterCountry && (
+              <div>
+                <p className="text-2xl font-black text-gray-900 dark:text-white">
+                  {loading ? '...' : countryTotal}
+                </p>
+                <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">posts matched</p>
+              </div>
+            )}
             <select
               value={filterCountry}
               onChange={(e) => { setFilterCountry(e.target.value); setPage(1) }}
