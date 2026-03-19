@@ -447,6 +447,8 @@ export default function PostRankingsPage() {
 
                 {!loading && paged.map((item, idx) => {
                   const rank       = (!isAllTab || filterCountry) ? idx + 1 : (item.rank ?? idx + 1)
+                  // Overall rank pill — shown when in a category tab or country filter so user sees the global position
+                  const overallRank = (!isAllTab || filterCountry) ? (item.rank ?? null) : null
                   const caption    = item.media?.caption
                   const thumb      = item.media?.thumbnailUrl
                   const permalink  = item.media?.permalink
@@ -458,7 +460,14 @@ export default function PostRankingsPage() {
                     <tr key={item.instagramMediaId ?? idx} className="border-b border-gray-50 dark:border-gray-800/50 last:border-0 hover:bg-gray-50/40 dark:hover:bg-gray-800/40 transition-colors">
                       {/* Rank */}
                       <td className="px-4 py-4 text-center">
-                        <RankBadge rank={rank} />
+                        <div className="flex flex-col items-center gap-1">
+                          <RankBadge rank={rank} />
+                          {overallRank && (
+                            <span className="inline-flex items-center rounded-full bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 text-[10px] font-semibold text-gray-400 dark:text-gray-500 leading-none">
+                              #{overallRank}
+                            </span>
+                          )}
+                        </div>
                       </td>
 
                       {/* Post */}
