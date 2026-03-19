@@ -1,5 +1,5 @@
 import { NavLink, useLocation, useNavigate, useMatch } from 'react-router-dom'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import navConfig from './navConfig'
 import BeedLogo from '../auth/BeedLogo'
 import { useAuth } from '../../hooks/useAuth'
@@ -18,6 +18,10 @@ function NavItem({ label, path, icon: Icon, collapsed, children }) {
   const isChildActive = hasChildren && children.some((c) => location.pathname.startsWith(c.path))
   const isParentExact = location.pathname === path
   const [open, setOpen] = useState(() => isChildActive || isParentExact)
+
+  useEffect(() => {
+    if (!isChildActive && !isParentExact) setOpen(false)
+  }, [location.pathname])
 
   if (hasChildren) {
     return (
