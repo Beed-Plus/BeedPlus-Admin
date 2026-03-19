@@ -23,6 +23,7 @@ export default function PostsPage() {
   const [search, setSearch]             = useState('')
   const [filterCategory, setCategory]   = useState('')
   const [filterSubCategory, setSubCategory] = useState('')
+  const [filterCountry, setFilterCountry] = useState('')
 
   useEffect(() => {
     let cancelled = false
@@ -67,6 +68,13 @@ export default function PostsPage() {
     return [...set].sort()
   }, [allPosts])
 
+  // Unique countries from all posts
+  const countries = useMemo(() => {
+    const set = new Set()
+    allPosts.forEach((p) => { if (p.userData?.country) set.add(p.userData.country) })
+    return [...set].sort()
+  }, [allPosts])
+
   // Unique sub-categories (filtered by active category if set)
   const subCategories = useMemo(() => {
     const set = new Set()
@@ -94,6 +102,7 @@ export default function PostsPage() {
           const sub = p.subCategory?.name ?? p.subCategory
           if (sub !== filterSubCategory) return false
         }
+        if (filterCountry && p.userData?.country !== filterCountry) return false
         if (q) {
           const username = (p.instagramUsername ?? p.userData?.username ?? '').toLowerCase()
           if (!username.includes(q)) return false
@@ -101,7 +110,7 @@ export default function PostsPage() {
         return true
       })
       .sort((a, b) => new Date(b.createdAt ?? 0) - new Date(a.createdAt ?? 0))
-  }, [allPosts, search, filterCategory, filterSubCategory])
+  }, [allPosts, search, filterCategory, filterSubCategory, filterCountry])
 
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE)
   const paged = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
@@ -110,7 +119,7 @@ export default function PostsPage() {
     return (val) => { setter(val); setPage(1) }
   }
 
-  const anyFilter = search || filterCategory || filterSubCategory
+  const anyFilter = search || filterCategory || filterSubCategory || filterCountry
 
   return (
     <div className="flex flex-col gap-6">
@@ -129,16 +138,6 @@ export default function PostsPage() {
 
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-3">
-        {/* Search */}
-        <input
-          type="text"
-          autoComplete="off"
-          value={search}
-          onChange={(e) => { setSearch(e.target.value); setPage(1) }}
-          placeholder="Search Username…"
-          className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-600 dark:text-gray-300 outline-none placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition w-48"
-        />
-
         {/* Category */}
         <select
           value={filterCategory}
@@ -163,10 +162,30 @@ export default function PostsPage() {
           {subCategories.map((s) => <option key={s} value={s} />)}
         </datalist>
 
+        {/* Search */}
+        <input
+          type="text"
+          autoComplete="off"
+          value={search}
+          onChange={(e) => { setSearch(e.target.value); setPage(1) }}
+          placeholder="Search Username…"
+          className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-600 dark:text-gray-300 outline-none placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition w-48"
+        />
+
+        {/* Country */}
+        <select
+          value={filterCountry}
+          onChange={(e) => { setFilterCountry(e.target.value); setPage(1) }}
+          className={`${SELECT} ml-auto`}
+        >
+          <option value="">All Countries</option>
+          {countries.map((c) => <option key={c} value={c}>{c}</option>)}
+        </select>
+
         {/* Clear */}
         {anyFilter && (
           <button
-            onClick={() => { setSearch(''); setCategory(''); setSubCategory(''); setPage(1) }}
+            onClick={() => { setSearch(''); setCategory(''); setSubCategory(''); setFilterCountry(''); setPage(1) }}
             className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-400 dark:text-gray-500 hover:border-red-200 hover:text-red-400 transition"
           >
             Clear

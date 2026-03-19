@@ -534,7 +534,7 @@ export default function PostDetailPage() {
       </div>
 
       {/* Archived Lifetimes */}
-      <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm overflow-hidden">
+      {/* <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-800">
           <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">Archived Lifetime Snapshots</p>
         </div>
@@ -613,7 +613,7 @@ export default function PostDetailPage() {
             )}
           </>
         )}
-      </div>
+      </div> */}
 
       {/* Back button */}
       <div>
