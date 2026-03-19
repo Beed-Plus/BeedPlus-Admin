@@ -49,7 +49,9 @@ function SkeletonRow() {
         </div>
       </td>
       <td className="px-4 py-4"><div className="h-3 w-24 rounded bg-gray-100" /></td>
+      <td className="px-4 py-4"><div className="h-5 w-16 rounded-full bg-gray-100" /></td>
       <td className="px-4 py-4"><div className="h-5 w-14 rounded-full bg-gray-100" /></td>
+      <td className="px-4 py-4"><div className="h-3 w-12 rounded bg-gray-100" /></td>
       <td className="px-4 py-4"><div className="h-3 w-12 rounded bg-gray-100" /></td>
       <td className="px-4 py-4"><div className="h-3 w-12 rounded bg-gray-100" /></td>
       <td className="px-4 py-4"><div className="h-6 w-12 rounded-lg bg-gray-100" /></td>
@@ -422,14 +424,16 @@ export default function PostRankingsPage() {
 
           {/* Table */}
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[640px]">
+            <table className="w-full min-w-[860px]">
               <thead>
                 <tr className="border-b border-gray-100 dark:border-gray-800 bg-gray-50/60 dark:bg-gray-800/50">
                   <th className={`${COL} w-12 text-center`}>Rank</th>
                   <th className={COL}>Post</th>
                   <th className={COL}>Creator</th>
+                  <th className={COL}>Sub-Category</th>
                   <th className={COL}>Beed+ Score</th>
                   <th className={COL}>Daily Views</th>
+                  <th className={COL}>Reach</th>
                   <th className={COL}>Interactions</th>
                   <th className={`${COL} w-16`}></th>
                 </tr>
@@ -439,7 +443,7 @@ export default function PostRankingsPage() {
 
                 {!loading && paged.length === 0 && (
                   <tr>
-                    <td colSpan={7} className="px-6 py-16 text-center text-sm text-gray-400">
+                    <td colSpan={9} className="px-6 py-16 text-center text-sm text-gray-400">
                       No rankings available{isAllTab ? '' : ' for this category'}.
                     </td>
                   </tr>
@@ -521,6 +525,14 @@ export default function PostRankingsPage() {
                         </div>
                       </td>
 
+                      {/* Sub-Category */}
+                      <td className="px-4 py-4">
+                        {item.subCategory
+                          ? <span className="inline-flex items-center rounded-full bg-blue-50 dark:bg-blue-500/10 px-2.5 py-0.5 text-xs font-medium text-blue-600 dark:text-blue-400">{item.subCategory}</span>
+                          : <span className="text-gray-300 dark:text-gray-600">—</span>
+                        }
+                      </td>
+
                       {/* Beed+ Score */}
                       <td className="px-4 py-4">
                         <span className="inline-flex items-center rounded-full bg-orange-50 px-2.5 py-0.5 text-xs font-bold text-orange-500">
@@ -531,6 +543,11 @@ export default function PostRankingsPage() {
                       {/* Daily Views */}
                       <td className="px-4 py-4 text-sm text-gray-600 dark:text-gray-400">
                         {fmt(item.insights?.daily_views)}
+                      </td>
+
+                      {/* Reach */}
+                      <td className="px-4 py-4 text-sm text-gray-600 dark:text-gray-400">
+                        {fmt(item.insights?.daily_reach)}
                       </td>
 
                       {/* Interactions */}

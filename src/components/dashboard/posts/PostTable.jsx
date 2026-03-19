@@ -67,6 +67,7 @@ function SkeletonRow() {
       <td className="px-6 py-4"><div className="h-3 w-24 rounded bg-gray-100 dark:bg-gray-800 animate-pulse" /></td>
       <td className="px-6 py-4"><div className="h-5 w-20 rounded-full bg-gray-100 dark:bg-gray-800 animate-pulse" /></td>
       <td className="px-6 py-4"><div className="h-5 w-16 rounded-full bg-gray-100 dark:bg-gray-800 animate-pulse" /></td>
+      <td className="px-6 py-4"><div className="h-3 w-16 rounded bg-gray-100 dark:bg-gray-800 animate-pulse" /></td>
       <td className="px-6 py-4"><div className="h-3 w-20 rounded bg-gray-100 dark:bg-gray-800 animate-pulse" /></td>
       <td className="px-6 py-4" />
     </tr>
@@ -81,13 +82,14 @@ export default function PostTable({ posts, loading, currentPage, totalItems, onP
   return (
     <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm overflow-hidden">
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[780px]">
+        <table className="w-full min-w-[900px]">
           <thead>
             <tr className="border-b border-gray-100 dark:border-gray-800 bg-gray-50/60 dark:bg-gray-800/50">
               <th className={COL}>Post</th>
               <th className={COL}>Creator</th>
               <th className={COL}>Category</th>
               <th className={COL}>Sub-Category</th>
+              <th className={COL}>Reach</th>
               <th className={COL}>Submitted</th>
               <th className={`${COL} text-right`}>Actions</th>
             </tr>
@@ -97,7 +99,7 @@ export default function PostTable({ posts, loading, currentPage, totalItems, onP
 
             {!loading && posts.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-6 py-16 text-center text-sm text-gray-400 dark:text-gray-500">
+                <td colSpan={7} className="px-6 py-16 text-center text-sm text-gray-400 dark:text-gray-500">
                   No posts found
                 </td>
               </tr>
@@ -168,6 +170,16 @@ export default function PostTable({ posts, loading, currentPage, totalItems, onP
                   <td className="px-6 py-4">
                     {subCat
                       ? <span className="inline-flex items-center rounded-full bg-blue-50 dark:bg-blue-500/10 px-2.5 py-0.5 text-xs font-medium text-blue-600 dark:text-blue-400">{subCat}</span>
+                      : <span className="text-gray-300 dark:text-gray-600">—</span>
+                    }
+                  </td>
+
+                  {/* Reach */}
+                  <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-200 font-medium">
+                    {post.insights?.reach != null
+                      ? post.insights.reach >= 1_000
+                        ? `${(post.insights.reach / 1_000).toFixed(1).replace(/\.0$/, '')}k`
+                        : post.insights.reach.toLocaleString()
                       : <span className="text-gray-300 dark:text-gray-600">—</span>
                     }
                   </td>
