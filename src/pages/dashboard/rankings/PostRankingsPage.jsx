@@ -309,7 +309,7 @@ export default function PostRankingsPage() {
         </div>
         <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 shadow-sm">
           <div className="flex items-center justify-between mb-3">
-            <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">Country</p>
+            <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">Total Post</p>
             {filterCountry && (
               <button
                 onClick={() => { setFilterCountry(''); setPage(1) }}
@@ -325,7 +325,7 @@ export default function PostRankingsPage() {
                 {loading ? '...' : filterCountry ? countryTotal : totalPosts}
               </p>
               <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
-                {filterCountry ? 'posts matched' : 'total posts'}
+                {filterCountry ? 'posts' : 'total posts'}
               </p>
             </div>
             <select
