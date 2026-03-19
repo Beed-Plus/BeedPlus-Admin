@@ -141,33 +141,41 @@ export default function PostRankingsPage() {
 
   console.log("data", data)
   
+  const [retryCount, setRetryCount] = useState(0)
+
   useEffect(() => {
     let cancelled = false
     setLoading(true)
     setError(null)
-    instagramApi.getDailyTop100()
-      .then((res) => {
-        if (!cancelled) {
-          const days = Array.isArray(res?.days) ? res.days : (Array.isArray(res) ? res : null)
-          const latestDay = days ? days[days.length - 1] : res
-          const rawRankings = latestDay?.rankings ?? []
-          const categories = groupByCategory(rawRankings)
 
-          // If API returns a single day object (not an array), wrap it so the calendar has a date
-          setAllDays(days ?? (latestDay ? [latestDay] : []))
-          setData({ date: latestDay?.date ?? null, categories })
-          setActiveTab(0)
-          setPage(1)
+    async function load() {
+      try {
+        const res = await instagramApi.getDailyTop100()
+        if (cancelled) return
+        const days = Array.isArray(res?.days) ? res.days : (Array.isArray(res) ? res : null)
+        const latestDay = days ? days[days.length - 1] : res
+        const rawRankings = latestDay?.rankings ?? []
+        const categories = groupByCategory(rawRankings)
+        setAllDays(days ?? (latestDay ? [latestDay] : []))
+        setData({ date: latestDay?.date ?? null, categories })
+        setActiveTab(0)
+        setPage(1)
+      } catch (err) {
+        if (cancelled) return
+        // Auto-retry once after 3s (handles Render.com cold-start wake-up)
+        if (retryCount === 0) {
+          setTimeout(() => { if (!cancelled) setRetryCount(1) }, 3000)
+        } else {
+          setError(err.message ?? 'Failed to load rankings')
         }
-      })
-      .catch((err) => {
-        if (!cancelled) setError(err.message ?? 'Failed to load rankings')
-      })
-      .finally(() => {
+      } finally {
         if (!cancelled) setLoading(false)
-      })
+      }
+    }
+
+    load()
     return () => { cancelled = true }
-  }, [])
+  }, [retryCount])
 
   function selectDate(iso) {  // iso = YYYY-MM-DD
     if (!iso || allDays.length === 0) return
@@ -345,8 +353,14 @@ export default function PostRankingsPage() {
 
       {/* Error */}
       {error && (
-        <div className="rounded-2xl border border-red-100 bg-red-50 px-5 py-4 text-sm text-red-500">
-          {error}
+        <div className="rounded-2xl border border-red-100 bg-red-50 px-5 py-4 text-sm text-red-500 flex items-center justify-between gap-4">
+          <span>{error}</span>
+          <button
+            onClick={() => setRetryCount((c) => c + 1)}
+            className="shrink-0 rounded-lg bg-red-100 px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-200 transition"
+          >
+            Retry
+          </button>
         </div>
       )}
 
