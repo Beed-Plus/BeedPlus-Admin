@@ -125,6 +125,7 @@ export default function PostsPage() {
         
         <input
           type="text"
+          autoComplete="off"
           value={search}
           onChange={(e) => { setSearch(e.target.value); setPage(1) }}
           placeholder="Caption or username…"

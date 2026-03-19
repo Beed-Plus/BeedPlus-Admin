@@ -138,6 +138,8 @@ export default function PostRankingsPage() {
   const [page, setPage]             = useState(1)
   const [calendarOpen, setCalendarOpen] = useState(false)
 
+  console.log("data", data)
+  
   useEffect(() => {
     let cancelled = false
     setLoading(true)
