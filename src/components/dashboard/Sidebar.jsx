@@ -1,4 +1,4 @@
-import { NavLink, useLocation, useNavigate } from 'react-router-dom'
+import { NavLink, useLocation, useNavigate, useMatch } from 'react-router-dom'
 import { useState } from 'react'
 import navConfig from './navConfig'
 import BeedLogo from '../auth/BeedLogo'
@@ -13,20 +13,22 @@ const STATUS_COLORS = {
 
 function NavItem({ label, path, icon: Icon, collapsed, children }) {
   const location = useLocation()
+  const navigate = useNavigate()
   const hasChildren = children?.length > 0
   const isChildActive = hasChildren && children.some((c) => location.pathname.startsWith(c.path))
-  const [open, setOpen] = useState(() => isChildActive)
+  const isParentExact = location.pathname === path
+  const [open, setOpen] = useState(() => isChildActive || isParentExact)
 
   if (hasChildren) {
     return (
       <div>
         <button
-          onClick={() => setOpen((o) => !o)}
+          onClick={() => { navigate(path); setOpen((o) => !o) }}
           title={collapsed ? label : undefined}
           className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all ${
             collapsed ? 'lg:justify-center lg:px-0' : ''
           } ${
-            isChildActive || open
+            isChildActive || isParentExact || open
               ? 'text-orange-500'
               : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100'
           }`}

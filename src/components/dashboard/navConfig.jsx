@@ -22,7 +22,6 @@ const navConfig = [
         path: '/dashboard/users',
         icon: UsersIcon,
         children: [
-          { label: 'All',      path: '/dashboard/users' },
           { label: 'Approved', path: '/dashboard/users/approved' },
           { label: 'Pending',  path: '/dashboard/users/pending' },
           { label: 'Rejected', path: '/dashboard/users/rejected' },
