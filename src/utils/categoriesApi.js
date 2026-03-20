@@ -22,4 +22,8 @@ export const categoriesApi = {
   /** DELETE /api/categories/:id  (public) */
   deleteCategory: (id) =>
     apiFetch(`${CAT}/${id}`, { method: 'DELETE' }),
+
+  /** PUT /api/categories/reorder  — ids in desired order */
+  reorderCategories: (ids) =>
+    apiFetch(`${CAT}/reorder`, { method: 'PUT', body: { ids } }),
 }

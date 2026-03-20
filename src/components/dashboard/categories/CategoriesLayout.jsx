@@ -171,6 +171,8 @@ export default function CategoriesLayout({ title, subtitle }) {
   const [showAdd, setShowAdd]       = useState(false)
   const [editTarget, setEditTarget] = useState(null)
   const [deleteTarget, setDeleteTarget] = useState(null)
+  const [draggingId, setDraggingId] = useState(null)
+  const [dragOverId, setDragOverId] = useState(null)
 
   async function loadCategories() {
     setLoading(true)
@@ -208,6 +210,29 @@ export default function CategoriesLayout({ title, subtitle }) {
     setDeleteTarget(null)
   }
 
+  async function handleDrop(e, targetId) {
+    e.preventDefault()
+    if (!draggingId || draggingId === targetId) {
+      setDraggingId(null)
+      setDragOverId(null)
+      return
+    }
+    const updated = [...categories]
+    const fromIdx = updated.findIndex((c) => c._id === draggingId)
+    const toIdx   = updated.findIndex((c) => c._id === targetId)
+    const [item]  = updated.splice(fromIdx, 1)
+    updated.splice(toIdx, 0, item)
+    setCategories(updated)
+    setDraggingId(null)
+    setDragOverId(null)
+    try {
+      await categoriesApi.reorderCategories(updated.map((c) => c._id))
+    } catch {
+      loadCategories()
+    }
+  }
+
+  const canDrag = !search.trim()
   const COL = 'px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-widest text-gray-400'
 
   return (
@@ -278,6 +303,7 @@ export default function CategoriesLayout({ title, subtitle }) {
           <table className="w-full min-w-[500px]">
             <thead>
               <tr className="border-b border-gray-100 dark:border-gray-800 bg-gray-50/60 dark:bg-gray-800/50">
+                <th className="w-8 px-3 py-3" />
                 <th className={COL}>Category</th>
                 <th className={COL}>Posts</th>
                 <th className={COL}>Users</th>
@@ -291,14 +317,37 @@ export default function CategoriesLayout({ title, subtitle }) {
 
               {!loading && filtered.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-6 py-10 text-center text-sm text-gray-400">
+                  <td colSpan={7} className="px-6 py-10 text-center text-sm text-gray-400">
                     No categories found.
                   </td>
                 </tr>
               )}
 
               {!loading && filtered.map((cat) => (
-                <tr key={cat._id} className="border-b border-gray-50 dark:border-gray-800/50 last:border-0 hover:bg-gray-50/40 dark:hover:bg-gray-800/40 transition-colors">
+                <tr
+                  key={cat._id}
+                  draggable={canDrag}
+                  onDragStart={(e) => { e.dataTransfer.effectAllowed = 'move'; setDraggingId(cat._id) }}
+                  onDragOver={(e) => { e.preventDefault(); if (cat._id !== draggingId) setDragOverId(cat._id) }}
+                  onDragLeave={() => setDragOverId(null)}
+                  onDrop={(e) => handleDrop(e, cat._id)}
+                  onDragEnd={() => { setDraggingId(null); setDragOverId(null) }}
+                  className={[
+                    'border-b border-gray-50 dark:border-gray-800/50 last:border-0 transition-colors',
+                    draggingId === cat._id ? 'opacity-40' : '',
+                    dragOverId === cat._id ? 'bg-orange-50/60 dark:bg-orange-500/10 border-t-2 border-t-orange-400' : 'hover:bg-gray-50/40 dark:hover:bg-gray-800/40',
+                  ].join(' ')}
+                >
+                  {/* Drag handle */}
+                  <td className="pl-3 pr-1 py-4">
+                    <div title={canDrag ? 'Drag to reorder' : 'Clear search to reorder'} className={canDrag ? 'cursor-grab active:cursor-grabbing text-gray-300 dark:text-gray-600 hover:text-gray-400' : 'cursor-not-allowed text-gray-200 dark:text-gray-700'}>
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 16 16" fill="currentColor">
+                        <circle cx="5" cy="3.5" r="1.2"/><circle cx="11" cy="3.5" r="1.2"/>
+                        <circle cx="5" cy="8" r="1.2"/><circle cx="11" cy="8" r="1.2"/>
+                        <circle cx="5" cy="12.5" r="1.2"/><circle cx="11" cy="12.5" r="1.2"/>
+                      </svg>
+                    </div>
+                  </td>
                   {/* Category name + color swatch */}
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
