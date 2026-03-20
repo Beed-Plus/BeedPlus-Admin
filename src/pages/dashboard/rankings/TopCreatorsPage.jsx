@@ -11,6 +11,8 @@ export default function TopCreatorsPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [page, setPage] = useState(1)
+  const [activeTab, setActiveTab] = useState(0) // 0 = All, 1+ = category index
+  const [filterCountry, setFilterCountry] = useState('')
 
   useEffect(() => {
     let cancelled = false
@@ -34,10 +36,42 @@ export default function TopCreatorsPage() {
     return () => { cancelled = true }
   }, [])
 
+  // Unique categories derived from rankings
+  const categories = useMemo(() => {
+    const seen = new Set()
+    const cats = []
+    rankings.forEach((r) => {
+      if (r.category && !seen.has(r.category)) {
+        seen.add(r.category)
+        cats.push(r.category)
+      }
+    })
+    return cats.sort()
+  }, [rankings])
+
+  // Unique countries derived from rankings
+  const availableCountries = useMemo(() => {
+    const set = new Set()
+    rankings.forEach((r) => { if (r.country) set.add(r.country) })
+    return [...set].sort()
+  }, [rankings])
+
+  // Filter by active tab + country
+  const filtered = useMemo(() => {
+    let list = activeTab === 0 ? rankings : rankings.filter((r) => r.category === categories[activeTab - 1])
+    if (filterCountry) list = list.filter((r) => r.country === filterCountry)
+    return list
+  }, [rankings, activeTab, categories, filterCountry])
+
   const paged = useMemo(
-    () => rankings.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
-    [rankings, page]
+    () => filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
+    [filtered, page]
   )
+
+  function switchTab(idx) {
+    setActiveTab(idx)
+    setPage(1)
+  }
 
   const topCreator = rankings[0]?.username ?? '—'
 
@@ -63,6 +97,10 @@ export default function TopCreatorsPage() {
         <CreatorHighlightCards
           topCreator={topCreator}
           totalActiveCreators={count}
+          availableCountries={availableCountries}
+          filterCountry={filterCountry}
+          onFilterCountry={(c) => { setFilterCountry(c); setPage(1) }}
+          filteredCount={filtered.length}
         />
       )}
 
@@ -79,14 +117,56 @@ export default function TopCreatorsPage() {
         </div>
       )}
 
-      {/* Table */}
-      <TopCreatorsTable
-        creators={paged}
-        currentPage={page}
-        totalItems={rankings.length}
-        onPageChange={setPage}
-        loading={loading}
-      />
+      {/* Category tabs + Table */}
+      <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm overflow-hidden">
+        {!loading && categories.length > 0 && (
+          <div className="flex overflow-x-auto border-b border-gray-100 dark:border-gray-800 scrollbar-none">
+            <button
+              onClick={() => switchTab(0)}
+              className={`flex shrink-0 items-center gap-2 px-5 py-3.5 text-sm font-semibold transition border-b-2 ${
+                activeTab === 0
+                  ? 'border-orange-500 text-orange-500'
+                  : 'border-transparent text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+              }`}
+            >
+              All
+              <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${
+                activeTab === 0 ? 'bg-orange-50 text-orange-500' : 'bg-gray-100 dark:bg-gray-800 text-gray-400'
+              }`}>
+                {filterCountry ? rankings.filter((r) => r.country === filterCountry).length : rankings.length}
+              </span>
+            </button>
+
+            {categories.map((cat, idx) => (
+              <button
+                key={cat}
+                onClick={() => switchTab(idx + 1)}
+                className={`flex shrink-0 items-center gap-2 px-5 py-3.5 text-sm font-semibold transition border-b-2 ${
+                  activeTab === idx + 1
+                    ? 'border-orange-500 text-orange-500'
+                    : 'border-transparent text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                }`}
+              >
+                {cat}
+                <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${
+                  activeTab === idx + 1 ? 'bg-orange-50 text-orange-500' : 'bg-gray-100 dark:bg-gray-800 text-gray-400'
+                }`}>
+                  {rankings.filter((r) => r.category === cat && (!filterCountry || r.country === filterCountry)).length}
+                </span>
+              </button>
+            ))}
+          </div>
+        )}
+
+        <TopCreatorsTable
+          creators={paged}
+          currentPage={page}
+          totalItems={filtered.length}
+          onPageChange={setPage}
+          loading={loading}
+          nested
+        />
+      </div>
     </div>
   )
 }

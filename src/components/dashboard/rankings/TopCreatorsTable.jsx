@@ -45,12 +45,15 @@ function formatScore(n) {
   return n.toLocaleString()
 }
 
-export default function TopCreatorsTable({ creators, currentPage, totalItems, onPageChange, loading }) {
+export default function TopCreatorsTable({ creators, currentPage, totalItems, onPageChange, loading, nested = false }) {
   const totalPages = Math.ceil(totalItems / PAGE_SIZE)
+  const Wrapper = ({ children }) => nested
+    ? <div className="overflow-hidden">{children}</div>
+    : <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm overflow-hidden">{children}</div>
 
   if (loading) {
     return (
-      <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm overflow-hidden">
+      <Wrapper>
         <table className="w-full">
           <thead>
             <tr className="border-b border-gray-100 dark:border-gray-800 bg-gray-50/60 dark:bg-gray-800/50">
@@ -82,12 +85,12 @@ export default function TopCreatorsTable({ creators, currentPage, totalItems, on
             ))}
           </tbody>
         </table>
-      </div>
+      </Wrapper>
     )
   }
 
   return (
-    <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm overflow-hidden">
+    <Wrapper>
       <table className="w-full">
         <thead>
           <tr className="border-b border-gray-100 dark:border-gray-800 bg-gray-50/60 dark:bg-gray-800/50">
@@ -181,6 +184,6 @@ export default function TopCreatorsTable({ creators, currentPage, totalItems, on
           onPageChange={onPageChange}
         />
       </div>
-    </div>
+    </Wrapper>
   )
 }
