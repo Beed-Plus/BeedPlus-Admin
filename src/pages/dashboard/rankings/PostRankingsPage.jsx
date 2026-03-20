@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useAuth } from '../../../hooks/useAuth'
 import { instagramApi } from '../../../utils/instagramApi'
 import { DayPicker } from 'react-day-picker'
 import 'react-day-picker/style.css'
@@ -130,7 +129,6 @@ function groupByCategory(rawRankings) {
 
 export default function PostRankingsPage() {
   const navigate = useNavigate()
-  const { auth } = useAuth()
 
   const [allDays, setAllDays]       = useState([])       // all days from API
   const [data, setData]             = useState(null)     // { date, categories: [...] }
@@ -140,9 +138,6 @@ export default function PostRankingsPage() {
   const [page, setPage]             = useState(1)
   const [calendarOpen, setCalendarOpen] = useState(false)
   const [filterCountry, setFilterCountry] = useState('')
-
-  console.log("data", data)
-  
   const [retryCount, setRetryCount] = useState(0)
   const [dateLoading, setDateLoading] = useState(false)
 
@@ -153,15 +148,14 @@ export default function PostRankingsPage() {
 
     async function load() {
       try {
-        // Fetch latest rankings (critical) + available dates (non-critical) in parallel
+        // Fetch latest chart (critical) + available dates (non-critical) in parallel
         const [res, datesRes] = await Promise.all([
-          instagramApi.getDailyTop100(),
+          instagramApi.getMediaChart(),
           instagramApi.getRankingDates().catch(() => null),
         ])
         if (cancelled) return
         const rawRankings = res?.rankings ?? []
         const categories = groupByCategory(rawRankings)
-        // Build allDays from the dates list so the calendar knows all available days
         const allDatesObjs = (datesRes?.dates ?? []).map((d) => ({ date: d }))
         setAllDays(allDatesObjs.length > 0 ? allDatesObjs : [{ date: res?.date }])
         setData({ date: res?.date ?? null, categories })
@@ -188,13 +182,13 @@ export default function PostRankingsPage() {
     if (!iso) return
     setDateLoading(true)
     try {
-      const res = await instagramApi.getRankingsByDate(iso)
+      const res = await instagramApi.getMediaChartByDate(iso)
       const categories = groupByCategory(res?.rankings ?? [])
       setData({ date: res?.date ?? iso, categories })
       setActiveTab(0)
       setPage(1)
     } catch (err) {
-      console.error('Failed to load rankings for date:', err)
+      console.error('Failed to load chart for date:', err)
     } finally {
       setDateLoading(false)
     }
@@ -239,7 +233,7 @@ export default function PostRankingsPage() {
 
   const availableDates = allDays.map((d) => toInputDate(d.date)).filter(Boolean)
 
-  // Close calendar on outside click (but not when clicking the trigger button itself)
+  // Close calendar on outside click
   const calendarWrapRef = useRef(null)
   useEffect(() => {
     if (!calendarOpen) return
@@ -262,12 +256,12 @@ export default function PostRankingsPage() {
       {/* Header */}
       <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h1 className="text-2xl font-black text-gray-900 dark:text-white">Post Rankings</h1>
+          <h1 className="text-2xl font-black text-gray-900 dark:text-white">Media Chart</h1>
           <p className="mt-1 text-sm text-gray-400 dark:text-gray-500">
-            Daily top-ranked posts by category based on Beed+ score and engagement.
+            Daily posts with recorded reach, grouped by category.
           </p>
         </div>
-        {/* Date picker — MUI-style input */}
+        {/* Date picker */}
         <div ref={calendarWrapRef} className="relative self-start">
           <div
             onClick={() => setCalendarOpen((o) => !o)}
@@ -279,32 +273,26 @@ export default function PostRankingsPage() {
               }
             `}
           >
-            {/* Calendar icon */}
             <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 shrink-0 ${calendarOpen ? 'text-orange-500' : 'text-gray-400 dark:text-gray-500'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
-
-            {/* Date value */}
             <span className={`flex-1 text-sm ${data?.date ? 'text-gray-800 dark:text-gray-100' : 'text-gray-400 dark:text-gray-500'}`}>
               {dateLoading ? 'Loading…' : data?.date ? fmtDate(data.date) : 'Select date'}
             </span>
-
-            {/* Dropdown chevron */}
             <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 shrink-0 text-gray-400 transition-transform duration-200 ${calendarOpen ? 'rotate-180 text-orange-500' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
             </svg>
           </div>
 
-          {/* Label above (like MUI floating label) */}
           <span className={`pointer-events-none absolute -top-2 left-2.5 px-1 text-[10px] font-medium transition-colors bg-white dark:bg-gray-800 ${calendarOpen ? 'text-orange-500' : 'text-gray-400 dark:text-gray-500'}`}>
-            Ranking date
+            Chart date
           </span>
 
           {calendarOpen && (
             <div className="absolute right-0 top-full mt-2 z-50 rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-2xl p-3 min-w-[280px]">
               {availableDates.length === 0 ? (
                 <p className="px-4 py-6 text-center text-sm text-gray-400">
-                  {loading ? 'Loading dates…' : 'No ranking dates available.'}
+                  {loading ? 'Loading dates…' : 'No chart dates available.'}
                 </p>
               ) : (
                 <CalendarPicker
@@ -380,10 +368,9 @@ export default function PostRankingsPage() {
       {/* Main card */}
       {!error && (
         <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm overflow-hidden">
-          {/* Category tabs — "All" + one per category */}
+          {/* Category tabs */}
           {!loading && categories.length > 0 && (
             <div className="flex overflow-x-auto border-b border-gray-100 dark:border-gray-800 scrollbar-none">
-              {/* All tab */}
               <button
                 onClick={() => switchTab(0)}
                 className={`flex shrink-0 items-center gap-2 px-5 py-3.5 text-sm font-semibold transition border-b-2 ${
@@ -400,7 +387,6 @@ export default function PostRankingsPage() {
                 </span>
               </button>
 
-              {/* Per-category tabs */}
               {categories.map((cat, idx) => (
                 <button
                   key={cat.category}
@@ -451,7 +437,6 @@ export default function PostRankingsPage() {
 
                 {!loading && paged.map((item, idx) => {
                   const rank       = (!isAllTab || filterCountry) ? idx + 1 : (item.rank ?? idx + 1)
-                  // Overall rank pill — shown when in a category tab or country filter so user sees the global position
                   const overallRank = (!isAllTab || filterCountry) ? (item.rank ?? null) : null
                   const caption    = item.media?.caption
                   const thumb      = item.media?.thumbnailUrl

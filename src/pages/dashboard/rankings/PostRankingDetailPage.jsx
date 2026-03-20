@@ -12,7 +12,7 @@ function fmt(n) {
 
 function fmtBeedScore(n) {
   if (n == null) return '—'
-  return Number(n).toFixed(2)
+  return Number(n).toFixed(10)
 }
 
 function fmtDate(iso) {

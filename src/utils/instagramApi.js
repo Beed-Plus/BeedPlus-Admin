@@ -67,6 +67,14 @@ export const instagramApi = {
   recordClick: (mediaId) =>
     apiFetch(`${IG}/media/${mediaId}/click`),
 
+  /** GET /api/instagram/media-chart  (public) — all media with daily_reach > 0 */
+  getMediaChart: () =>
+    apiFetch(`${IG}/media-chart`),
+
+  /** GET /api/instagram/media-chart/:date  (public) */
+  getMediaChartByDate: (date) =>
+    apiFetch(`${IG}/media-chart/${date}`),
+
   /** POST /api/instagram/disconnect  (auth) */
   disconnect: (token) =>
     apiFetch(`${IG}/disconnect`, { body: {}, token }),
