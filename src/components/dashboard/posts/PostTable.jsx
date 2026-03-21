@@ -47,6 +47,7 @@ function SkeletonRow() {
       <td className="px-6 py-4"><div className="h-3 w-24 rounded bg-gray-100 dark:bg-gray-800 animate-pulse" /></td>
       <td className="px-6 py-4"><div className="h-5 w-20 rounded-full bg-gray-100 dark:bg-gray-800 animate-pulse" /></td>
       <td className="px-6 py-4"><div className="h-5 w-16 rounded-full bg-gray-100 dark:bg-gray-800 animate-pulse" /></td>
+      <td className="px-6 py-4"><div className="h-3 w-28 rounded bg-gray-100 dark:bg-gray-800 animate-pulse" /></td>
       <td className="px-6 py-4"><div className="h-3 w-16 rounded bg-gray-100 dark:bg-gray-800 animate-pulse" /></td>
       <td className="px-6 py-4"><div className="h-3 w-20 rounded bg-gray-100 dark:bg-gray-800 animate-pulse" /></td>
       <td className="px-6 py-4" />
@@ -61,13 +62,14 @@ export default function PostTable({ posts, loading }) {
   return (
     <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm overflow-hidden">
       <div className="overflow-auto max-h-[75vh]">
-        <table className="w-full min-w-[900px]">
+        <table className="w-full min-w-[1100px]">
           <thead className="sticky top-0 z-10">
             <tr className="border-b border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800">
               <th className={COL}>Post</th>
               <th className={COL}>Creator</th>
               <th className={COL}>Category</th>
               <th className={COL}>Sub-Category</th>
+              <th className={COL}>Media ID</th>
               <th className={COL}>Reach</th>
               <th className={COL}>Submitted</th>
               <th className={`${COL} text-right`}>Actions</th>
@@ -78,7 +80,7 @@ export default function PostTable({ posts, loading }) {
 
             {!loading && posts.length === 0 && (
               <tr>
-                <td colSpan={7} className="px-6 py-16 text-center text-sm text-gray-400 dark:text-gray-500">
+                <td colSpan={8} className="px-6 py-16 text-center text-sm text-gray-400 dark:text-gray-500">
                   No posts found
                 </td>
               </tr>
@@ -102,7 +104,7 @@ export default function PostTable({ posts, loading }) {
                   {/* Post */}
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
-                      <PostThumbnail src={thumb} color="#e5e7eb" alt={caption} />
+                      <div className="shrink-0"><PostThumbnail src={thumb} color="#e5e7eb" alt={caption} /></div>
                       <div className="min-w-0">
                         <p className="text-sm font-semibold text-gray-800 dark:text-gray-100 leading-snug">
                           {truncate(caption)}
@@ -151,6 +153,11 @@ export default function PostTable({ posts, loading }) {
                       ? <span className="inline-flex items-center rounded-full bg-blue-50 dark:bg-blue-500/10 px-2.5 py-0.5 text-xs font-medium text-blue-600 dark:text-blue-400">{subCat}</span>
                       : <span className="text-gray-300 dark:text-gray-600">—</span>
                     }
+                  </td>
+
+                  {/* Media ID */}
+                  <td className="px-6 py-4 text-xs text-gray-800 dark:text-gray-100 font-mono">
+                    {post.instagramMediaId ?? <span className="text-gray-300 dark:text-gray-600">—</span>}
                   </td>
 
                   {/* Reach */}
