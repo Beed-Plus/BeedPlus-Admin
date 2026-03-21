@@ -1,9 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import PostThumbnail from './PostThumbnail'
-import Pagination from '../../ui/Pagination'
 
 const COL = 'px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-widest text-gray-400'
-const PAGE_SIZE = 15
 
 const MEDIA_TYPE_CONFIG = {
   VIDEO:          { label: 'Video',    color: 'bg-blue-50 text-blue-500' },
@@ -22,24 +20,6 @@ function MediaTypeBadge({ type }) {
   )
 }
 
-function fmtScore(n) {
-  if (!n && n !== 0) return <span className="text-gray-300">—</span>
-  const val = n >= 1_000 ? `${(n / 1_000).toFixed(1).replace(/\.0$/, '')}k` : n.toLocaleString()
-  return (
-    <span className="inline-flex items-center rounded-full bg-orange-50 px-2.5 py-0.5 text-xs font-bold text-orange-500">
-      {val}
-    </span>
-  )
-}
-
-function fmtRank(n) {
-  if (!n) return <span className="text-gray-300">—</span>
-  return (
-    <span className="inline-flex items-center gap-0.5 text-sm font-semibold text-gray-700">
-      <span className="text-xs font-normal text-gray-400">#</span>{n}
-    </span>
-  )
-}
 
 function fmtDate(iso) {
   if (!iso) return '—'
@@ -75,9 +55,8 @@ function SkeletonRow() {
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
-export default function PostTable({ posts, loading, currentPage, totalItems, onPageChange }) {
+export default function PostTable({ posts, loading }) {
   const navigate = useNavigate()
-  const totalPages = Math.ceil(totalItems / PAGE_SIZE)
 
   return (
     <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm overflow-hidden">
@@ -203,16 +182,6 @@ export default function PostTable({ posts, loading, currentPage, totalItems, onP
         </table>
       </div>
 
-      <div className="border-t border-gray-100 dark:border-gray-800">
-        <Pagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          totalItems={totalItems}
-          itemLabel="posts"
-          pageSize={PAGE_SIZE}
-          onPageChange={onPageChange}
-        />
-      </div>
     </div>
   )
 }
