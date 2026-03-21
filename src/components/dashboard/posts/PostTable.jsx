@@ -60,10 +60,10 @@ export default function PostTable({ posts, loading }) {
 
   return (
     <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm overflow-hidden">
-      <div className="overflow-x-auto">
+      <div className="overflow-auto max-h-[75vh]">
         <table className="w-full min-w-[900px]">
-          <thead>
-            <tr className="border-b border-gray-100 dark:border-gray-800 bg-gray-50/60 dark:bg-gray-800/50">
+          <thead className="sticky top-0 z-10">
+            <tr className="border-b border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800">
               <th className={COL}>Post</th>
               <th className={COL}>Creator</th>
               <th className={COL}>Category</th>
