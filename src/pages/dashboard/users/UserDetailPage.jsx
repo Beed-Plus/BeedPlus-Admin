@@ -458,21 +458,14 @@ export default function UserDetailPage() {
       )}
 
       {/* Stat cards */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         {loading ? (
-          Array.from({ length: 4 }).map((_, i) => <StatSkeleton key={i} />)
+          Array.from({ length: 3 }).map((_, i) => <StatSkeleton key={i} />)
         ) : (
           <>
             <StatCard
-              label="Beed+ Score"
-              value={fmt(user?.beedPlusCreatorScore)}
-              sub="Creator score"
-              icon={ScoreIcon}
-              accent="bg-orange-50"
-            />
-            <StatCard
-              label="Monthly Score"
-              value={fmt(user?.beedPlusMonthlyCreatorScore)}
+              label="Monthly Reach"
+              value={fmt(user?.monthlyReach)}
               sub="30-day aggregate"
               icon={TrophyIcon}
               accent="bg-amber-50"

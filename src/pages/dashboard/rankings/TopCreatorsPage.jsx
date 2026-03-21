@@ -19,7 +19,7 @@ export default function TopCreatorsPage() {
     setLoading(true)
     setError(null)
 
-    instagramApi.getCreatorRankings()
+    instagramApi.getCreatorMonthlyTop100()
       .then((res) => {
         if (cancelled) return
         setRankings(res.rankings ?? [])

@@ -6,19 +6,10 @@ const COL = 'px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-wi
 const PAGE_SIZE = 10
 
 function RankBadge({ rank }) {
-  const colors =
-    rank === 1
-      ? 'bg-yellow-100 text-yellow-600 ring-2 ring-yellow-300'
-      : rank === 2
-      ? 'bg-gray-100 text-gray-500 ring-2 ring-gray-300'
-      : rank === 3
-      ? 'bg-orange-100 text-orange-500 ring-2 ring-orange-300'
-      : 'bg-gray-50 text-gray-400'
-  return (
-    <div className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold ${colors}`}>
-      {rank}
-    </div>
-  )
+  if (rank === 1) return <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-amber-400 text-xs font-black text-white shadow-sm">1</span>
+  if (rank === 2) return <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-gray-300 text-xs font-black text-white shadow-sm">2</span>
+  if (rank === 3) return <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-orange-300 text-xs font-black text-white shadow-sm">3</span>
+  return <span className="text-sm font-semibold text-gray-500">#{rank}</span>
 }
 
 function CreatorAvatar({ profilePicture, username }) {
@@ -48,8 +39,8 @@ function formatScore(n) {
 export default function TopCreatorsTable({ creators, currentPage, totalItems, onPageChange, loading, nested = false }) {
   const totalPages = Math.ceil(totalItems / PAGE_SIZE)
   const Wrapper = ({ children }) => nested
-    ? <div className="overflow-hidden">{children}</div>
-    : <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm overflow-hidden">{children}</div>
+    ? <div className="overflow-x-auto">{children}</div>
+    : <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm overflow-x-auto">{children}</div>
 
   if (loading) {
     return (
@@ -61,8 +52,7 @@ export default function TopCreatorsTable({ creators, currentPage, totalItems, on
               <th className={COL}>Creator</th>
               <th className={COL}>Country</th>
               <th className={COL}>Category</th>
-              <th className={COL}>Daily Score</th>
-              <th className={COL}>Monthly Score</th>
+              <th className={COL}>Monthly Reach</th>
               <th className={`${COL} text-right`}>Action</th>
             </tr>
           </thead>
@@ -78,7 +68,6 @@ export default function TopCreatorsTable({ creators, currentPage, totalItems, on
                 </td>
                 <td className="px-6 py-4"><div className="h-4 w-20 rounded bg-gray-100 dark:bg-gray-800 animate-pulse" /></td>
                 <td className="px-6 py-4"><div className="h-5 w-20 rounded-full bg-gray-100 dark:bg-gray-800 animate-pulse" /></td>
-                <td className="px-6 py-4"><div className="h-4 w-16 rounded bg-gray-100 dark:bg-gray-800 animate-pulse" /></td>
                 <td className="px-6 py-4"><div className="h-4 w-16 rounded bg-gray-100 dark:bg-gray-800 animate-pulse" /></td>
                 <td className="px-6 py-4 text-right"><div className="ml-auto h-8 w-24 rounded-xl bg-gray-100 dark:bg-gray-800 animate-pulse" /></td>
               </tr>
@@ -98,8 +87,7 @@ export default function TopCreatorsTable({ creators, currentPage, totalItems, on
             <th className={COL}>Creator</th>
             <th className={COL}>Country</th>
             <th className={COL}>Category</th>
-            <th className={COL}>Daily Score</th>
-            <th className={COL}>Monthly Score</th>
+            <th className={COL}>Monthly Reach</th>
             <th className={`${COL} text-right`}>Action</th>
           </tr>
         </thead>
@@ -111,7 +99,7 @@ export default function TopCreatorsTable({ creators, currentPage, totalItems, on
             >
               {/* Rank */}
               <td className="px-6 py-4">
-                <RankBadge rank={creator.monthlyRank} />
+                <RankBadge rank={creator.monthlyCreatorRank} />
               </td>
 
               {/* Creator */}
@@ -138,17 +126,10 @@ export default function TopCreatorsTable({ creators, currentPage, totalItems, on
                 )}
               </td>
 
-              {/* Daily Score */}
-              <td className="px-6 py-4">
-                <span className="text-sm font-semibold text-orange-500">
-                  {formatScore(creator.dailyScore)}
-                </span>
-              </td>
-
-              {/* Monthly Score */}
+              {/* Monthly Reach */}
               <td className="px-6 py-4">
                 <span className="text-sm font-bold text-gray-800 dark:text-gray-100">
-                  {formatScore(creator.monthlyScore)}
+                  {formatScore(creator.monthlyReach)}
                 </span>
               </td>
 
@@ -166,7 +147,7 @@ export default function TopCreatorsTable({ creators, currentPage, totalItems, on
 
           {creators.length === 0 && (
             <tr>
-              <td colSpan={7} className="px-6 py-12 text-center text-sm text-gray-400 dark:text-gray-500">
+              <td colSpan={6} className="px-6 py-12 text-center text-sm text-gray-400 dark:text-gray-500">
                 No creators found.
               </td>
             </tr>
