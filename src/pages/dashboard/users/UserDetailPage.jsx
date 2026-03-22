@@ -276,6 +276,7 @@ export default function UserDetailPage() {
   const [error, setError]           = useState(null)
   const [selectedPost, setSelectedPost] = useState(null)
   const [postsPage, setPostsPage]       = useState(1)
+  const [reachPage, setReachPage]       = useState(1)
   const [approving, setApproving]       = useState(false)
   const [approveError, setApproveError] = useState(null)
   const POSTS_PER_PAGE = 5
@@ -486,6 +487,53 @@ export default function UserDetailPage() {
             />
           </>
         )}
+      </div>
+
+      {/* Daily Reach */}
+      <div className="flex flex-col rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm overflow-hidden">
+        <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-800">
+          <p className="text-sm font-bold text-gray-800 dark:text-gray-100">Daily Reach</p>
+          <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Per-day reach history</p>
+        </div>
+        {!user?.instagram?.dailyInsights?.length ? (
+          <p className="px-6 py-10 text-center text-sm text-gray-400 dark:text-gray-500">No daily reach data yet.</p>
+        ) : (() => {
+          const REACH_PER_PAGE = 5
+          const reversed = [...user.instagram.dailyInsights].reverse()
+          const totalReachPages = Math.ceil(reversed.length / REACH_PER_PAGE)
+          const paged = reversed.slice((reachPage - 1) * REACH_PER_PAGE, reachPage * REACH_PER_PAGE)
+          return (
+            <>
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[400px]">
+                  <thead>
+                    <tr className="border-b border-gray-100 dark:border-gray-800 bg-gray-50/60 dark:bg-gray-800/50">
+                      <th className="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">Date</th>
+                      <th className="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">Reach</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {paged.map((entry, i) => (
+                      <tr key={i} className="border-b border-gray-50 dark:border-gray-800/50 last:border-0 hover:bg-gray-50/40 dark:hover:bg-gray-800/40">
+                        <td className="px-6 py-3 text-sm text-gray-500 dark:text-gray-400">{fmtDate(entry.date)}</td>
+                        <td className="px-6 py-3 text-sm font-semibold text-gray-800 dark:text-gray-100">{fmt(entry.reach)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              {totalReachPages > 1 && (
+                <div className="flex items-center justify-between px-6 py-3 border-t border-gray-100 dark:border-gray-800 text-xs text-gray-400">
+                  <span>{(reachPage - 1) * REACH_PER_PAGE + 1}–{Math.min(reachPage * REACH_PER_PAGE, reversed.length)} of {reversed.length}</span>
+                  <div className="flex gap-1">
+                    <button onClick={() => setReachPage(p => Math.max(1, p - 1))} disabled={reachPage === 1} className="px-2 py-1 rounded disabled:opacity-40 hover:bg-gray-100 dark:hover:bg-gray-800">‹</button>
+                    <button onClick={() => setReachPage(p => Math.min(totalReachPages, p + 1))} disabled={reachPage === totalReachPages} className="px-2 py-1 rounded disabled:opacity-40 hover:bg-gray-100 dark:hover:bg-gray-800">›</button>
+                  </div>
+                </div>
+              )}
+            </>
+          )
+        })()}
       </div>
 
       {/* Submitted Posts */}

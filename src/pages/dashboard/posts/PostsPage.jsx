@@ -3,7 +3,6 @@ import { useAuth } from '../../../hooks/useAuth'
 import { instagramApi } from '../../../utils/instagramApi'
 import PostTable from '../../../components/dashboard/posts/PostTable'
 
-const PAGE_SIZE = 15
 
 const SELECT ='rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-600 dark:text-gray-300 outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition cursor-pointer'
 
@@ -14,7 +13,6 @@ export default function PostsPage() {
   const [allPosts, setAllPosts] = useState([])
   const [loading, setLoading]   = useState(true)
   const [error, setError]       = useState(null)
-  const [page, setPage]         = useState(1)
   const [retryKey, setRetryKey] = useState(0)
 
   console.log("all posts", allPosts)
@@ -112,11 +110,9 @@ export default function PostsPage() {
       .sort((a, b) => new Date(b.createdAt ?? 0) - new Date(a.createdAt ?? 0))
   }, [allPosts, search, filterCategory, filterSubCategory, filterCountry])
 
-  const totalPages = Math.ceil(filtered.length / PAGE_SIZE)
-  const paged = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
   function handleFilter(setter) {
-    return (val) => { setter(val); setPage(1) }
+    return (val) => { setter(val) }
   }
 
   const anyFilter = search || filterCategory || filterSubCategory || filterCountry
@@ -167,7 +163,7 @@ export default function PostsPage() {
           type="text"
           autoComplete="off"
           value={search}
-          onChange={(e) => { setSearch(e.target.value); setPage(1) }}
+          onChange={(e) => { setSearch(e.target.value) }}
           placeholder="Search Username…"
           className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-600 dark:text-gray-300 outline-none placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition w-48"
         />
@@ -175,7 +171,7 @@ export default function PostsPage() {
         {/* Country */}
         <select
           value={filterCountry}
-          onChange={(e) => { setFilterCountry(e.target.value); setPage(1) }}
+          onChange={(e) => { setFilterCountry(e.target.value) }}
           className={`${SELECT} ml-auto`}
         >
           <option value="">All Countries</option>
@@ -185,7 +181,7 @@ export default function PostsPage() {
         {/* Clear */}
         {anyFilter && (
           <button
-            onClick={() => { setSearch(''); setCategory(''); setSubCategory(''); setFilterCountry(''); setPage(1) }}
+            onClick={() => { setSearch(''); setCategory(''); setSubCategory(''); setFilterCountry('') }}
             className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-400 dark:text-gray-500 hover:border-red-200 hover:text-red-400 transition"
           >
             Clear
@@ -208,11 +204,8 @@ export default function PostsPage() {
 
       {/* Table */}
       <PostTable
-        posts={paged}
+        posts={filtered}
         loading={loading}
-        currentPage={page}
-        totalItems={filtered.length}
-        onPageChange={setPage}
       />
     </div>
   )

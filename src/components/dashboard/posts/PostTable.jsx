@@ -163,9 +163,11 @@ export default function PostTable({ posts, loading }) {
                   {/* Reach */}
                   <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-200 font-medium">
                     {post.insights?.reach != null
-                      ? post.insights.reach >= 1_000
-                        ? `${(post.insights.reach / 1_000).toFixed(1).replace(/\.0$/, '')}k`
-                        : post.insights.reach.toLocaleString()
+                      ? post.insights.reach >= 1_000_000
+                        ? `${(post.insights.reach / 1_000_000).toFixed(1).replace(/\.0$/, '')}M`
+                        : post.insights.reach >= 1_000
+                          ? `${(post.insights.reach / 1_000).toFixed(1).replace(/\.0$/, '')}k`
+                          : post.insights.reach.toLocaleString()
                       : <span className="text-gray-300 dark:text-gray-600">—</span>
                     }
                   </td>
