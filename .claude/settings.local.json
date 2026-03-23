@@ -5,7 +5,8 @@
       "Bash(c:/Users/HP/Documents/BeedPlus-admin/src/App.jsx:*)",
       "Bash(npm run:*)",
       "Bash(find c:UsersHPDocumentsBeedPlus-Backend -type f -name *activit* -o -name *log*)",
-      "Bash(npx vite:*)"
+      "Bash(npx vite:*)",
+      "WebFetch(domain:developers.facebook.com)"
     ]
   }
 }
