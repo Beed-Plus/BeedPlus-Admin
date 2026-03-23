@@ -23,6 +23,10 @@ export const instagramApi = {
   getMediaByIdForAdmin: (id, token) =>
     apiFetch(`${IG}/admin/media/${id}`, { token }),
 
+  /** PATCH /api/instagram/admin/media/:id/category  (admin) */
+  updateMediaCategory: (id, { category, subCategory }, token) =>
+    apiFetch(`${IG}/admin/media/${id}/category`, { method: 'PATCH', body: { category, subCategory }, token }),
+
   /** GET /api/instagram/daily-top-100  (public) */
   getDailyTop100: () =>
     apiFetch(`${IG}/daily-top-100`),

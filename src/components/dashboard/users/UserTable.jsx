@@ -1,7 +1,9 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../../hooks/useAuth'
 import { usersApi } from '../../../utils/usersApi'
+import { categoriesApi } from '../../../utils/categoriesApi'
+import { countriesApi } from '../../../utils/countriesApi'
 import Badge from '../../ui/Badge'
 import StatusBadge from '../../ui/StatusBadge'
 import Pagination from '../../ui/Pagination'
@@ -40,15 +42,6 @@ function fmtFollowers(n) {
   return n.toLocaleString()
 }
 
-function fmtScore(n) {
-  if (!n && n !== 0) return <span className="text-gray-300">—</span>
-  return (
-    <span className="inline-flex items-center gap-1 rounded-full bg-orange-50 px-2.5 py-0.5 text-xs font-bold text-orange-500">
-      {n >= 1_000 ? `${(n / 1_000).toFixed(1).replace(/\.0$/, '')}k` : n.toLocaleString()}
-    </span>
-  )
-}
-
 // ─── Skeleton ─────────────────────────────────────────────────────────────────
 function SkeletonRow() {
   return (
@@ -80,9 +73,24 @@ export default function UserTable({ users: initialUsers, loading, currentPage, t
   const token = auth?.token
 
   const [localUsers, setLocalUsers] = useState(null)
-  const [confirmDelete, setConfirmDelete] = useState(null) // user object pending deletion
+  const [confirmDelete, setConfirmDelete] = useState(null)
   const [deleting, setDeleting] = useState(false)
+  const [editUser, setEditUser] = useState(null)
+  const [editCategory, setEditCategory] = useState('')
+  const [editCountry, setEditCountry] = useState('')
+  const [categories, setCategories] = useState([])
+  const [countries, setCountries] = useState([])
+  const [saving, setSaving] = useState(false)
   const displayUsers = localUsers ?? initialUsers
+
+  useEffect(() => {
+    categoriesApi.getCategories()
+      .then((res) => setCategories(Array.isArray(res) ? res : (res.categories ?? [])))
+      .catch(() => {})
+    countriesApi.getCountries()
+      .then((res) => setCountries(Array.isArray(res) ? res : (res.countries ?? [])))
+      .catch(() => {})
+  }, [])
 
   async function handleAction(action, user) {
     if (action === 'View Profile') {
@@ -100,10 +108,34 @@ export default function UserTable({ users: initialUsers, loading, currentPage, t
       } catch (err) {
         alert(`Approve failed: ${err.message}`)
       }
+    } else if (action === 'Edit User') {
+      setEditUser(user)
+      setEditCategory(Array.isArray(user.category) ? user.category[0] ?? '' : user.category ?? '')
+      setEditCountry(user.country ?? '')
     } else if (action === 'Suspend User') {
       alert('Suspend endpoint not yet available.')
     } else if (action === 'Delete User') {
       setConfirmDelete(user)
+    }
+  }
+
+  async function saveEditUser() {
+    if (!editUser || (!editCategory && !editCountry)) return
+    setSaving(true)
+    try {
+      await usersApi.updateUserCategory(editUser._id, { category: editCategory || undefined, country: editCountry || undefined }, token)
+      setLocalUsers((prev) =>
+        (prev ?? initialUsers).map((u) =>
+          u._id === editUser._id
+            ? { ...u, ...(editCategory && { category: editCategory }), ...(editCountry && { country: editCountry }) }
+            : u
+        )
+      )
+      setEditUser(null)
+    } catch (err) {
+      alert(`Failed to update user: ${err.message}`)
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -131,7 +163,6 @@ export default function UserTable({ users: initialUsers, loading, currentPage, t
               <th className={COL}>Monthly Rank</th>
               <th className={COL}>Followers</th>
               <th className={COL}>Category</th>
-              <th className={COL}>Beed+ Score</th>
               <th className={COL}>Connected</th>
               <th className={COL}>Approval</th>
               <th className={`${COL} text-right`}>Actions</th>
@@ -142,7 +173,7 @@ export default function UserTable({ users: initialUsers, loading, currentPage, t
 
             {!loading && displayUsers.length === 0 && (
               <tr>
-                <td colSpan={8} className="px-6 py-16 text-center text-sm text-gray-400 dark:text-gray-500">
+                <td colSpan={7} className="px-6 py-16 text-center text-sm text-gray-400 dark:text-gray-500">
                   No users found
                 </td>
               </tr>
@@ -188,11 +219,6 @@ export default function UserTable({ users: initialUsers, loading, currentPage, t
                     }
                   </td>
 
-                  {/* Beed+ Score */}
-                  <td className="px-6 py-4">
-                    {fmtScore(user.beedPlusCreatorScore)}
-                  </td>
-
                   {/* Connected */}
                   <td className="px-6 py-4">
                     {connected ? (
@@ -236,6 +262,68 @@ export default function UserTable({ users: initialUsers, loading, currentPage, t
           onPageChange={onPageChange}
         />
       </div>
+
+      {/* Edit User modal */}
+      {editUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => !saving && setEditUser(null)} />
+          <div className="relative w-full max-w-sm rounded-2xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 shadow-2xl p-6 flex flex-col gap-5">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-500/10">
+                <svg className="h-5 w-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-gray-900 dark:text-gray-100">Edit User</h3>
+                <p className="text-xs text-gray-400 dark:text-gray-500">{displayName(editUser)}</p>
+              </div>
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">Category</label>
+              <select
+                value={editCategory}
+                onChange={(e) => setEditCategory(e.target.value)}
+                className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-3 text-sm text-gray-700 dark:text-gray-200 outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition"
+              >
+                <option value="">Select a category…</option>
+                {categories.map((c) => (
+                  <option key={c._id ?? c.name} value={c.name}>{c.name}</option>
+                ))}
+              </select>
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">Country</label>
+              <select
+                value={editCountry}
+                onChange={(e) => setEditCountry(e.target.value)}
+                className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-3 text-sm text-gray-700 dark:text-gray-200 outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition"
+              >
+                <option value="">Select a country…</option>
+                {countries.map((c) => (
+                  <option key={c._id ?? c.name} value={c.name}>{c.name}</option>
+                ))}
+              </select>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setEditUser(null)}
+                disabled={saving}
+                className="flex-1 rounded-xl border border-gray-200 dark:border-gray-700 py-2.5 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={saveEditUser}
+                disabled={saving || (!editCategory && !editCountry)}
+                className="flex-1 rounded-xl bg-orange-500 py-2.5 text-sm font-semibold text-white hover:bg-orange-600 transition disabled:opacity-60"
+              >
+                {saving ? 'Saving…' : 'Save'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Delete confirmation modal */}
       {confirmDelete && (

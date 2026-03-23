@@ -6,6 +6,7 @@ export default function UserActions({ onAction, approvalStatus }) {
 
   const ACTIONS = [
     'View Profile',
+    'Edit User',
     ...(!isApproved ? ['Approve User'] : []),
     ...(isApproved  ? ['Suspend User'] : []),
     'Delete User',
@@ -64,6 +65,7 @@ export default function UserActions({ onAction, approvalStatus }) {
                 action === 'Delete User'   ? 'text-red-500' :
                 action === 'Approve User'  ? 'text-green-600 dark:text-green-400 font-medium' :
                 action === 'Suspend User'  ? 'text-amber-500 dark:text-amber-400' :
+                action === 'Edit User'     ? 'text-blue-500 dark:text-blue-400' :
                 'text-gray-700 dark:text-gray-200'
               }`}
             >

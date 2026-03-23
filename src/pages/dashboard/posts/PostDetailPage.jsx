@@ -1,7 +1,5 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useParams, useNavigate, useLocation, Link } from 'react-router-dom'
-import { DayPicker } from 'react-day-picker'
-import 'react-day-picker/style.css'
 import { useAuth } from '../../../hooks/useAuth'
 import { instagramApi } from '../../../utils/instagramApi'
 import Breadcrumb from '../../../components/ui/Breadcrumb'
@@ -104,8 +102,6 @@ function PageSkeleton() {
   )
 }
 
-const PAGE_SIZE = 5
-
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export default function PostDetailPage() {
   const { id } = useParams()
@@ -117,20 +113,6 @@ export default function PostDetailPage() {
   const [post, setPost]       = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError]     = useState(null)
-  const [dateRange, setDateRange]         = useState(undefined)
-  const [pickerOpen, setPickerOpen]       = useState(false)
-  const [dailyPage, setDailyPage]         = useState(1)
-  const [archivedPage, setArchivedPage]   = useState(1)
-  const pickerRef = useRef(null)
-
-  useEffect(() => {
-    if (!pickerOpen) return
-    function handleClickOutside(e) {
-      if (pickerRef.current && !pickerRef.current.contains(e.target)) setPickerOpen(false)
-    }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [pickerOpen])
 
   // Always fetch full data so dailyInsights (excluded from list endpoint) are included
   useEffect(() => {
@@ -192,35 +174,8 @@ export default function PostDetailPage() {
     .filter(([k, v]) => k.startsWith('daily_') && v !== undefined && v !== null)
     .map(([k, v]) => ({ key: k, label: DAILY_LABELS[k] ?? k.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()), value: v }))
 
-  const archivedRows     = [...(post.insights?.archivedLifetimes ?? [])].reverse()
-  const archivedPageRows = archivedRows.slice((archivedPage - 1) * PAGE_SIZE, archivedPage * PAGE_SIZE)
-  const totalArchivedPages = Math.ceil(archivedRows.length / PAGE_SIZE)
-
-  const allDailyRows = [...(post.insights?.dailyInsights ?? [])].reverse()
-  const filteredDailyRows = (() => {
-    if (!dateRange?.from) return allDailyRows
-    const from = new Date(dateRange.from); from.setHours(0, 0, 0, 0)
-    const to   = dateRange.to ? new Date(dateRange.to) : new Date(dateRange.from); to.setHours(23, 59, 59, 999)
-    return allDailyRows.filter((row) => {
-      const d = new Date(row.date)
-      return d >= from && d <= to
-    })
-  })()
-
-  const totalDailyPages  = Math.ceil(filteredDailyRows.length / PAGE_SIZE)
-  const pagedDailyRows   = filteredDailyRows.slice((dailyPage - 1) * PAGE_SIZE, dailyPage * PAGE_SIZE)
-
-  const rangeAgg = dateRange?.from && filteredDailyRows.length > 0
-    ? filteredDailyRows.reduce((acc, row) => ({
-        views:             (acc.views             ?? 0) + (row.views             ?? 0),
-        reach:             (acc.reach             ?? 0) + (row.reach             ?? 0),
-        totalInteractions: (acc.totalInteractions ?? 0) + (row.totalInteractions ?? 0),
-        likes:             (acc.likes             ?? 0) + (row.likes             ?? 0),
-        comments:          (acc.comments          ?? 0) + (row.comments          ?? row.commentsCount ?? 0),
-        shares:            (acc.shares            ?? 0) + (row.shares            ?? 0),
-        saved:             (acc.saved             ?? 0) + (row.saved             ?? 0),
-      }), {})
-    : null
+  const archivedRows = [...(post.insights?.archivedLifetimes ?? [])].reverse().slice(0, 2)
+  const dailyRows    = [...(post.insights?.dailyInsights ?? [])].reverse().slice(0, 2)
 
   return (
     <div className="flex flex-col gap-6">
@@ -230,42 +185,6 @@ export default function PostDetailPage() {
       <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-sm">
         {/* Card top row */}
         <div className="flex items-center justify-end gap-2 mb-4">
-          {/* Date range picker */}
-          <div className="relative" ref={pickerRef}>
-            <button
-              onClick={() => setPickerOpen((o) => !o)}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-1.5 text-xs font-semibold text-gray-600 dark:text-gray-300 hover:border-orange-300 hover:text-orange-500 transition"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-              {dateRange?.from
-                ? dateRange.to
-                  ? `${fmtDate(dateRange.from)} – ${fmtDate(dateRange.to)}`
-                  : fmtDate(dateRange.from)
-                : 'Filter by date range'}
-              {dateRange?.from && (
-                <span
-                  onClick={(e) => { e.stopPropagation(); setDateRange(undefined); setDailyPage(1) }}
-                  className="ml-1 text-gray-400 hover:text-red-400 transition"
-                >✕</span>
-              )}
-            </button>
-            {pickerOpen && (
-              <div className="absolute right-0 z-50 mt-2 rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-xl p-3">
-                <DayPicker
-                  mode="range"
-                  selected={dateRange}
-                  onSelect={(range) => {
-                    setDateRange(range)
-                    setDailyPage(1)
-                    if (range?.from && range?.to && range.from.toDateString() !== range.to.toDateString()) setPickerOpen(false)
-                  }}
-                />
-              </div>
-            )}
-          </div>
-
           <button
             onClick={() => navigate('/dashboard/posts/compare', { state: { postA: post } })}
             className="inline-flex items-center gap-1.5 rounded-xl border border-orange-200 dark:border-orange-500/30 bg-orange-50 dark:bg-orange-500/10 px-3 py-1.5 text-xs font-semibold text-orange-500 hover:bg-orange-100 dark:hover:bg-orange-500/20 transition"
@@ -416,118 +335,40 @@ export default function PostDetailPage() {
 
       {/* Daily Insights History Table */}
       <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between gap-3 flex-wrap">
+        <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-800">
           <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">Daily Insights History</p>
-          {dateRange?.from && (
-            <span className="text-xs text-gray-400 dark:text-gray-500">
-              {filteredDailyRows.length} day{filteredDailyRows.length !== 1 ? 's' : ''} selected
-            </span>
-          )}
         </div>
 
-        {/* Range aggregation summary */}
-        {rangeAgg && (
-          <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-800 bg-orange-50/60 dark:bg-orange-500/5">
-            <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-orange-400">Range Totals ({filteredDailyRows.length} days)</p>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7">
-              {[
-                { label: 'Views',        value: rangeAgg.views },
-                { label: 'Reach',        value: rangeAgg.reach },
-                { label: 'Interactions', value: rangeAgg.totalInteractions },
-                { label: 'Likes',        value: rangeAgg.likes },
-                { label: 'Comments',     value: rangeAgg.comments },
-                { label: 'Shares',       value: rangeAgg.shares },
-                { label: 'Saved',        value: rangeAgg.saved },
-              ].map(({ label, value }) => (
-                <div key={label}>
-                  <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400">{label}</p>
-                  <p className="mt-0.5 text-lg font-black text-orange-500">{fmt(value)}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {allDailyRows.length === 0 ? (
+        {dailyRows.length === 0 ? (
           <div className="px-6 py-10 text-center text-sm text-gray-400 dark:text-gray-500">
             No daily insights history available for this post.
           </div>
-        ) : filteredDailyRows.length === 0 ? (
-          <div className="px-6 py-10 text-center text-sm text-gray-400 dark:text-gray-500">
-            No entries found for the selected date range.
-          </div>
         ) : (
-          <>
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[700px]">
-                <thead>
-                  <tr className="border-b border-gray-100 dark:border-gray-800 bg-gray-50/60 dark:bg-gray-800/50">
-                    {['Date', 'Views', 'Reach', 'Interactions', 'Likes', 'Comments', 'Shares', 'Saved'].map((h) => (
-                      <th key={h} className="px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-widest text-gray-400">{h}</th>
-                    ))}
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[700px]">
+              <thead>
+                <tr className="border-b border-gray-100 dark:border-gray-800 bg-gray-50/60 dark:bg-gray-800/50">
+                  {['Date', 'Views', 'Reach', 'Interactions', 'Likes', 'Comments', 'Shares', 'Saved'].map((h) => (
+                    <th key={h} className="px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-widest text-gray-400">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {dailyRows.map((row, i) => (
+                  <tr key={i} className="border-b border-gray-50 dark:border-gray-800/50 last:border-0 hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors">
+                    <td className="px-5 py-3.5 text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">{fmtDate(row.date)}</td>
+                    <td className="px-5 py-3.5 text-sm text-gray-700 dark:text-gray-300 font-medium">{fmt(row.views)}</td>
+                    <td className="px-5 py-3.5 text-sm text-gray-600 dark:text-gray-400">{fmt(row.reach)}</td>
+                    <td className="px-5 py-3.5 text-sm text-orange-500 font-semibold">{fmt(row.totalInteractions)}</td>
+                    <td className="px-5 py-3.5 text-sm text-gray-600 dark:text-gray-400">{fmt(row.likes)}</td>
+                    <td className="px-5 py-3.5 text-sm text-gray-600 dark:text-gray-400">{fmt(row.comments ?? row.commentsCount)}</td>
+                    <td className="px-5 py-3.5 text-sm text-gray-600 dark:text-gray-400">{fmt(row.shares)}</td>
+                    <td className="px-5 py-3.5 text-sm text-gray-600 dark:text-gray-400">{fmt(row.saved)}</td>
                   </tr>
-                </thead>
-                <tbody>
-                  {pagedDailyRows.map((row, i) => (
-                    <tr key={i} className="border-b border-gray-50 dark:border-gray-800/50 last:border-0 hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors">
-                      <td className="px-5 py-3.5 text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">{fmtDate(row.date)}</td>
-                      <td className="px-5 py-3.5 text-sm text-gray-700 dark:text-gray-300 font-medium">{fmt(row.views)}</td>
-                      <td className="px-5 py-3.5 text-sm text-gray-600 dark:text-gray-400">{fmt(row.reach)}</td>
-                      <td className="px-5 py-3.5 text-sm text-orange-500 font-semibold">{fmt(row.totalInteractions)}</td>
-                      <td className="px-5 py-3.5 text-sm text-gray-600 dark:text-gray-400">{fmt(row.likes)}</td>
-                      <td className="px-5 py-3.5 text-sm text-gray-600 dark:text-gray-400">{fmt(row.comments ?? row.commentsCount)}</td>
-                      <td className="px-5 py-3.5 text-sm text-gray-600 dark:text-gray-400">{fmt(row.shares)}</td>
-                      <td className="px-5 py-3.5 text-sm text-gray-600 dark:text-gray-400">{fmt(row.saved)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            {totalDailyPages > 1 && (
-              <div className="flex items-center justify-between border-t border-gray-100 dark:border-gray-800 px-6 py-3">
-                <p className="text-sm text-gray-400 dark:text-gray-500">
-                  <span className="font-bold text-gray-700 dark:text-gray-300">
-                    {(dailyPage - 1) * PAGE_SIZE + 1}–{Math.min(dailyPage * PAGE_SIZE, filteredDailyRows.length)}
-                  </span>
-                  {' '}of{' '}
-                  <span className="font-bold text-gray-700 dark:text-gray-300">{filteredDailyRows.length}</span>
-                </p>
-                <div className="flex items-center gap-1">
-                  <button
-                    onClick={() => setDailyPage((p) => p - 1)}
-                    disabled={dailyPage === 1}
-                    className="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 dark:border-gray-700 text-gray-400 hover:border-orange-300 hover:text-orange-500 transition disabled:opacity-40 disabled:cursor-not-allowed"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                    </svg>
-                  </button>
-                  {Array.from({ length: totalDailyPages }, (_, i) => i + 1).map((p) => (
-                    <button
-                      key={p}
-                      onClick={() => setDailyPage(p)}
-                      className={`flex h-8 w-8 items-center justify-center rounded-lg text-sm font-medium transition ${
-                        p === dailyPage
-                          ? 'bg-orange-500 text-white'
-                          : 'border border-gray-200 dark:border-gray-700 text-gray-500 hover:border-orange-300 hover:text-orange-500'
-                      }`}
-                    >
-                      {p}
-                    </button>
-                  ))}
-                  <button
-                    onClick={() => setDailyPage((p) => p + 1)}
-                    disabled={dailyPage === totalDailyPages}
-                    className="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 dark:border-gray-700 text-gray-400 hover:border-orange-300 hover:text-orange-500 transition disabled:opacity-40 disabled:cursor-not-allowed"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-            )}
-          </>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
 

@@ -1,4 +1,9 @@
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../../../hooks/useAuth'
+import { instagramApi } from '../../../utils/instagramApi'
+import { categoriesApi } from '../../../utils/categoriesApi'
+import { subCategoriesApi } from '../../../utils/subCategoriesApi'
 import PostThumbnail from './PostThumbnail'
 
 const COL = 'px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-widest text-gray-400'
@@ -58,6 +63,69 @@ function SkeletonRow() {
 // ─── Component ────────────────────────────────────────────────────────────────
 export default function PostTable({ posts, loading }) {
   const navigate = useNavigate()
+  const { auth } = useAuth()
+  const token = auth?.token
+
+  const [localPosts, setLocalPosts] = useState(null)
+  const [editPost, setEditPost] = useState(null)
+  const [editCategory, setEditCategory] = useState('')
+  const [editSubCategory, setEditSubCategory] = useState('')
+  const [categories, setCategories] = useState([])
+  const [subCategories, setSubCategories] = useState([])
+  const [saving, setSaving] = useState(false)
+  const displayPosts = localPosts ?? posts
+
+  useEffect(() => {
+    categoriesApi.getCategories()
+      .then((res) => setCategories(Array.isArray(res) ? res : (res.categories ?? [])))
+      .catch(() => {})
+  }, [])
+
+  useEffect(() => {
+    if (!editCategory) { setSubCategories([]); return }
+    const cat = categories.find((c) => c.name === editCategory)
+    if (!cat?._id) return
+    subCategoriesApi.getSubCategories(cat._id)
+      .then((res) => setSubCategories(Array.isArray(res) ? res : (res.subCategories ?? [])))
+      .catch(() => {})
+  }, [editCategory, categories])
+
+  function openEdit(post) {
+    const cat = Array.isArray(post.category) ? post.category[0] ?? '' : post.category ?? ''
+    setEditPost(post)
+    setEditCategory(cat)
+    setEditSubCategory(post.subCategory?.name ?? '')
+  }
+
+  async function saveEdit() {
+    if (!editPost || !editCategory) return
+    setSaving(true)
+    try {
+      let subCategoryId = null
+      if (editSubCategory.trim()) {
+        const cat = categories.find((c) => c.name === editCategory)
+        const found = await subCategoriesApi.findOrCreate({ name: editSubCategory.trim(), categoryId: cat?._id })
+        subCategoryId = found?._id ?? found?.subCategory?._id ?? null
+      }
+      const res = await instagramApi.updateMediaCategory(
+        editPost._id,
+        { category: editCategory, subCategory: subCategoryId },
+        token
+      )
+      setLocalPosts((prev) =>
+        (prev ?? posts).map((p) =>
+          p._id === editPost._id
+            ? { ...p, category: [editCategory], subCategory: res.media?.subCategory ?? null }
+            : p
+        )
+      )
+      setEditPost(null)
+    } catch (err) {
+      alert(`Failed to update: ${err.message}`)
+    } finally {
+      setSaving(false)
+    }
+  }
 
   return (
     <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm overflow-hidden">
@@ -78,7 +146,7 @@ export default function PostTable({ posts, loading }) {
           <tbody>
             {loading && Array.from({ length: 8 }).map((_, i) => <SkeletonRow key={i} />)}
 
-            {!loading && posts.length === 0 && (
+            {!loading && displayPosts.length === 0 && (
               <tr>
                 <td colSpan={8} className="px-6 py-16 text-center text-sm text-gray-400 dark:text-gray-500">
                   No posts found
@@ -86,7 +154,7 @@ export default function PostTable({ posts, loading }) {
               </tr>
             )}
 
-            {!loading && posts.map((post) => {
+            {!loading && displayPosts.map((post) => {
               const caption   = post.media?.caption
               const type      = post.media?.mediaType
               const thumb     = post.media?.thumbnailUrl ?? post.media?.mediaUrl
@@ -177,12 +245,20 @@ export default function PostTable({ posts, loading }) {
 
                   {/* Actions */}
                   <td className="px-6 py-4 text-right" onClick={(e) => e.stopPropagation()}>
-                    <button
-                      onClick={() => navigate(`/dashboard/posts/${post._id}`, { state: { post } })}
-                      className="rounded-lg bg-orange-50 dark:bg-orange-500/10 px-3 py-1.5 text-xs font-semibold text-orange-500 hover:bg-orange-100 dark:hover:bg-orange-500/20 transition"
-                    >
-                      View
-                    </button>
+                    <div className="flex items-center justify-end gap-2">
+                      <button
+                        onClick={() => openEdit(post)}
+                        className="rounded-lg bg-blue-50 dark:bg-blue-500/10 px-3 py-1.5 text-xs font-semibold text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-500/20 transition"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => navigate(`/dashboard/posts/${post._id}`, { state: { post } })}
+                        className="rounded-lg bg-orange-50 dark:bg-orange-500/10 px-3 py-1.5 text-xs font-semibold text-orange-500 hover:bg-orange-100 dark:hover:bg-orange-500/20 transition"
+                      >
+                        View
+                      </button>
+                    </div>
                   </td>
                 </tr>
               )
@@ -191,6 +267,74 @@ export default function PostTable({ posts, loading }) {
         </table>
       </div>
 
+      {/* Edit Post modal */}
+      {editPost && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => !saving && setEditPost(null)} />
+          <div className="relative w-full max-w-sm rounded-2xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 shadow-2xl p-6 flex flex-col gap-5">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-500/10">
+                <svg className="h-5 w-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+              </div>
+              <div className="min-w-0">
+                <h3 className="text-base font-bold text-gray-900 dark:text-gray-100">Edit Post</h3>
+                <p className="text-xs text-gray-400 dark:text-gray-500 truncate">{truncate(editPost.media?.caption, 40)}</p>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">Category</label>
+              <select
+                value={editCategory}
+                onChange={(e) => { setEditCategory(e.target.value); setEditSubCategory('') }}
+                className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-3 text-sm text-gray-700 dark:text-gray-200 outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition"
+              >
+                <option value="">Select a category…</option>
+                {categories.map((c) => (
+                  <option key={c._id} value={c.name}>{c.name}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">Sub-Category</label>
+              <input
+                type="text"
+                list="edit-subcategory-list"
+                value={editSubCategory}
+                onChange={(e) => setEditSubCategory(e.target.value)}
+                disabled={!editCategory}
+                placeholder={editCategory ? 'Type or select…' : 'Select a category first'}
+                className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-3 text-sm text-gray-700 dark:text-gray-200 placeholder-gray-400 dark:placeholder-gray-600 outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition disabled:opacity-50"
+              />
+              <datalist id="edit-subcategory-list">
+                {subCategories.map((s) => (
+                  <option key={s._id} value={s.name} />
+                ))}
+              </datalist>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setEditPost(null)}
+                disabled={saving}
+                className="flex-1 rounded-xl border border-gray-200 dark:border-gray-700 py-2.5 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={saveEdit}
+                disabled={saving || !editCategory}
+                className="flex-1 rounded-xl bg-orange-500 py-2.5 text-sm font-semibold text-white hover:bg-orange-600 transition disabled:opacity-60"
+              >
+                {saving ? 'Saving…' : 'Save'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

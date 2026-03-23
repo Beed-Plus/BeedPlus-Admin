@@ -45,4 +45,8 @@ export const usersApi = {
   /** PUT /api/auth/approve-instagram-connect/:userId  (admin) */
   approveUser: (id, token) =>
     apiFetch(`/api/auth/approve-instagram-connect/${id}`, { method: 'PUT', token }),
+
+  /** PATCH /api/users/:id/category  (admin) — accepts category and/or country */
+  updateUserCategory: (id, { category, country }, token) =>
+    apiFetch(`${USERS}/${id}/category`, { method: 'PATCH', body: { category, country }, token }),
 }

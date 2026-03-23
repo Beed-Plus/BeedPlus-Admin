@@ -1,7 +1,4 @@
-import { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-
-const PAGE_SIZE = 5
 
 function fmt(n) {
   if (!n && n !== 0) return '—'
@@ -35,63 +32,10 @@ function InsightCard({ label, value, sub }) {
   )
 }
 
-function TablePager({ page, total, onChange }) {
-  const totalPages = Math.ceil(total / PAGE_SIZE)
-  if (totalPages <= 1) return null
-  const from = (page - 1) * PAGE_SIZE + 1
-  const to   = Math.min(page * PAGE_SIZE, total)
-
-  return (
-    <div className="flex items-center justify-between border-t border-gray-100 dark:border-gray-800 px-6 py-3">
-      <p className="text-sm text-gray-400 dark:text-gray-500">
-        <span className="font-bold text-gray-700 dark:text-gray-300">{from}–{to}</span>
-        {' '}of{' '}
-        <span className="font-bold text-gray-700 dark:text-gray-300">{total}</span>
-      </p>
-      <div className="flex items-center gap-1">
-        <button
-          onClick={() => onChange(page - 1)}
-          disabled={page === 1}
-          className="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 dark:border-gray-700 text-gray-400 hover:border-orange-300 hover:text-orange-500 transition disabled:opacity-40 disabled:cursor-not-allowed"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-        </button>
-        {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-          <button
-            key={p}
-            onClick={() => onChange(p)}
-            className={`flex h-8 w-8 items-center justify-center rounded-lg text-sm font-medium transition ${
-              p === page
-                ? 'bg-orange-500 text-white'
-                : 'border border-gray-200 dark:border-gray-700 text-gray-500 hover:border-orange-300 hover:text-orange-500'
-            }`}
-          >
-            {p}
-          </button>
-        ))}
-        <button
-          onClick={() => onChange(page + 1)}
-          disabled={page === totalPages}
-          className="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 dark:border-gray-700 text-gray-400 hover:border-orange-300 hover:text-orange-500 transition disabled:opacity-40 disabled:cursor-not-allowed"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-          </svg>
-        </button>
-      </div>
-    </div>
-  )
-}
-
 export default function PostRankingDetailPage() {
   const navigate = useNavigate()
   const { state } = useLocation()
   const item = state?.post
-
-  const [dailyPage, setDailyPage]    = useState(1)
-  const [archivedPage, setArchivedPage] = useState(1)
 
   console.log("post item", item)
 
@@ -118,11 +62,8 @@ export default function PostRankingDetailPage() {
 
   const cats = Array.isArray(category) ? category : [category].filter(Boolean)
 
-  const dailyRows    = [...dailyInsights].reverse()
-  const archivedRows = [...archivedLifetimes].reverse()
-
-  const dailyPage_rows    = dailyRows.slice((dailyPage - 1) * PAGE_SIZE, dailyPage * PAGE_SIZE)
-  const archivedPage_rows = archivedRows.slice((archivedPage - 1) * PAGE_SIZE, archivedPage * PAGE_SIZE)
+  const dailyRows    = [...dailyInsights].reverse().slice(0, 2)
+  const archivedRows = [...archivedLifetimes].reverse().slice(0, 2)
 
   return (
     <div className="flex flex-col gap-6">
@@ -235,7 +176,7 @@ export default function PostRankingDetailPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {dailyPage_rows.map((row, i) => (
+                  {dailyRows.map((row, i) => (
                     <tr key={i} className="border-b border-gray-50 dark:border-gray-800/50 last:border-0">
                       <td className="px-5 py-3.5 text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">{fmtDate(row.date)}</td>
                       <td className="px-5 py-3.5 text-sm text-gray-600 dark:text-gray-400">{fmt(row.views)}</td>
@@ -250,7 +191,6 @@ export default function PostRankingDetailPage() {
                 </tbody>
               </table>
             </div>
-            <TablePager page={dailyPage} total={dailyRows.length} onChange={setDailyPage} />
           </>
         )}
       </div>
@@ -274,7 +214,7 @@ export default function PostRankingDetailPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {archivedPage_rows.map((row, i) => (
+                  {archivedRows.map((row, i) => (
                     <tr key={i} className="border-b border-gray-50 dark:border-gray-800/50 last:border-0">
                       <td className="px-5 py-3.5 text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">{fmtDate(row.datetime ?? row.createdAt)}</td>
                       <td className="px-5 py-3.5 text-sm text-gray-600 dark:text-gray-400">{fmt(row.views)}</td>
@@ -287,7 +227,6 @@ export default function PostRankingDetailPage() {
                 </tbody>
               </table>
             </div>
-            <TablePager page={archivedPage} total={archivedRows.length} onChange={setArchivedPage} />
           </>
         )}
       </div>
