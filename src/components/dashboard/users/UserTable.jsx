@@ -163,6 +163,7 @@ export default function UserTable({ users: initialUsers, loading, currentPage, t
               <th className={COL}>Monthly Rank</th>
               <th className={COL}>Followers</th>
               <th className={COL}>Category</th>
+              <th className={COL}>Country</th>
               <th className={COL}>Connected</th>
               <th className={COL}>Approval</th>
               <th className={`${COL} text-right`}>Actions</th>
@@ -173,7 +174,7 @@ export default function UserTable({ users: initialUsers, loading, currentPage, t
 
             {!loading && displayUsers.length === 0 && (
               <tr>
-                <td colSpan={7} className="px-6 py-16 text-center text-sm text-gray-400 dark:text-gray-500">
+                <td colSpan={8} className="px-6 py-16 text-center text-sm text-gray-400 dark:text-gray-500">
                   No users found
                 </td>
               </tr>
@@ -217,6 +218,11 @@ export default function UserTable({ users: initialUsers, loading, currentPage, t
                       ? <Badge label={category} variant="orange" />
                       : <span className="text-gray-300 dark:text-gray-600 text-sm">—</span>
                     }
+                  </td>
+
+                  {/* Country */}
+                  <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
+                    {user.country || <span className="text-gray-300 dark:text-gray-600">—</span>}
                   </td>
 
                   {/* Connected */}

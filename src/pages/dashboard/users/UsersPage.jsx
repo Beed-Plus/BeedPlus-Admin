@@ -119,7 +119,7 @@ export default function UsersPage() {
       {/* Header */}
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-black text-gray-900">User Management</h1>
+          <h1 className="text-2xl font-black text-gray-900 dark:text-white">User Management</h1>
           <p className="mt-1 text-sm text-gray-400">
             Manage, audit, and monitor all registered users in the Beed+ ecosystem.
           </p>
