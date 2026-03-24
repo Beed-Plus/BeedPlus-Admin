@@ -19,7 +19,7 @@ export default function DashboardLayout() {
         onThemeToggle={toggleTheme}
       />
 
-      <div className="flex flex-1 flex-col overflow-hidden">
+      <div className="flex flex-1 flex-col min-w-0">
         {/* Mobile top bar */}
         <header className="flex items-center gap-3 border-b border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 px-4 py-3 lg:hidden">
           <button
@@ -30,13 +30,13 @@ export default function DashboardLayout() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
-          <span className="text-sm font-black text-gray-900 dark:text-white">
+          <span className="text-2xl font-black text-gray-900 dark:text-white">
             Beed<span className="text-red-500">+</span>{' '}
             <span className="font-normal text-gray-400">Admin</span>
           </span>
         </header>
 
-        <main className="flex-1 overflow-y-auto p-4 lg:p-8">
+        <main className="flex-1 overflow-y-auto overflow-x-hidden p-4 lg:p-8">
           <Outlet />
         </main>
       </div>
