@@ -5,6 +5,8 @@ export default function UserActions({ onAction, approvalStatus }) {
   const isApproved = approvalStatus === 'approved'
 
   const DROPDOWN_ACTIONS = [
+    'View Profile',
+    'Edit User',
     ...(!isApproved ? ['Approve User'] : []),
     ...(isApproved  ? ['Suspend User'] : []),
     'Delete User',
@@ -38,23 +40,7 @@ export default function UserActions({ onAction, approvalStatus }) {
   }
 
   return (
-    <div className="inline-flex items-center justify-end gap-1">
-      {/* View button */}
-      <button
-        onClick={() => onAction?.('View Profile')}
-        className="rounded-lg px-3 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition"
-      >
-        View
-      </button>
-
-      {/* Edit button */}
-      <button
-        onClick={() => onAction?.('Edit User')}
-        className="rounded-lg px-3 py-1.5 text-xs font-medium text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-500/30 hover:bg-blue-50 dark:hover:bg-blue-500/10 transition"
-      >
-        Edit
-      </button>
-
+    <div className="inline-flex items-center justify-end">
       {/* More actions dropdown */}
       <div ref={btnRef} className="inline-block">
         <button
@@ -79,9 +65,10 @@ export default function UserActions({ onAction, approvalStatus }) {
                 key={action}
                 onClick={() => { onAction?.(action); setOpen(false) }}
                 className={`w-full px-4 py-2 text-left text-sm transition hover:bg-gray-50 dark:hover:bg-gray-800 ${
-                  action === 'Delete User'  ? 'text-red-500' :
-                  action === 'Approve User' ? 'text-green-600 dark:text-green-400 font-medium' :
-                  action === 'Suspend User' ? 'text-amber-500 dark:text-amber-400' :
+                  action === 'Delete User'   ? 'text-red-500' :
+                  action === 'Approve User'  ? 'text-green-600 dark:text-green-400 font-medium' :
+                  action === 'Suspend User'  ? 'text-amber-500 dark:text-amber-400' :
+                  action === 'Edit User'     ? 'text-blue-600 dark:text-blue-400' :
                   'text-gray-700 dark:text-gray-200'
                 }`}
               >

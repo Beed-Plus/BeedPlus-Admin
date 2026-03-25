@@ -1,12 +1,12 @@
 const SELECT = 'w-36 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-600 dark:text-gray-300 outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition cursor-pointer scrollbar-thin'
 
 export default function UserFilters({
-  category, country, approvalStatus, search = '', followerSort = '',
+  category, country, approvalStatus, search = '', followerSort = '', gender = '',
   categories, countries = [],
-  onCategoryChange, onCountryChange, onApprovalStatusChange, onSearchChange, onFollowerSortChange,
+  onCategoryChange, onCountryChange, onApprovalStatusChange, onSearchChange, onFollowerSortChange, onGenderChange,
   hideStatusFilter = false,
 }) {
-  const hasFilter = category || country || approvalStatus || search || followerSort
+  const hasFilter = category || country || approvalStatus || search || followerSort || gender
 
   return (
     <div className="flex flex-wrap items-center gap-3">
@@ -35,6 +35,13 @@ export default function UserFilters({
         ))}
       </select>
 
+      {/* Gender */}
+      <select value={gender} onChange={(e) => onGenderChange(e.target.value)} className={SELECT}>
+        <option value="">All Genders</option>
+        <option value="male">Male</option>
+        <option value="female">Female</option>
+      </select>
+
       {/* Followers sort */}
       <select value={followerSort} onChange={(e) => onFollowerSortChange(e.target.value)} className={SELECT}>
         <option value="">Followers</option>
@@ -55,7 +62,7 @@ export default function UserFilters({
       {/* Clear filters */}
       {hasFilter && (
         <button
-          onClick={() => { onSearchChange(''); onCategoryChange(''); onCountryChange(''); onApprovalStatusChange(''); onFollowerSortChange('') }}
+          onClick={() => { onSearchChange(''); onCategoryChange(''); onCountryChange(''); onApprovalStatusChange(''); onFollowerSortChange(''); onGenderChange('') }}
           className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-400 dark:text-gray-500 hover:border-red-200 hover:text-red-400 transition"
         >
           Clear

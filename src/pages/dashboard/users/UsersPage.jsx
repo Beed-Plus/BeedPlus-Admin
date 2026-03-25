@@ -44,6 +44,8 @@ export default function UsersPage() {
   const [category, setCategory]             = useState('')
   const [country, setCountry]               = useState('')
   const [approvalStatus, setApprovalStatus] = useState('')
+  const [gender, setGender] = useState('')
+
 
   const [categories, setCategories] = useState([])
   const [countries, setCountries]   = useState([])
@@ -75,6 +77,7 @@ export default function UsersPage() {
               page,
               limit: PAGE_SIZE,
               ...(category       ? { category }       : {}),
+              ...(gender ?        {gender}: {}),
               ...(country        ? { country }        : {}),
               ...(approvalStatus ? { approvalStatus } : {}),
             },
@@ -103,7 +106,7 @@ export default function UsersPage() {
 
     load()
     return () => { cancelled = true }
-  }, [page, category, country, approvalStatus, token, retryKey])
+  }, [page, category, country, gender, approvalStatus, token, retryKey])
 
   function handleFilter(setter) {
     return (val) => { setter(val); setPage(1) }
@@ -142,6 +145,7 @@ export default function UsersPage() {
       {/* Filters */}
       <UserFilters
         search={search}
+        gender={gender}
         category={category}
         country={country}
         approvalStatus={approvalStatus}
@@ -153,6 +157,7 @@ export default function UsersPage() {
         onCategoryChange={handleFilter(setCategory)}
         onCountryChange={handleFilter(setCountry)}
         onApprovalStatusChange={handleFilter(setApprovalStatus)}
+        onGenderChange={handleFilter(setGender)}
       />
 
       {/* Error */}

@@ -25,16 +25,6 @@ function avatarSrc(user) {
   return user.instagram?.profilePictureUrl ?? user.profilePicture ?? null
 }
 
-function fmtRank(rank) {
-  if (!rank) return <span className="text-gray-300">—</span>
-  return (
-    <span className="inline-flex items-center gap-1 text-sm font-semibold text-gray-700">
-      <span className="text-xs font-normal text-gray-400">#</span>
-      {rank}
-    </span>
-  )
-}
-
 function fmtFollowers(n) {
   if (!n && n !== 0) return <span className="text-gray-300">—</span>
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1).replace(/\.0$/, '')}M`
@@ -55,9 +45,10 @@ function SkeletonRow() {
           </div>
         </div>
       </td>
-      <td className="px-6 py-4"><div className="h-3 w-10 rounded bg-gray-100 dark:bg-gray-800 animate-pulse" /></td>
       <td className="px-6 py-4"><div className="h-3 w-16 rounded bg-gray-100 dark:bg-gray-800 animate-pulse" /></td>
       <td className="px-6 py-4"><div className="h-3 w-16 rounded bg-gray-100 dark:bg-gray-800 animate-pulse" /></td>
+      <td className="px-6 py-4"><div className="h-3 w-12 rounded bg-gray-100 dark:bg-gray-800 animate-pulse" /></td>
+      <td className="px-6 py-4"><div className="h-3 w-24 rounded bg-gray-100 dark:bg-gray-800 animate-pulse" /></td>
       <td className="px-6 py-4"><div className="h-5 w-14 rounded-full bg-gray-100 dark:bg-gray-800 animate-pulse" /></td>
       <td className="px-6 py-4"><div className="h-5 w-20 rounded-full bg-gray-100 dark:bg-gray-800 animate-pulse" /></td>
       <td className="px-6 py-4"><div className="h-3 w-16 rounded bg-gray-100 dark:bg-gray-800 animate-pulse" /></td>
@@ -160,10 +151,11 @@ export default function UserTable({ users: initialUsers, loading, currentPage, t
           <thead>
             <tr className="border-b border-gray-100 dark:border-gray-800 bg-gray-50/60 dark:bg-gray-800/50">
               <th className={COL}>User</th>
-              <th className={COL}>Monthly Rank</th>
               <th className={COL}>Followers</th>
               <th className={COL}>Category</th>
               <th className={COL}>Country</th>
+              <th className={COL}>Gender</th>
+              <th className={COL}>Instagram</th>
               <th className={COL}>Connected</th>
               <th className={COL}>Approval</th>
               <th className={`${COL} text-right`}>Actions</th>
@@ -174,7 +166,7 @@ export default function UserTable({ users: initialUsers, loading, currentPage, t
 
             {!loading && displayUsers.length === 0 && (
               <tr>
-                <td colSpan={8} className="px-6 py-16 text-center text-sm text-gray-400 dark:text-gray-500">
+                <td colSpan={10} className="px-6 py-16 text-center text-sm text-gray-400 dark:text-gray-500">
                   No users found
                 </td>
               </tr>
@@ -204,9 +196,6 @@ export default function UserTable({ users: initialUsers, loading, currentPage, t
                     </div>
                   </td>
 
-                  {/* Monthly rank */}
-                  <td className="px-6 py-4">{fmtRank(user.monthlyCreatorRank)}</td>
-
                   {/* Followers */}
                   <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
                     {fmtFollowers(user.instagram?.followersCount)}
@@ -223,6 +212,27 @@ export default function UserTable({ users: initialUsers, loading, currentPage, t
                   {/* Country */}
                   <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
                     {user.country || <span className="text-gray-300 dark:text-gray-600">—</span>}
+                  </td>
+
+                  {/* Gender */}
+                  <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400 capitalize">
+                    {user.gender || <span className="text-gray-300 dark:text-gray-600">—</span>}
+                  </td>
+
+                  {/* Instagram link */}
+                  <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
+                    {user.instagram?.instagramUsername ? (
+                      <a
+                        href={`https://instagram.com/${user.instagram.instagramUsername}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center rounded-xl bg-orange-50 dark:bg-orange-500/10 px-3 py-1.5 text-xs font-semibold text-orange-500 hover:bg-orange-100 dark:hover:bg-orange-500/20 transition"
+                      >
+                        Link
+                      </a>
+                    ) : (
+                      <span className="text-gray-300 dark:text-gray-600">—</span>
+                    )}
                   </td>
 
                   {/* Connected */}

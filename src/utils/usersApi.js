@@ -6,10 +6,11 @@ export const usersApi = {
   /** GET /api/users  (admin)
    *  Query params: page, limit, category, country, isVerified, approvalStatus
    */
-  getUsers: ({ page = 1, limit = 20, category, country, isVerified, approvalStatus, search } = {}, token) => {
+  getUsers: ({ page = 1, limit = 20, category, country, gender, isVerified, approvalStatus, search } = {}, token) => {
     const params = new URLSearchParams({ page, limit })
     if (category)       params.set('category', category)
     if (country)        params.set('country', country)
+    if (gender)        params.set('gender', gender)
     if (isVerified !== undefined) params.set('isVerified', isVerified)
     if (approvalStatus) params.set('approvalStatus', approvalStatus)
     if (search)         params.set('search', search)
