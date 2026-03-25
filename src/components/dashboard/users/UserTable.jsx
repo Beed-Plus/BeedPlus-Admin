@@ -223,7 +223,7 @@ export default function UserTable({ users: initialUsers, loading, currentPage, t
                   <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
                     {user.instagram?.instagramUsername ? (
                       <a
-                        href={`https://instagram.com/${user.instagram.instagramUsername}`}
+                        href={`https://instagram.com/${user.instagramUsername}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center rounded-xl bg-orange-50 dark:bg-orange-500/10 px-3 py-1.5 text-xs font-semibold text-orange-500 hover:bg-orange-100 dark:hover:bg-orange-500/20 transition"
