@@ -1,4 +1,4 @@
-import { createContext, useState, useCallback, useMemo } from 'react'
+import { createContext, useState, useCallback, useMemo, useEffect } from 'react'
 import { apiFetch } from '../utils/api'
 
 export const AuthContext = createContext(null)
@@ -35,6 +35,11 @@ export function AuthProvider({ children }) {
     localStorage.removeItem(STORAGE_KEY)
     setAuth(null)
   }, [])
+
+  useEffect(() => {
+    window.addEventListener('auth:unauthorized', logout)
+    return () => window.removeEventListener('auth:unauthorized', logout)
+  }, [logout])
 
   const value = useMemo(
     () => ({ auth, login, logout }),

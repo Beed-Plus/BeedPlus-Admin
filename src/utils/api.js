@@ -25,6 +25,9 @@ export async function apiFetch(path, { body, method, token, ...rest } = {}) {
   })
 
   const data = await res.json().catch(() => ({}))
-  if (!res.ok) throw new Error(data.message ?? `Request failed (${res.status})`)
+  if (!res.ok) {
+    if (res.status === 401) window.dispatchEvent(new Event('auth:unauthorized'))
+    throw new Error(data.message ?? `Request failed (${res.status})`)
+  }
   return data
 }
