@@ -221,7 +221,7 @@ export default function UserTable({ users: initialUsers, loading, currentPage, t
 
                   {/* Instagram link */}
                   <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
-                    {user.instagram?.instagramUsername ? (
+                    {user?.instagramUsername ? (
                       <a
                         href={`https://instagram.com/${user.instagramUsername}`}
                         target="_blank"
