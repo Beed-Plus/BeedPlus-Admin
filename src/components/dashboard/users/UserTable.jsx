@@ -64,6 +64,7 @@ export default function UserTable({ users: initialUsers, loading, currentPage, t
   const token = auth?.token
 
   const [localUsers, setLocalUsers] = useState(null)
+  const [approvingIds, setApprovingIds] = useState(new Set())
   const [confirmDelete, setConfirmDelete] = useState(null)
   const [deleting, setDeleting] = useState(false)
   const [editUser, setEditUser] = useState(null)
@@ -87,6 +88,7 @@ export default function UserTable({ users: initialUsers, loading, currentPage, t
     if (action === 'View Profile') {
       navigate(`/dashboard/users/${user._id}`)
     } else if (action === 'Approve User') {
+      setApprovingIds((prev) => new Set(prev).add(user._id))
       try {
         await usersApi.approveUser(user._id, token)
         setLocalUsers((prev) =>
@@ -98,6 +100,8 @@ export default function UserTable({ users: initialUsers, loading, currentPage, t
         )
       } catch (err) {
         alert(`Approve failed: ${err.message}`)
+      } finally {
+        setApprovingIds((prev) => { const next = new Set(prev); next.delete(user._id); return next })
       }
     } else if (action === 'Edit User') {
       setEditUser(user)
@@ -252,7 +256,15 @@ export default function UserTable({ users: initialUsers, loading, currentPage, t
 
                   {/* Approval status */}
                   <td className="px-6 py-4">
-                    <StatusBadge status={status} />
+                    {approvingIds.has(user._id) ? (
+                      <div className="flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 animate-spin text-gray-400 dark:text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                      </div>
+                    ) : (
+                      <StatusBadge status={status} />
+                    )}
                   </td>
 
                   {/* Actions */}
