@@ -13,6 +13,7 @@ export default function TopCreatorsPage() {
   const [page, setPage] = useState(1)
   const [activeTab, setActiveTab] = useState(0) // 0 = All, 1+ = category index
   const [filterCountry, setFilterCountry] = useState('')
+  const [refreshKey, setRefreshKey] = useState(0)
 
   useEffect(() => {
     let cancelled = false
@@ -34,7 +35,7 @@ export default function TopCreatorsPage() {
       })
 
     return () => { cancelled = true }
-  }, [])
+  }, [refreshKey])
 
   // Unique categories derived from rankings
   const categories = useMemo(() => {
@@ -78,11 +79,23 @@ export default function TopCreatorsPage() {
   return (
     <div className="flex flex-col gap-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-black text-gray-900 dark:text-white">Top Creators Ranking</h1>
-        <p className="mt-1 text-sm text-gray-400">
-          Performance overview of the most active content creators across the Beed+ platform.
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-black text-gray-900 dark:text-white">Top Creators Ranking</h1>
+          <p className="mt-1 text-sm text-gray-400">
+            Performance overview of the most active content creators across the Beed+ platform.
+          </p>
+        </div>
+        <button
+          onClick={() => setRefreshKey((k) => k + 1)}
+          disabled={loading}
+          title="Refresh"
+          className="mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-400 hover:text-orange-500 hover:border-orange-300 dark:hover:border-orange-500/50 dark:hover:text-orange-400 transition disabled:opacity-40"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+        </button>
       </div>
 
       {/* Error */}

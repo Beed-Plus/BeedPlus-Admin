@@ -125,11 +125,23 @@ export default function PostsPage() {
           <h1 className="text-2xl font-black text-gray-900 dark:text-white">Posts Management</h1>
           <p className="mt-1 text-sm text-gray-400 dark:text-gray-500">Monitor and manage all submitted posts.</p>
         </div>
-        {!loading && (
-          <span className="inline-flex self-start items-center rounded-full bg-orange-50 px-3 py-1 text-sm font-semibold text-orange-500">
-            {filtered.length.toLocaleString()} post{filtered.length !== 1 ? 's' : ''}
-          </span>
-        )}
+        <div className="flex items-center gap-2 self-start">
+          {!loading && (
+            <span className="inline-flex items-center rounded-full bg-orange-50 px-3 py-1 text-sm font-semibold text-orange-500">
+              {filtered.length.toLocaleString()} post{filtered.length !== 1 ? 's' : ''}
+            </span>
+          )}
+          <button
+            onClick={() => setRetryKey((k) => k + 1)}
+            disabled={loading}
+            title="Refresh"
+            className="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-400 hover:text-orange-500 hover:border-orange-300 dark:hover:border-orange-500/50 dark:hover:text-orange-400 transition disabled:opacity-40"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+          </button>
+        </div>
       </div>
 
       {/* Filters */}
