@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { createPortal } from 'react-dom'
 import { instagramApi } from '../../../utils/instagramApi'
 import { DayPicker } from 'react-day-picker'
 import 'react-day-picker/style.css'
@@ -67,6 +68,92 @@ function RankBadge({ rank }) {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 const COL = 'px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-widest text-gray-400'
 const PAGE_SIZE = 10
+
+// ─── Media Modal ──────────────────────────────────────────────────────────────
+function MediaModal({ item, onClose }) {
+  const overlayRef  = useRef(null)
+  const embedRef    = useRef(null)
+  const permalink   = item.media?.permalink ?? ''
+  const [html, setHtml]       = useState(null)
+  const [loadError, setLoadError] = useState(false)
+
+  // Fetch oEmbed HTML from our backend proxy
+  useEffect(() => {
+    if (!permalink) { setLoadError(true); return }
+    instagramApi.getOembed(permalink)
+      .then((res) => setHtml(res.html))
+      .catch(() => setLoadError(true))
+  }, [permalink])
+
+  // After HTML is injected, trigger Instagram's embed script to activate the widget
+  useEffect(() => {
+    if (!html || !embedRef.current) return
+    if (window.instgrm?.Embeds) {
+      window.instgrm.Embeds.process()
+    } else {
+      const existing = document.getElementById('instagram-embed-script')
+      if (!existing) {
+        const s = document.createElement('script')
+        s.id  = 'instagram-embed-script'
+        s.src = 'https://www.instagram.com/embed.js'
+        s.async = true
+        document.body.appendChild(s)
+      }
+    }
+  }, [html])
+
+  useEffect(() => {
+    function onKey(e) { if (e.key === 'Escape') onClose() }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [onClose])
+
+  return createPortal(
+    <div
+      ref={overlayRef}
+      onClick={(e) => { if (e.target === overlayRef.current) onClose() }}
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
+    >
+      <div className="relative w-full max-w-sm rounded-2xl bg-white dark:bg-gray-900 shadow-2xl overflow-y-auto max-h-[90vh]">
+        {/* Close */}
+        <button
+          onClick={onClose}
+          className="absolute right-3 top-3 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-black/10 dark:bg-white/10 text-gray-700 dark:text-white hover:bg-black/20 transition"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+
+        {/* oEmbed content */}
+        {!html && !loadError && (
+          <div className="flex items-center justify-center py-20">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 animate-spin text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+          </div>
+        )}
+
+        {loadError && (
+          <div className="flex flex-col items-center justify-center gap-3 py-16 px-6 text-center">
+            <p className="text-sm text-gray-500 dark:text-gray-400">Preview unavailable.</p>
+            {permalink && (
+              <a href={permalink} target="_blank" rel="noopener noreferrer"
+                className="text-sm font-semibold text-orange-500 hover:text-orange-600 transition">
+                Open on Instagram ↗
+              </a>
+            )}
+          </div>
+        )}
+
+        {html && (
+          <div ref={embedRef} dangerouslySetInnerHTML={{ __html: html }} className="[&>blockquote]:!mx-0 [&>blockquote]:!min-w-0 [&>blockquote]:!w-full" />
+        )}
+      </div>
+    </div>,
+    document.body,
+  )
+}
 
 // ─── Calendar Picker ──────────────────────────────────────────────────────────
 function CalendarPicker({ value, availableDates, onChange }) {
@@ -138,6 +225,7 @@ export default function PostRankingsPage() {
   const [filterCountry, setFilterCountry] = useState('')
   const [retryCount, setRetryCount] = useState(0)
   const [dateLoading, setDateLoading] = useState(false)
+  const [selectedItem, setSelectedItem] = useState(null)
 
   useEffect(() => {
     let cancelled = false
@@ -376,6 +464,9 @@ export default function PostRankingsPage() {
         </div>
       )}
 
+      {/* Media modal */}
+      {selectedItem && <MediaModal item={selectedItem} onClose={() => setSelectedItem(null)} />}
+
       {/* Main card */}
       {!error && (
         <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm overflow-hidden">
@@ -551,14 +642,25 @@ export default function PostRankingsPage() {
                         {fmt(item.insights?.daily_totalInteractions)}
                       </td>
 
-                      {/* View */}
+                      {/* Actions */}
                       <td className="px-4 py-4">
-                        <button
-                          onClick={() => navigate(`/dashboard/rankings/posts/${item.instagramMediaId}`, { state: { post: { ...item, rankingDate: data?.date } } })}
-                          className="rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-1.5 text-xs font-semibold text-gray-600 dark:text-gray-300 hover:border-orange-300 hover:text-orange-500 dark:hover:border-orange-500/50 dark:hover:text-orange-400 transition"
-                        >
-                          View
-                        </button>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => setSelectedItem(item)}
+                            title="Watch media"
+                            className="flex h-7 w-7 items-center justify-center rounded-lg border border-gray-200 dark:border-gray-700 text-gray-400 hover:border-orange-300 hover:text-orange-500 dark:hover:border-orange-500/50 dark:hover:text-orange-400 transition"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 translate-x-px" fill="currentColor" viewBox="0 0 24 24">
+                              <path d="M8 5v14l11-7z" />
+                            </svg>
+                          </button>
+                          <button
+                            onClick={() => navigate(`/dashboard/rankings/posts/${item.instagramMediaId}`, { state: { post: { ...item, rankingDate: data?.date } } })}
+                            className="rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-1.5 text-xs font-semibold text-gray-600 dark:text-gray-300 hover:border-orange-300 hover:text-orange-500 dark:hover:border-orange-500/50 dark:hover:text-orange-400 transition"
+                          >
+                            View
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   )

@@ -79,6 +79,10 @@ export const instagramApi = {
   getMediaChartByDate: (date) =>
     apiFetch(`${IG}/media-chart/${date}`),
 
+  /** GET /api/instagram/oembed?url=...  (public) */
+  getOembed: (url) =>
+    apiFetch(`${IG}/oembed?url=${encodeURIComponent(url)}`),
+
   /** POST /api/instagram/disconnect  (auth) */
   disconnect: (token) =>
     apiFetch(`${IG}/disconnect`, { body: {}, token }),
