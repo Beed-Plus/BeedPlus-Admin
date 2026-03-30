@@ -6,7 +6,9 @@
       "Bash(npm run:*)",
       "Bash(find c:UsersHPDocumentsBeedPlus-Backend -type f -name *activit* -o -name *log*)",
       "Bash(npx vite:*)",
-      "WebFetch(domain:developers.facebook.com)"
+      "WebFetch(domain:developers.facebook.com)",
+      "Bash(find /c/Users/HP/Documents/BeedPlus-admin -name .env* -o -name *.env*)",
+      "Bash(grep -r \"auth\\\\.token\\\\|auth?.token\\\\|localStorage.getItem.*token\\\\|auth.user\" /c/Users/HP/Documents/BeedPlus-admin/src --include=*.jsx --include=*.js -n)"
     ]
   }
 }
