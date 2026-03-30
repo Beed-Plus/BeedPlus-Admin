@@ -11,6 +11,7 @@ import {
   RankingsIcon,
   EmailIcon,
   CompareIcon,
+  FormulaIcon,
 } from '../ui/icons'
 
 const navConfig = [
@@ -46,6 +47,7 @@ const navConfig = [
       { label: 'Top Creators', path: '/dashboard/rankings/top-creators', icon: TrophyIcon },
       { label: 'Top Hits', path: '/dashboard/rankings/top-hits', icon: TopHitsIcon },
       { label: 'Media Charts', path: '/dashboard/rankings/posts', icon: RankingsIcon },
+      { label: 'Formula Tester', path: '/dashboard/rankings/formula-test', icon: FormulaIcon },
     ],
   },
   {

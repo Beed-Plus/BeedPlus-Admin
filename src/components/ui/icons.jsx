@@ -156,3 +156,11 @@ export const CompareIcon = (p) =>
     </>,
     p,
   )
+
+export const FormulaIcon = (p) =>
+  s(
+    <>
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M9 7h6m0 10H9m3-10v10M6 3h12a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V5a2 2 0 012-2z" />
+    </>,
+    p,
+  )
