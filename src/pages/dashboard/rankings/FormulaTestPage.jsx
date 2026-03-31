@@ -246,12 +246,16 @@ export default function FormulaTestPage() {
 
           {/* Table */}
           <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 overflow-x-auto">
-            <table className="w-full min-w-[700px]">
+            <table className="w-full min-w-[900px]">
               <thead className="border-b border-gray-100 dark:border-gray-700">
                 <tr>
-                  <th className={TH}>#</th>
-                  {sortBy !== 'original' && <th className={TH}>Orig.</th>}
-                  {sortBy !== 'original' && <th className={TH}>Shift</th>}
+                  <th className={TH}>Orig.</th>
+                  <th className={`${TH} border-l border-blue-100 dark:border-blue-900/40 text-blue-500`}>Rank A</th>
+                  <th className={`${TH} border-l border-orange-100 dark:border-orange-900/40 text-orange-500`}>Rank B</th>
+                  {sortBy === 'A' && <th className={`${TH} text-blue-500`}>Shift A</th>}
+                  {sortBy === 'A' && <th className={`${TH} text-blue-500`}>Score A</th>}
+                  {sortBy === 'B' && <th className={`${TH} text-orange-500`}>Shift B</th>}
+                  {sortBy === 'B' && <th className={`${TH} text-orange-500`}>Score B</th>}
                   <th className={TH}>Creator</th>
                   <th className={TH}>Category</th>
                   <th className={TH}>Views</th>
@@ -260,27 +264,42 @@ export default function FormulaTestPage() {
                   <th className={TH}>Shares</th>
                   <th className={TH}>Saves</th>
                   <th className={TH}>Reach</th>
-                  {sortBy !== 'original' && (
-                    <th className={`${TH} ${sortBy === 'A' ? 'text-blue-500' : 'text-orange-500'}`}>Score</th>
-                  )}
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50 dark:divide-gray-700/50">
-                {tested.map((row, i) => {
-                  const rank  = sortBy === 'A' ? row.rankA  : sortBy === 'B' ? row.rankB  : row.originalRank
-                  const score = sortBy === 'A' ? row.scoreA : sortBy === 'B' ? row.scoreB : null
-                  const color = sortBy === 'A' ? 'A' : 'B'
-                  return (
+                {tested.map((row, i) => (
                     <tr key={row.instagramMediaId} className="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition">
-                      <td className={TD}>
-                        <span className={`font-semibold ${sortBy === 'A' ? 'text-blue-500' : sortBy === 'B' ? 'text-orange-500' : 'text-gray-700 dark:text-gray-300'}`}>
-                          {i + 1}
-                        </span>
+                      <td className={TD}>{row.originalRank}</td>
+                      {/* Rank A */}
+                      <td className={`${TD} border-l border-blue-50 dark:border-blue-900/20`}>
+                        <span className="font-semibold text-blue-500">{row.rankA}</span>
                       </td>
-                      {sortBy !== 'original' && <td className={TD}>{row.originalRank}</td>}
-                      {sortBy !== 'original' && (
-                        <td className={TD}><RankDelta original={row.originalRank} test={rank} color={color} /></td>
+                      {/* Rank B */}
+                      <td className={`${TD} border-l border-orange-50 dark:border-orange-900/20`}>
+                        <span className="font-semibold text-orange-500">{row.rankB}</span>
+                      </td>
+                      {/* Active formula Shift + Score */}
+                      {sortBy === 'A' && (
+                        <td className={TD}><RankDelta original={row.originalRank} test={row.rankA} color="A" /></td>
                       )}
+                      {sortBy === 'A' && (
+                        <td className={TD}>
+                          {row.scoreA != null
+                            ? <span className="text-xs font-medium text-blue-500">{row.scoreA.toFixed(4)}</span>
+                            : <span className="text-gray-400">err</span>}
+                        </td>
+                      )}
+                      {sortBy === 'B' && (
+                        <td className={TD}><RankDelta original={row.originalRank} test={row.rankB} color="B" /></td>
+                      )}
+                      {sortBy === 'B' && (
+                        <td className={TD}>
+                          {row.scoreB != null
+                            ? <span className="text-xs font-medium text-orange-500">{row.scoreB.toFixed(4)}</span>
+                            : <span className="text-gray-400">err</span>}
+                        </td>
+                      )}
+                      {/* Creator */}
                       <td className={TD}>
                         <div className="flex items-center gap-2">
                           {row.thumbnail && (
@@ -303,16 +322,8 @@ export default function FormulaTestPage() {
                       <td className={TD}>{row.metrics.shares.toLocaleString()}</td>
                       <td className={TD}>{row.metrics.saves.toLocaleString()}</td>
                       <td className={TD}>{row.metrics.reach.toLocaleString()}</td>
-                      {sortBy !== 'original' && (
-                        <td className={TD}>
-                          {score != null
-                            ? <span className={`text-xs font-medium ${sortBy === 'A' ? 'text-blue-500' : 'text-orange-500'}`}>{score.toFixed(4)}</span>
-                            : <span className="text-gray-400">err</span>}
-                        </td>
-                      )}
                     </tr>
-                  )
-                })}
+                ))}
               </tbody>
             </table>
           </div>
