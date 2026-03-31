@@ -279,6 +279,8 @@ export default function UserDetailPage() {
   const [reachPage, setReachPage]       = useState(1)
   const [approving, setApproving]       = useState(false)
   const [approveError, setApproveError] = useState(null)
+  const [inviting, setInviting]         = useState(false)
+  const [inviteError, setInviteError]   = useState(null)
   const POSTS_PER_PAGE = 5
 
   async function handleApprove() {
@@ -294,6 +296,19 @@ export default function UserDetailPage() {
       setApproveError(err.message ?? 'Approval failed')
     } finally {
       setApproving(false)
+    }
+  }
+
+  async function handleInvite() {
+    setInviting(true)
+    setInviteError(null)
+    try {
+      await usersApi.markUserInvited(id, token)
+      setUser((prev) => prev ? { ...prev, isInvited: true } : prev)
+    } catch (err) {
+      setInviteError(err.message ?? 'Failed to mark as invited')
+    } finally {
+      setInviting(false)
     }
   }
 
@@ -443,6 +458,40 @@ export default function UserDetailPage() {
               {approveError && (
                 <p className="text-xs text-red-500">{approveError}</p>
               )}
+
+              {!user?.isInvited && (
+                <button
+                  onClick={handleInvite}
+                  disabled={inviting}
+                  className="flex items-center gap-2 rounded-xl bg-purple-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-purple-700 active:scale-95 transition disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {inviting ? (
+                    <svg className="h-4 w-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                    </svg>
+                  ) : (
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                  )}
+                  {inviting ? 'Saving…' : 'Mark as Invited'}
+                </button>
+              )}
+
+              {user?.isInvited && (
+                <span className="flex items-center gap-1.5 rounded-xl border border-purple-200 dark:border-purple-800 bg-purple-50 dark:bg-purple-900/20 px-3 py-2 text-sm font-semibold text-purple-600 dark:text-purple-400">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  Invited
+                </span>
+              )}
+
+              {inviteError && (
+                <p className="text-xs text-red-500">{inviteError}</p>
+              )}
+
 
               <button
                 onClick={() => navigate('/dashboard/users')}

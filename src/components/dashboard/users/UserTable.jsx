@@ -107,6 +107,17 @@ export default function UserTable({ users: initialUsers, loading, currentPage, t
       setEditUser(user)
       setEditCategory(Array.isArray(user.category) ? user.category[0] ?? '' : user.category ?? '')
       setEditCountry(user.country ?? '')
+    } else if (action === 'Mark as Invited') {
+      try {
+        await usersApi.markUserInvited(user._id, token)
+        setLocalUsers((prev) =>
+          (prev ?? initialUsers).map((u) =>
+            u._id === user._id ? { ...u, isInvited: true } : u,
+          ),
+        )
+      } catch (err) {
+        alert(`Failed to mark as invited: ${err.message}`)
+      }
     } else if (action === 'Suspend User') {
       alert('Suspend endpoint not yet available.')
     } else if (action === 'Delete User') {
@@ -271,6 +282,7 @@ export default function UserTable({ users: initialUsers, loading, currentPage, t
                   <td className="px-6 py-4 text-right" onClick={(e) => e.stopPropagation()}>
                     <UserActions
                       approvalStatus={status}
+                      isInvited={user.isInvited}
                       onAction={(action) => handleAction(action, user)}
                     />
                   </td>

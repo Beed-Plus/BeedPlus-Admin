@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 
-export default function UserActions({ onAction, approvalStatus }) {
+export default function UserActions({ onAction, approvalStatus, isInvited }) {
   const isApproved = approvalStatus === 'approved'
 
   const DROPDOWN_ACTIONS = [
@@ -9,6 +9,7 @@ export default function UserActions({ onAction, approvalStatus }) {
     'Edit User',
     ...(!isApproved ? ['Approve User'] : []),
     ...(isApproved  ? ['Suspend User'] : []),
+    ...(!isInvited  ? ['Mark as Invited'] : []),
     'Delete User',
   ]
 
@@ -65,10 +66,11 @@ export default function UserActions({ onAction, approvalStatus }) {
                 key={action}
                 onClick={() => { onAction?.(action); setOpen(false) }}
                 className={`w-full px-4 py-2 text-left text-sm transition hover:bg-gray-50 dark:hover:bg-gray-800 ${
-                  action === 'Delete User'   ? 'text-red-500' :
-                  action === 'Approve User'  ? 'text-green-600 dark:text-green-400 font-medium' :
-                  action === 'Suspend User'  ? 'text-amber-500 dark:text-amber-400' :
-                  action === 'Edit User'     ? 'text-blue-600 dark:text-blue-400' :
+                  action === 'Delete User'      ? 'text-red-500' :
+                  action === 'Approve User'     ? 'text-green-600 dark:text-green-400 font-medium' :
+                  action === 'Suspend User'     ? 'text-amber-500 dark:text-amber-400' :
+                  action === 'Edit User'        ? 'text-blue-600 dark:text-blue-400' :
+                  action === 'Mark as Invited'  ? 'text-purple-600 dark:text-purple-400 font-medium' :
                   'text-gray-700 dark:text-gray-200'
                 }`}
               >
