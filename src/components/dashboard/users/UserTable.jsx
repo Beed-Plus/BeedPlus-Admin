@@ -255,8 +255,8 @@ export default function UserTable({ users: initialUsers, loading, currentPage, t
                    {/* Invited */}
                   <td className="px-6 py-4">
                     {user.isInvited ? (
-                      <span className="inline-flex items-center gap-1.5 rounded-full bg-purple-50 dark:bg-purple-500/10 px-2.5 py-1 text-xs font-semibold text-purple-600 dark:text-purple-400">
-                        <span className="h-1.5 w-1.5 rounded-full bg-purple-500" />
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-green-50 dark:bg-green-500/10 px-2.5 py-1 text-xs font-semibold text-green-600 dark:text-green-400">
+                        <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
                         Invited
                       </span>
                     ) : (
