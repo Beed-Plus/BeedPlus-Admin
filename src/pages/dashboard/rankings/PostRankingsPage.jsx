@@ -538,8 +538,8 @@ export default function PostRankingsPage() {
                 )}
 
                 {!loading && paged.map((item, idx) => {
-                  const rank       = (!isAllTab || filterCountry) ? idx + 1 : (item.rank ?? idx + 1)
-                  const overallRank = (!isAllTab || filterCountry) ? (item.rank ?? null) : null
+                  const rank        = idx + 1
+                  const overallRank = null
                   const caption    = item.media?.caption
                   const thumb      = item.media?.thumbnailUrl
                   const permalink  = item.media?.permalink
