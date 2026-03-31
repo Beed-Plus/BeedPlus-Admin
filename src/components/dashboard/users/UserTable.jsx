@@ -51,6 +51,7 @@ function SkeletonRow() {
       <td className="px-6 py-4"><div className="h-3 w-24 rounded bg-gray-100 dark:bg-gray-800 animate-pulse" /></td>
       <td className="px-6 py-4"><div className="h-5 w-14 rounded-full bg-gray-100 dark:bg-gray-800 animate-pulse" /></td>
       <td className="px-6 py-4"><div className="h-5 w-20 rounded-full bg-gray-100 dark:bg-gray-800 animate-pulse" /></td>
+      <td className="px-6 py-4"><div className="h-5 w-16 rounded-full bg-gray-100 dark:bg-gray-800 animate-pulse" /></td>
       <td className="px-6 py-4"><div className="h-3 w-16 rounded bg-gray-100 dark:bg-gray-800 animate-pulse" /></td>
       <td className="px-6 py-4" />
     </tr>
@@ -173,6 +174,7 @@ export default function UserTable({ users: initialUsers, loading, currentPage, t
               <th className={COL}>Instagram</th>
               <th className={COL}>Connected</th>
               <th className={COL}>Approval</th>
+              <th className={COL}>Invited</th>
               <th className={`${COL} text-right`}>Actions</th>
             </tr>
           </thead>
@@ -275,6 +277,21 @@ export default function UserTable({ users: initialUsers, loading, currentPage, t
                       </div>
                     ) : (
                       <StatusBadge status={status} />
+                    )}
+                  </td>
+
+                  {/* Invited */}
+                  <td className="px-6 py-4">
+                    {user.isInvited ? (
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-purple-50 dark:bg-purple-500/10 px-2.5 py-1 text-xs font-semibold text-purple-600 dark:text-purple-400">
+                        <span className="h-1.5 w-1.5 rounded-full bg-purple-500" />
+                        Invited
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-gray-100 dark:bg-gray-800 px-2.5 py-1 text-xs font-medium text-gray-400 dark:text-gray-500">
+                        <span className="h-1.5 w-1.5 rounded-full bg-gray-300 dark:bg-gray-600" />
+                        Uninvited
+                      </span>
                     )}
                   </td>
 
