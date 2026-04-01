@@ -19,9 +19,9 @@ export const subCategoriesApi = {
   createSubCategory: ({ name, categoryId }) =>
     apiFetch(SUB, { body: { name, categoryId } }),
 
-  /** POST /api/sub-categories/find-or-create  (public) */
-  findOrCreate: ({ name, categoryId }) =>
-    apiFetch(`${SUB}/find-or-create`, { body: { name, categoryId } }),
+  /** POST /api/sub-categories/find-or-create  (admin) */
+  findOrCreate: ({ name, categoryId }, token) =>
+    apiFetch(`${SUB}/find-or-create`, { body: { name, categoryId }, token }),
 
   /** PUT /api/sub-categories/:id  (public) */
   updateSubCategory: (id, data) =>

@@ -104,7 +104,7 @@ export default function PostTable({ posts, loading }) {
       let subCategoryId = null
       if (editSubCategory.trim()) {
         const cat = categories.find((c) => c.name === editCategory)
-        const found = await subCategoriesApi.findOrCreate({ name: editSubCategory.trim(), categoryId: cat?._id })
+        const found = await subCategoriesApi.findOrCreate({ name: editSubCategory.trim(), categoryId: cat?._id }, token)
         subCategoryId = found?._id ?? found?.subCategory?._id ?? null
       }
       const res = await instagramApi.updateMediaCategory(
