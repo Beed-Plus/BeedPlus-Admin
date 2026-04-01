@@ -1,9 +1,6 @@
 import { Link } from 'react-router-dom'
-import Pagination from '../../ui/Pagination'
 
 const COL = 'px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-widest text-gray-400'
-
-const PAGE_SIZE = 10
 
 function RankBadge({ rank }) {
   if (rank === 1) return <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-amber-400 text-xs font-black text-white shadow-sm">1</span>
@@ -34,8 +31,7 @@ function formatScore(n) {
   return n.toLocaleString()
 }
 
-export default function TopCreatorsTable({ creators, currentPage, totalItems, onPageChange, loading, nested = false }) {
-  const totalPages = Math.ceil(totalItems / PAGE_SIZE)
+export default function TopCreatorsTable({ creators, loading, nested = false }) {
   const Wrapper = ({ children }) => nested
     ? <div className="overflow-x-auto">{children}</div>
     : <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm overflow-x-auto">{children}</div>
@@ -153,16 +149,6 @@ export default function TopCreatorsTable({ creators, currentPage, totalItems, on
         </tbody>
       </table>
 
-      <div className="border-t border-gray-100 dark:border-gray-800">
-        <Pagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          totalItems={totalItems}
-          itemLabel="creators"
-          pageSize={PAGE_SIZE}
-          onPageChange={onPageChange}
-        />
-      </div>
     </Wrapper>
   )
 }

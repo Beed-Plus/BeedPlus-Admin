@@ -67,7 +67,6 @@ function RankBadge({ rank }) {
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 const COL = 'px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-widest text-gray-400'
-const PAGE_SIZE = 10
 
 // ─── Media Modal ──────────────────────────────────────────────────────────────
 function MediaModal({ item, onClose }) {
@@ -220,7 +219,6 @@ export default function PostRankingsPage() {
   const [loading, setLoading]       = useState(true)
   const [error, setError]           = useState(null)
   const [activeTab, setActiveTab]   = useState(0)        // 0 = All, 1+ = category idx
-  const [page, setPage]             = useState(1)
   const [calendarOpen, setCalendarOpen] = useState(false)
   const [filterCountry, setFilterCountry] = useState('')
   const [retryCount, setRetryCount] = useState(0)
@@ -246,7 +244,6 @@ export default function PostRankingsPage() {
         setAllDays(allDatesObjs.length > 0 ? allDatesObjs : [{ date: res?.date }])
         setData({ date: res?.date ?? null, categories })
         setActiveTab(0)
-        setPage(1)
       } catch (err) {
         if (cancelled) return
         // Auto-retry once after 3s (handles Render.com cold-start wake-up)
@@ -272,7 +269,6 @@ export default function PostRankingsPage() {
       const categories = groupByCategory(res?.rankings ?? [])
       setData({ date: res?.date ?? iso, categories })
       setActiveTab(0)
-      setPage(1)
     } catch (err) {
       console.error('Failed to load chart for date:', err)
     } finally {
@@ -299,8 +295,6 @@ export default function PostRankingsPage() {
   const rankings = filterCountry
     ? tabRankings.filter((r) => r.userData?.country === filterCountry)
     : tabRankings
-  const totalPages = Math.ceil(rankings.length / PAGE_SIZE)
-  const paged      = rankings
 
   const totalPosts = allRankings.length
 
@@ -334,7 +328,6 @@ export default function PostRankingsPage() {
 
   function switchTab(idx) {
     setActiveTab(idx)
-    setPage(1)
   }
 
   return (
@@ -420,7 +413,7 @@ export default function PostRankingsPage() {
             <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">Total Posts</p>
             {filterCountry && (
               <button
-                onClick={() => { setFilterCountry(''); setPage(1) }}
+                onClick={() => { setFilterCountry('') }}
                 className="text-[11px] font-semibold text-orange-500 hover:text-orange-600 transition"
               >
                 Clear
@@ -438,7 +431,7 @@ export default function PostRankingsPage() {
             </div>
             <select
               value={filterCountry}
-              onChange={(e) => { setFilterCountry(e.target.value); setPage(1) }}
+              onChange={(e) => { setFilterCountry(e.target.value) }}
               disabled={loading || availableCountries.length === 0}
               className="w-28 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-2 py-1.5 text-xs text-gray-700 dark:text-gray-200 outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition cursor-pointer disabled:opacity-40"
             >
@@ -529,7 +522,7 @@ export default function PostRankingsPage() {
               <tbody>
                 {loading && Array.from({ length: 8 }).map((_, i) => <SkeletonRow key={i} />)}
 
-                {!loading && paged.length === 0 && (
+                {!loading && rankings.length === 0 && (
                   <tr>
                     <td colSpan={9} className="px-6 py-16 text-center text-sm text-gray-400">
                       No rankings available{isAllTab ? '' : ' for this category'}.
@@ -537,7 +530,7 @@ export default function PostRankingsPage() {
                   </tr>
                 )}
 
-                {!loading && paged.map((item, idx) => {
+                {!loading && rankings.map((item, idx) => {
                   const rank        = idx + 1
                   const overallRank = null
                   const caption    = item.media?.caption

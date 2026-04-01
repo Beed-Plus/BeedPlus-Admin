@@ -3,14 +3,11 @@ import { instagramApi } from '../../../utils/instagramApi'
 import CreatorHighlightCards from '../../../components/dashboard/rankings/CreatorHighlightCards'
 import TopCreatorsTable from '../../../components/dashboard/rankings/TopCreatorsTable'
 
-const PAGE_SIZE = 10
-
 export default function TopCreatorsPage() {
   const [rankings, setRankings] = useState([])
   const [count, setCount] = useState(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [page, setPage] = useState(1)
   const [activeTab, setActiveTab] = useState(0) // 0 = All, 1+ = category index
   const [filterCountry, setFilterCountry] = useState('')
   const [refreshKey, setRefreshKey] = useState(0)
@@ -64,14 +61,8 @@ export default function TopCreatorsPage() {
     return list
   }, [rankings, activeTab, categories, filterCountry])
 
-  const paged = useMemo(
-    () => filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
-    [filtered, page]
-  )
-
   function switchTab(idx) {
     setActiveTab(idx)
-    setPage(1)
   }
 
   const topCreator = rankings[0]?.username ?? '—'
@@ -112,7 +103,7 @@ export default function TopCreatorsPage() {
           totalActiveCreators={count}
           availableCountries={availableCountries}
           filterCountry={filterCountry}
-          onFilterCountry={(c) => { setFilterCountry(c); setPage(1) }}
+          onFilterCountry={(c) => { setFilterCountry(c) }}
           filteredCount={filtered.length}
         />
       )}
@@ -172,10 +163,7 @@ export default function TopCreatorsPage() {
         )}
 
         <TopCreatorsTable
-          creators={paged}
-          currentPage={page}
-          totalItems={filtered.length}
-          onPageChange={setPage}
+          creators={filtered}
           loading={loading}
           nested
         />

@@ -6,7 +6,6 @@ import { categoriesApi } from '../../../utils/categoriesApi'
 import { countriesApi } from '../../../utils/countriesApi'
 import Badge from '../../ui/Badge'
 import StatusBadge from '../../ui/StatusBadge'
-import Pagination from '../../ui/Pagination'
 import UserAvatar from './UserAvatar'
 import UserActions from './UserActions'
 
@@ -217,7 +216,7 @@ export default function UserTable({ users: initialUsers, loading, currentPage, t
                   <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
                     {fmtFollowers(user.instagram?.followersCount)}
                   </td>
-
+{/* man is man but the authentic realization of man is education. hdfjh */}
                   {/* Category */}
                   <td className="px-6 py-4">
                     {category
@@ -308,16 +307,6 @@ export default function UserTable({ users: initialUsers, loading, currentPage, t
             })}
           </tbody>
         </table>
-      </div>
-
-      <div className="border-t border-gray-100 dark:border-gray-800">
-        <Pagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          totalItems={totalItems}
-          itemLabel="users"
-          onPageChange={onPageChange}
-        />
       </div>
 
       {/* Edit User modal */}

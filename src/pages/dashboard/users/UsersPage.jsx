@@ -6,8 +6,6 @@ import { countriesApi } from '../../../utils/countriesApi'
 import UserFilters from '../../../components/dashboard/users/UserFilters'
 import UserTable from '../../../components/dashboard/users/UserTable'
 
-const PAGE_SIZE = 15
-
 function applyFilters(users, { search, followerSort }) {
   let result = users
   if (search) {
@@ -38,7 +36,6 @@ export default function UsersPage() {
   const [error, setError]           = useState(null)
   const [retryKey, setRetryKey]     = useState(0)
 
-  const [page, setPage]                     = useState(1)
   const [search, setSearch]                 = useState('')
   const [followerSort, setFollowerSort]     = useState('')
   const [category, setCategory]             = useState('')
@@ -74,8 +71,6 @@ export default function UsersPage() {
         try {
           const res = await usersApi.getUsers(
             {
-              page,
-              limit: PAGE_SIZE,
               ...(category       ? { category }       : {}),
               ...(gender ?        {gender}: {}),
               ...(country        ? { country }        : {}),
@@ -106,10 +101,10 @@ export default function UsersPage() {
 
     load()
     return () => { cancelled = true }
-  }, [page, category, country, gender, approvalStatus, token, retryKey])
+  }, [category, country, gender, approvalStatus, token, retryKey])
 
   function handleFilter(setter) {
-    return (val) => { setter(val); setPage(1) }
+    return (val) => { setter(val) }
   }
 
   const visibleUsers = useMemo(
@@ -189,10 +184,6 @@ export default function UsersPage() {
       <UserTable
         users={visibleUsers}
         loading={loading}
-        currentPage={pagination.page ?? page}
-        totalPages={pagination.pages ?? 1}
-        totalItems={pagination.total ?? 0}
-        onPageChange={setPage}
       />
     </div>
   )

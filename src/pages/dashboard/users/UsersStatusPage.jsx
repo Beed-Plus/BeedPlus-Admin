@@ -6,8 +6,6 @@ import { countriesApi } from '../../../utils/countriesApi'
 import UserFilters from '../../../components/dashboard/users/UserFilters'
 import UserTable from '../../../components/dashboard/users/UserTable'
 
-const PAGE_SIZE = 15
-
 const STATUS_META = {
   approved: { label: 'Approved Users', color: 'bg-emerald-50 text-emerald-600', dot: 'bg-emerald-400', description: 'Users who have been approved and have full platform access.' },
   pending:  { label: 'Pending Users',  color: 'bg-amber-50 text-amber-600',   dot: 'bg-amber-400',   description: 'Users awaiting review and approval.' },
@@ -44,7 +42,6 @@ export default function UsersStatusPage({ status }) {
   const [loading, setLoading]       = useState(true)
   const [error, setError]           = useState(null)
 
-  const [page, setPage]             = useState(1)
   const [search, setSearch]             = useState('')
   const [followerSort, setFollowerSort] = useState('')
   const [category, setCategory]     = useState('')
@@ -73,8 +70,6 @@ export default function UsersStatusPage({ status }) {
       try {
         const res = await usersApi.getUsers(
           {
-            page,
-            limit: PAGE_SIZE,
             approvalStatus: status,
             ...(category ? { category } : {}),
             ...(country  ? { country }  : {}),
@@ -92,10 +87,10 @@ export default function UsersStatusPage({ status }) {
     }
     load()
     return () => { cancelled = true }
-  }, [page, category, country, status, token])
+  }, [category, country, status, token])
 
   function handleFilter(setter) {
-    return (val) => { setter(val); setPage(1) }
+    return (val) => { setter(val) }
   }
 
   const visibleUsers = applyFilters(users, { search, followerSort })
@@ -144,10 +139,6 @@ export default function UsersStatusPage({ status }) {
       <UserTable
         users={visibleUsers}
         loading={loading}
-        currentPage={pagination.page ?? page}
-        totalPages={pagination.pages ?? 1}
-        totalItems={pagination.total ?? 0}
-        onPageChange={setPage}
       />
     </div>
   )

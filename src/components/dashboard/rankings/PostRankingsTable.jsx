@@ -1,8 +1,6 @@
-import Pagination from '../../ui/Pagination'
 import { CATEGORY_BADGE_STYLES } from '../../../data/mockPostRankings'
 
 const COL = 'px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-widest text-gray-400'
-const PAGE_SIZE = 5
 
 function ChangeArrow({ change }) {
   if (change === 'up') return (
@@ -18,11 +16,7 @@ function ChangeArrow({ change }) {
   return <span className="text-sm text-gray-300">—</span>
 }
 
-export default function PostRankingsTable({ posts, totalItems, currentPage, onPageChange }) {
-  const totalPages = Math.ceil(totalItems / PAGE_SIZE)
-  const from = (currentPage - 1) * PAGE_SIZE + 1
-  const to   = Math.min(currentPage * PAGE_SIZE, totalItems)
-
+export default function PostRankingsTable({ posts }) {
   return (
     <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm overflow-hidden">
       <table className="w-full">
@@ -39,7 +33,7 @@ export default function PostRankingsTable({ posts, totalItems, currentPage, onPa
         </thead>
         <tbody>
           {posts.map((post, i) => {
-            const rank = (currentPage - 1) * PAGE_SIZE + i + 1
+            const rank = i + 1
             const badgeStyle = CATEGORY_BADGE_STYLES[post.category] ?? 'border-gray-200 bg-gray-50 text-gray-500'
 
             return (
@@ -95,52 +89,6 @@ export default function PostRankingsTable({ posts, totalItems, currentPage, onPa
         </tbody>
       </table>
 
-      {/* Footer pagination */}
-      <div className="flex items-center justify-between border-t border-gray-100 dark:border-gray-800 px-6 py-4">
-        <p className="text-sm text-gray-400 dark:text-gray-500">
-          Showing{' '}
-          <span className="font-bold text-gray-700 dark:text-gray-300">{from}-{to}</span>
-          {' '}of{' '}
-          <span className="font-bold text-gray-700 dark:text-gray-300">{totalItems.toLocaleString()}</span>
-          {' '}posts
-        </p>
-
-        <div className="flex items-center gap-1">
-          <button
-            onClick={() => onPageChange(currentPage - 1)}
-            disabled={currentPage === 1}
-            className="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 dark:border-gray-700 text-gray-400 dark:text-gray-500 hover:border-orange-300 hover:text-orange-500 transition disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
-
-          {Array.from({ length: Math.min(totalPages, 3) }, (_, i) => i + 1).map((page) => (
-            <button
-              key={page}
-              onClick={() => onPageChange(page)}
-              className={`flex h-8 w-8 items-center justify-center rounded-lg text-sm font-medium transition ${
-                page === currentPage
-                  ? 'bg-orange-500 text-white'
-                  : 'border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:border-orange-300 hover:text-orange-500'
-              }`}
-            >
-              {page}
-            </button>
-          ))}
-
-          <button
-            onClick={() => onPageChange(currentPage + 1)}
-            disabled={currentPage === totalPages}
-            className="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 dark:border-gray-700 text-gray-400 dark:text-gray-500 hover:border-orange-300 hover:text-orange-500 transition disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </button>
-        </div>
-      </div>
     </div>
   )
 }

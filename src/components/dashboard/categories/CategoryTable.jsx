@@ -20,16 +20,9 @@ export default function CategoryTable({
   categories,
   countKey,
   countLabel,
-  currentPage,
-  pageSize,
-  totalItems,
-  onPrev,
-  onNext,
   onEdit,
   onDelete,
 }) {
-  const showing = Math.min(currentPage * pageSize, totalItems)
-
   return (
     <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm overflow-hidden">
       <table className="w-full">
@@ -68,29 +61,6 @@ export default function CategoryTable({
         </tbody>
       </table>
 
-      {/* Footer */}
-      <div className="flex items-center justify-between border-t border-gray-100 dark:border-gray-800 px-6 py-4">
-        <p className="text-sm text-gray-400 dark:text-gray-500">
-          Showing <span className="font-semibold text-gray-700 dark:text-gray-300">{showing}</span> of{' '}
-          <span className="font-semibold text-gray-700 dark:text-gray-300">{totalItems}</span> categories
-        </p>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={onPrev}
-            disabled={currentPage === 1}
-            className="rounded-xl border border-gray-200 dark:border-gray-700 px-5 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 transition hover:border-orange-300 hover:text-orange-500 disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            Previous
-          </button>
-          <button
-            onClick={onNext}
-            disabled={showing >= totalItems}
-            className="rounded-xl border border-gray-200 dark:border-gray-700 px-5 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 transition hover:border-orange-300 hover:text-orange-500 disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            Next
-          </button>
-        </div>
-      </div>
     </div>
   )
 }
