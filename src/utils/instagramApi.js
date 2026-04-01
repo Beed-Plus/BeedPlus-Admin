@@ -75,6 +75,15 @@ export const instagramApi = {
   getMediaChart: () =>
     apiFetch(`${IG}/media-chart`),
 
+  /** GET /api/instagram/rankings/media?country=&category=  (public) */
+  getMediaChartFiltered: ({ country, category } = {}) => {
+    const qs = new URLSearchParams()
+    if (country)  qs.set('country',  country)
+    if (category) qs.set('category', category)
+    const q = qs.toString()
+    return apiFetch(`${IG}/rankings/media${q ? `?${q}` : ''}`)
+  },
+
   /** GET /api/instagram/media-chart/:date  (public) */
   getMediaChartByDate: (date) =>
     apiFetch(`${IG}/media-chart/${date}`),
