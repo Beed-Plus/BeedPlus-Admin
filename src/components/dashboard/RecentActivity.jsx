@@ -81,15 +81,14 @@ const FALLBACK = {
 function fmtDateTime(iso) {
   if (!iso) return '—'
   const d = new Date(iso)
-  return d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
+  return d.toLocaleString(undefined, {
+    year: 'numeric', month: 'short', day: 'numeric',
+    hour: '2-digit', minute: '2-digit',
+  })
 }
 
 function displayName(activity) {
-  const u = activity.user
-  if (!u) return 'System Auto Job'
-  return u.instagram?.instagramUsername
-    ? `@${u.instagram.instagramUsername}`
-    : u.email ?? 'System Auto Job'
+  return activity.username || 'System Auto Job'
 }
 
 function metaLine(activity) {
