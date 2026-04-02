@@ -166,6 +166,7 @@ export default function UserTable({ users: initialUsers, loading, currentPage, t
           <thead>
             <tr className="border-b border-gray-100 dark:border-gray-800 bg-gray-50/60 dark:bg-gray-800/50">
               <th className={COL}>User</th>
+              <th className={COL}>User ID</th>
               <th className={COL}>Followers</th>
               <th className={COL}>Category</th>
               <th className={COL}>Country</th>
@@ -210,6 +211,11 @@ export default function UserTable({ users: initialUsers, loading, currentPage, t
                         <p className="text-xs text-gray-400 dark:text-gray-500">{user.email}</p>
                       </div>
                     </div>
+                  </td>
+
+                  {/* User ID */}
+                  <td className="px-6 py-4 text-xs text-gray-400 dark:text-gray-500 font-mono">
+                    {user._id}
                   </td>
 
                   {/* Followers */}

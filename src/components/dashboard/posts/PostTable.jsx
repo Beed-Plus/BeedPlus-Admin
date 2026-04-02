@@ -137,7 +137,6 @@ export default function PostTable({ posts, loading }) {
               <th className={COL}>Creator</th>
               <th className={COL}>Category</th>
               <th className={COL}>Sub-Category</th>
-              <th className={COL}>User ID</th>
               <th className={COL}>Media ID</th>
               <th className={COL}>Reach</th>
               <th className={COL}>Submitted</th>
@@ -222,11 +221,6 @@ export default function PostTable({ posts, loading }) {
                       ? <span className="inline-flex items-center rounded-full bg-blue-50 dark:bg-blue-500/10 px-2.5 py-0.5 text-xs font-medium text-blue-600 dark:text-blue-400">{subCat}</span>
                       : <span className="text-gray-300 dark:text-gray-600">—</span>
                     }
-                  </td>
-
-                  {/* User ID */}
-                  <td className="px-6 py-4 text-xs text-gray-500 dark:text-gray-400 font-mono">
-                    {post.userId ?? <span className="text-gray-300 dark:text-gray-600">—</span>}
                   </td>
 
                   {/* Media ID */}
