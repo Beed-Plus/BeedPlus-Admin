@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useNavigate, useLocation, Link } from 'react-router-dom'
 import { useAuth } from '../../../hooks/useAuth'
 import { instagramApi } from '../../../utils/instagramApi'
+import { useWatchlist } from '../../../hooks/useWatchlist'
 import Breadcrumb from '../../../components/ui/Breadcrumb'
 import UserAvatar from '../../../components/dashboard/users/UserAvatar'
 
@@ -110,9 +111,12 @@ export default function PostDetailPage() {
   const { auth } = useAuth()
   const token = auth?.token
 
+  const { watchlistedIds, add: addToWatchlist, remove: removeFromWatchlist } = useWatchlist(token)
+
   const [post, setPost]       = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError]     = useState(null)
+  const [watchlistBusy, setWatchlistBusy] = useState(false)
 
   // Always fetch full data so dailyInsights (excluded from list endpoint) are included
   useEffect(() => {
@@ -185,6 +189,35 @@ export default function PostDetailPage() {
       <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-sm">
         {/* Card top row */}
         <div className="flex items-center justify-end gap-2 mb-4">
+          {/* Watchlist toggle */}
+          {post && (() => {
+            const isWatchlisted = watchlistedIds.has(post._id)
+            return (
+              <button
+                disabled={watchlistBusy}
+                onClick={async () => {
+                  setWatchlistBusy(true)
+                  try {
+                    if (isWatchlisted) await removeFromWatchlist(post._id)
+                    else await addToWatchlist(post._id)
+                  } finally {
+                    setWatchlistBusy(false)
+                  }
+                }}
+                className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-semibold transition disabled:opacity-50 ${
+                  isWatchlisted
+                    ? 'border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 text-amber-500 hover:bg-amber-100 dark:hover:bg-amber-500/20'
+                    : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:border-amber-200 hover:text-amber-500'
+                }`}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 24 24" fill={isWatchlisted ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                </svg>
+                {isWatchlisted ? 'Watchlisted' : 'Add to Watchlist'}
+              </button>
+            )
+          })()}
+
           <button
             onClick={() => navigate('/dashboard/posts/compare', { state: { postA: post } })}
             className="inline-flex items-center gap-1.5 rounded-xl border border-orange-200 dark:border-orange-500/30 bg-orange-50 dark:bg-orange-500/10 px-3 py-1.5 text-xs font-semibold text-orange-500 hover:bg-orange-100 dark:hover:bg-orange-500/20 transition"

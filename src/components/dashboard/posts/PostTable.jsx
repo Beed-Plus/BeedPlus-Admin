@@ -60,8 +60,27 @@ function SkeletonRow() {
   )
 }
 
+// ─── Bookmark Button ──────────────────────────────────────────────────────────
+function BookmarkButton({ active, onClick }) {
+  return (
+    <button
+      onClick={onClick}
+      title={active ? 'Remove from watchlist' : 'Add to watchlist'}
+      className={`flex h-7 w-7 items-center justify-center rounded-lg transition ${
+        active
+          ? 'bg-amber-50 dark:bg-amber-500/10 text-amber-500 hover:bg-amber-100 dark:hover:bg-amber-500/20'
+          : 'bg-gray-100 dark:bg-gray-800 text-gray-400 hover:bg-amber-50 dark:hover:bg-amber-500/10 hover:text-amber-500'
+      }`}
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 24 24" fill={active ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+      </svg>
+    </button>
+  )
+}
+
 // ─── Component ────────────────────────────────────────────────────────────────
-export default function PostTable({ posts, loading }) {
+export default function PostTable({ posts, loading, watchlistedIds = new Set(), onWatchlistAdd, onWatchlistRemove }) {
   const navigate = useNavigate()
   const { auth } = useAuth()
   const token = auth?.token
@@ -246,6 +265,13 @@ export default function PostTable({ posts, loading }) {
                   {/* Actions */}
                   <td className="px-6 py-4 text-right" onClick={(e) => e.stopPropagation()}>
                     <div className="flex items-center justify-end gap-2">
+                      <BookmarkButton
+                        active={watchlistedIds.has(post._id)}
+                        onClick={() => {
+                          if (watchlistedIds.has(post._id)) onWatchlistRemove?.(post._id)
+                          else onWatchlistAdd?.(post._id)
+                        }}
+                      />
                       <button
                         onClick={() => openEdit(post)}
                         className="rounded-lg bg-blue-50 dark:bg-blue-500/10 px-3 py-1.5 text-xs font-semibold text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-500/20 transition"

@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useAuth } from '../../../hooks/useAuth'
 import { instagramApi } from '../../../utils/instagramApi'
+import { useWatchlist } from '../../../hooks/useWatchlist'
 import PostTable from '../../../components/dashboard/posts/PostTable'
 
 
@@ -9,6 +10,8 @@ const SELECT ='rounded-xl border border-gray-200 dark:border-gray-700 bg-white d
 export default function PostsPage() {
   const { auth } = useAuth()
   const token = auth?.token
+
+  const { watchlistedIds, add: addToWatchlist, remove: removeFromWatchlist } = useWatchlist(token)
 
   const [allPosts, setAllPosts] = useState([])
   const [loading, setLoading]   = useState(true)
@@ -216,6 +219,9 @@ export default function PostsPage() {
       <PostTable
         posts={filtered}
         loading={loading}
+        watchlistedIds={watchlistedIds}
+        onWatchlistAdd={addToWatchlist}
+        onWatchlistRemove={removeFromWatchlist}
       />
     </div>
   )

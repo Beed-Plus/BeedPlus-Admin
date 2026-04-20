@@ -20,6 +20,7 @@ import FormulaTestPage from '../pages/dashboard/rankings/FormulaTestPage'
 import EmailPage from '../pages/dashboard/email/EmailPage'
 import AdminPage from '../pages/dashboard/admin/AdminPage'
 import CountriesPage from '../pages/dashboard/countries/CountriesPage'
+import WatchlistPage from '../pages/dashboard/watchlist/WatchlistPage'
 import ProtectedRoute from '../components/router/ProtectedRoute'
 import GuestRoute from '../components/router/GuestRoute'
 
@@ -56,6 +57,7 @@ const router = createBrowserRouter([
       { path: 'rankings/posts', element: <PostRankingsPage /> },
       { path: 'rankings/posts/:id', element: <PostRankingDetailPage /> },
       { path: 'rankings/formula-test', element: <FormulaTestPage /> },
+      { path: 'watchlist', element: <WatchlistPage /> },
       { path: 'email', element: <EmailPage /> },
       { path: 'admin', element: <AdminPage /> },
       { path: 'countries', element: <CountriesPage /> },
