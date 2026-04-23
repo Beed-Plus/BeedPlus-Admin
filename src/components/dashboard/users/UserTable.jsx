@@ -107,17 +107,6 @@ export default function UserTable({ users: initialUsers, loading, currentPage, t
       setEditUser(user)
       setEditCategory(Array.isArray(user.category) ? user.category[0] ?? '' : user.category ?? '')
       setEditCountry(user.country ?? '')
-    } else if (action === 'Mark as Invited') {
-      try {
-        await usersApi.markUserInvited(user._id, token)
-        setLocalUsers((prev) =>
-          (prev ?? initialUsers).map((u) =>
-            u._id === user._id ? { ...u, isInvited: true } : u,
-          ),
-        )
-      } catch (err) {
-        alert(`Failed to mark as invited: ${err.message}`)
-      }
     } else if (action === 'Suspend User') {
       alert('Suspend endpoint not yet available.')
     } else if (action === 'Delete User') {
@@ -172,7 +161,6 @@ export default function UserTable({ users: initialUsers, loading, currentPage, t
               <th className={COL}>Country</th>
               <th className={COL}>Gender</th>
               <th className={COL}>Instagram</th>
-              <th className={COL}>Invited</th>
               <th className={COL}>Approval</th>
               <th className={COL}>Connected</th>
               <th className={`${COL} text-right`}>Actions</th>
@@ -257,21 +245,6 @@ export default function UserTable({ users: initialUsers, loading, currentPage, t
                     )}
                   </td>
 
-                   {/* Invited */}
-                  <td className="px-6 py-4">
-                    {user.isInvited ? (
-                      <span className="inline-flex items-center gap-1.5 rounded-full bg-green-50 dark:bg-green-500/10 px-2.5 py-1 text-xs font-semibold text-green-600 dark:text-green-400">
-                        <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
-                        Invited
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1.5 rounded-full bg-gray-100 dark:bg-gray-800 px-2.5 py-1 text-xs font-medium text-gray-400 dark:text-gray-500">
-                        <span className="h-1.5 w-1.5 rounded-full bg-gray-300 dark:bg-gray-600" />
-                        Uninvited
-                      </span>
-                    )}
-                  </td>         
-
                   {/* Approval status */}
                   <td className="px-6 py-4">
                     {approvingIds.has(user._id) ? (
@@ -304,7 +277,6 @@ export default function UserTable({ users: initialUsers, loading, currentPage, t
                   <td className="px-6 py-4 text-right" onClick={(e) => e.stopPropagation()}>
                     <UserActions
                       approvalStatus={status}
-                      isInvited={user.isInvited}
                       onAction={(action) => handleAction(action, user)}
                     />
                   </td>

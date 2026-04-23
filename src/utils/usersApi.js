@@ -51,7 +51,4 @@ export const usersApi = {
   updateUserCategory: (id, { category, country }, token) =>
     apiFetch(`${USERS}/${id}/category`, { method: 'PATCH', body: { category, country }, token }),
 
-  /** PATCH /api/users/:id/invite  (admin) */
-  markUserInvited: (id, token) =>
-    apiFetch(`${USERS}/${id}/invite`, { method: 'PATCH', token }),
 }

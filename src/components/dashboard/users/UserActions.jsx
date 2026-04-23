@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 
-export default function UserActions({ onAction, approvalStatus, isInvited }) {
+export default function UserActions({ onAction, approvalStatus }) {
   const isApproved = approvalStatus === 'approved'
 
   const DROPDOWN_ACTIONS = [
@@ -9,7 +9,6 @@ export default function UserActions({ onAction, approvalStatus, isInvited }) {
     'Edit User',
     ...(!isApproved ? ['Approve User'] : []),
     ...(isApproved  ? ['Suspend User'] : []),
-    ...(!isInvited  ? ['Mark as Invited'] : []),
     'Delete User',
   ]
 
@@ -70,7 +69,6 @@ export default function UserActions({ onAction, approvalStatus, isInvited }) {
                   action === 'Approve User'     ? 'text-green-600 dark:text-green-400 font-medium' :
                   action === 'Suspend User'     ? 'text-amber-500 dark:text-amber-400' :
                   action === 'Edit User'        ? 'text-blue-600 dark:text-blue-400' :
-                  action === 'Mark as Invited'  ? 'text-purple-600 dark:text-purple-400 font-medium' :
                   'text-gray-700 dark:text-gray-200'
                 }`}
               >
