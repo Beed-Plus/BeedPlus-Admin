@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { instagramApi } from '../../../utils/instagramApi'
+import { proxyVideoUrl } from '../../../utils/api'
 
 function fmt(n) {
   if (!n && n !== 0) return '—'
@@ -28,7 +29,7 @@ function ReelSlide({ item, rank, playing, muted, onTogglePlay, onEnded, setVideo
     <div className="relative w-full h-full flex items-center justify-center bg-black">
       <video
         ref={setVideoEl}
-        src={item.media?.mediaUrl}
+        src={proxyVideoUrl(item.media?.mediaUrl)}
         playsInline
         muted={muted}
         onClick={onTogglePlay}
@@ -323,7 +324,7 @@ function VideoTile({ item, rank, onClick }) {
 
       <video
         ref={videoRef}
-        src={item.media?.mediaUrl}
+        src={proxyVideoUrl(item.media?.mediaUrl)}
         muted
         loop
         playsInline

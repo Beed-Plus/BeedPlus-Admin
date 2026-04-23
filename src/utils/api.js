@@ -1,5 +1,12 @@
 const BASE = import.meta.env.VITE_API_URL ?? ''
 
+/** Converts an Instagram CDN video URL into a same-origin proxy URL so iOS
+ *  can buffer it properly via Range requests without CORS restrictions. */
+export function proxyVideoUrl(url) {
+  if (!url) return url
+  return `${BASE}/api/proxy/video?url=${encodeURIComponent(url)}`
+}
+
 /**
  * Thin fetch wrapper.
  * - Automatically sets Content-Type and Authorization headers.
