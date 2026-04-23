@@ -266,26 +266,39 @@ function ReelPlayer({ items, startIndex, onClose, onLoadMore, loadingMore }) {
         className="h-full w-full overflow-y-scroll"
         style={{ scrollSnapType: 'y mandatory', scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
-        {items.map((item, idx) => (
-          <div
-            key={item._id ?? item.instagramMediaId ?? idx}
-            ref={(el) => { slideRefs.current[idx] = el }}
-            style={{ scrollSnapAlign: 'start', height: '100dvh' }}
-          >
-            <ReelSlide
-              item={item}
-              rank={item.currentRank ?? idx + 1}
-              playing={idx === currentIdx ? playing : false}
-              muted={muted}
-              onTogglePlay={togglePlay}
-              onEnded={goNext}
-              setVideoEl={(el) => {
-                videoRefs.current[idx] = el
-                if (el) el.preload = idx >= startIndex && idx <= startIndex + 2 ? 'auto' : 'none'
-              }}
-            />
-          </div>
-        ))}
+        {items.map((item, idx) => {
+          // only mount slide content within ±2 of current — everything else
+          // is a black placeholder that keeps scroll-snap positions intact
+          const isNear = Math.abs(idx - currentIdx) <= 2
+
+          return (
+            <div
+              key={item._id ?? item.instagramMediaId ?? idx}
+              ref={(el) => { slideRefs.current[idx] = el }}
+              style={{ scrollSnapAlign: 'start', height: '100dvh' }}
+            >
+              {isNear ? (
+                <ReelSlide
+                  item={item}
+                  rank={item.currentRank ?? idx + 1}
+                  playing={idx === currentIdx ? playing : false}
+                  muted={muted}
+                  onTogglePlay={togglePlay}
+                  onEnded={goNext}
+                  setVideoEl={(el) => {
+                    videoRefs.current[idx] = el
+                    if (el) el.preload = idx >= startIndex && idx <= startIndex + 2 ? 'auto' : 'none'
+                  }}
+                />
+              ) : (
+                <div
+                  className="w-full h-full bg-black"
+                  ref={() => { videoRefs.current[idx] = null }}
+                />
+              )}
+            </div>
+          )
+        })}
       </div>
     </div>
   )
@@ -355,7 +368,7 @@ function VideoTile({ item, rank, onClick }) {
   )
 }
 
-const LIMIT = 20
+const LIMIT = 10
 
 // ─── Page ──────────────────────────────────────────────────────────────────────
 export default function WatchPage() {
