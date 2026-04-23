@@ -129,14 +129,22 @@ function ReelPlayer({ items, startIndex, onClose, onLoadMore, loadingMore }) {
     })
   }
 
-  // when currentIdx changes: pause old, play new, update preload window
+  // when currentIdx changes: pause old, play current, imperatively buffer next 2
   useEffect(() => {
     videoRefs.current.forEach((v, i) => {
       if (!v) return
-      // preload current + next 2, drop everything else
+      // non-iOS: hint via preload attribute
       v.preload = i >= currentIdx && i <= currentIdx + 2 ? 'auto' : 'none'
       if (i !== currentIdx) { v.pause(); v.currentTime = 0 }
     })
+
+    // iOS-compatible: explicit load() after user gesture buffers the next videos
+    // iOS ignores preload but honors video.load() triggered by a user interaction
+    for (let offset = 1; offset <= 2; offset++) {
+      const next = videoRefs.current[currentIdx + offset]
+      if (next && next.readyState === 0) next.load()
+    }
+
     const v = videoRefs.current[currentIdx]
     if (v) {
       v.muted = muted
