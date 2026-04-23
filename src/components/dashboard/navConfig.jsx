@@ -13,6 +13,7 @@ import {
   CompareIcon,
   FormulaIcon,
   WatchlistIcon,
+  WatchIcon,
 } from '../ui/icons'
 
 const navConfig = [
@@ -30,6 +31,7 @@ const navConfig = [
         ],
       },
       { label: 'Posts',          path: '/dashboard/posts',         icon: PostsIcon },
+      { label: 'Watch',           path: '/dashboard/watch',          icon: WatchIcon },
       { label: 'Watchlist',      path: '/dashboard/watchlist',     icon: WatchlistIcon },
       { label: 'Compare Posts',  path: '/dashboard/posts/compare', icon: CompareIcon },
       { label: 'Countries', path: '/dashboard/countries', icon: CountryIcon },

@@ -95,4 +95,8 @@ export const instagramApi = {
   /** POST /api/instagram/disconnect  (auth) */
   disconnect: (token) =>
     apiFetch(`${IG}/disconnect`, { body: {}, token }),
+
+  /** GET /api/instagram/watch-feed?page=1&limit=20  (public) */
+  getWatchFeed: ({ page = 1, limit = 20 } = {}) =>
+    apiFetch(`${IG}/watch-feed?page=${page}&limit=${limit}`),
 }
