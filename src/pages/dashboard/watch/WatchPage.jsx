@@ -2,13 +2,6 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { instagramApi } from '../../../utils/instagramApi'
 import { proxyVideoUrl } from '../../../utils/api'
 
-function fmt(n) {
-  if (!n && n !== 0) return '—'
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1).replace(/\.0$/, '')}M`
-  if (n >= 1_000)     return `${(n / 1_000).toFixed(1).replace(/\.0$/, '')}k`
-  return n.toLocaleString()
-}
-
 // ─── Right-side icon button ───────────────────────────────────────────────────
 function RightBtn({ onClick, label, children, large = false, active = false }) {
   return (
@@ -24,7 +17,7 @@ function RightBtn({ onClick, label, children, large = false, active = false }) {
 }
 
 // ─── Single reel slide — only the video + bottom info ────────────────────────
-function ReelSlide({ item, rank, playing, muted, onTogglePlay, onEnded, setVideoEl }) {
+function ReelSlide({ item, playing, muted, onTogglePlay, onEnded, setVideoEl }) {
   return (
     <div className="relative w-full h-full flex items-center justify-center bg-black">
       <video
@@ -48,53 +41,6 @@ function ReelSlide({ item, rank, playing, muted, onTogglePlay, onEnded, setVideo
         </div>
       )}
 
-      {/* bottom info — only visible when paused */}
-      <div
-        className="absolute bottom-0 inset-x-0 px-4 pb-6 pt-20 transition-opacity duration-300 pointer-events-none"
-        style={{
-          background: 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 100%)',
-          opacity: playing ? 0 : 1,
-        }}
-      >
-        <div className="flex items-center gap-3 mb-2">
-          {item.userData?.profilePicture && (
-            <img src={item.userData.profilePicture} alt="" className="h-10 w-10 rounded-full object-cover ring-2 ring-white/30 shrink-0" />
-          )}
-          <div className="min-w-0">
-            <div className="flex items-center gap-2">
-              <p className="text-sm font-bold text-white truncate">
-                @{item.userData?.username || item.media?.username || '—'}
-              </p>
-              <span className="shrink-0 rounded bg-orange-500 px-1.5 py-0.5 text-[10px] font-bold text-white">
-                #{rank}
-              </span>
-            </div>
-            {item.userData?.country && (
-              <p className="text-xs text-white/60">{item.userData.country}</p>
-            )}
-          </div>
-        </div>
-        {item.media?.caption && (
-          <p className="text-sm text-white/80 leading-relaxed line-clamp-2">{item.media.caption}</p>
-        )}
-        {(item.category ?? []).length > 0 && (
-          <p className="mt-1 text-xs text-orange-300">{(item.category ?? []).join(' · ')}</p>
-        )}
-        {item.media?.permalink && (
-          <a
-            href={item.media.permalink}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={(e) => e.stopPropagation()}
-            className="pointer-events-auto mt-3 flex w-full items-center justify-center gap-2 rounded-full bg-white py-3 text-sm font-bold text-gray-900 hover:bg-white/90 transition"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-            </svg>
-            View on Instagram
-          </a>
-        )}
-      </div>
     </div>
   )
 }
@@ -280,7 +226,6 @@ function ReelPlayer({ items, startIndex, onClose, onLoadMore, loadingMore }) {
               {isNear ? (
                 <ReelSlide
                   item={item}
-                  rank={item.currentRank ?? idx + 1}
                   playing={idx === currentIdx ? playing : false}
                   muted={muted}
                   onTogglePlay={togglePlay}
@@ -358,10 +303,7 @@ function VideoTile({ item, rank, onClick }) {
 
       <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/70 to-transparent px-3 py-2">
         <p className="truncate text-xs font-semibold text-white">
-          @{item.userData?.username || item.media?.username || '—'}
-        </p>
-        <p className="text-[10px] text-white/70">
-          {fmt(item.insights?.lifeTimeViews ?? item.insights?.views)} views
+          @{item.userData?.username || '—'}
         </p>
       </div>
     </button>
@@ -379,8 +321,7 @@ export default function WatchPage() {
   const [hasMore, setHasMore]     = useState(false)
   const [page, setPage]           = useState(1)
   const [activeIdx, setActiveIdx] = useState(null)
-  const [filterCategory, setCategory] = useState('')
-  const [filterCountry, setCountry]   = useState('')
+  const [filterCountry, setCountry] = useState('')
   const sentinelRef = useRef(null)
 
   async function fetchPage(pageNum, replace = false) {
@@ -422,12 +363,10 @@ export default function WatchPage() {
     return () => obs.disconnect()
   }, [hasMore, loadingMore, page])
 
-  const categories = [...new Set(posts.flatMap((p) => p.category ?? []).filter(Boolean))]
-  const countries  = [...new Set(posts.map((p) => p.userData?.country).filter(Boolean))]
+  const countries = [...new Set(posts.map((p) => p.userData?.country).filter(Boolean))]
 
   const filtered = posts.filter((p) => {
-    if (filterCategory && !(p.category ?? []).includes(filterCategory)) return false
-    if (filterCountry  && p.userData?.country !== filterCountry) return false
+    if (filterCountry && p.userData?.country !== filterCountry) return false
     return true
   })
 
@@ -439,14 +378,6 @@ export default function WatchPage() {
         </div>
 
         <div className="flex flex-wrap gap-2">
-          <select
-            value={filterCategory}
-            onChange={(e) => setCategory(e.target.value)}
-            className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-600 dark:text-gray-300 outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition"
-          >
-            <option value="">All categories</option>
-            {categories.map((c) => <option key={c} value={c}>{c}</option>)}
-          </select>
           <select
             value={filterCountry}
             onChange={(e) => setCountry(e.target.value)}
