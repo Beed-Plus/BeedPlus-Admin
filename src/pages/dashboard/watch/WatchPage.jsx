@@ -50,8 +50,9 @@ function ReelPlayer({ items, startIndex, onClose, onLoadMore, loadingMore }) {
   const [currentIdx, setCurrentIdx] = useState(startIndex)
   const [playing, setPlaying]       = useState(false)
   const [muted, setMuted]           = useState(true)
-  const slideRefs = useRef([])
-  const videoRefs = useRef([])
+  const slideRefs  = useRef([])
+  const videoRefs  = useRef([])
+  const debounceRef = useRef(null)
 
   // helpers
   const currentVideo = () => videoRefs.current[currentIdx]
@@ -112,8 +113,11 @@ function ReelPlayer({ items, startIndex, onClose, onLoadMore, loadingMore }) {
       const obs = new IntersectionObserver(
         ([entry]) => {
           if (entry.isIntersecting) {
-            setCurrentIdx(idx)
-            if (onLoadMore && idx >= items.length - 3) onLoadMore()
+            clearTimeout(debounceRef.current)
+            debounceRef.current = setTimeout(() => {
+              setCurrentIdx(idx)
+              if (onLoadMore && idx >= items.length - 3) onLoadMore()
+            }, 120)
           }
         },
         { threshold: 0.6 },
@@ -310,7 +314,7 @@ function VideoTile({ item, rank, onClick }) {
   )
 }
 
-const LIMIT = 10
+const LIMIT = 5
 
 // ─── Page ──────────────────────────────────────────────────────────────────────
 export default function WatchPage() {
