@@ -237,22 +237,33 @@ function ReelPlayer({ items, startIndex, onClose, onLoadMore, loadingMore }) {
         className="flex-1 overflow-y-scroll"
         style={{ scrollSnapType: 'y mandatory', scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
-        {items.map((item, idx) => (
-          <div
-            key={item._id ?? item.instagramMediaId ?? idx}
-            ref={(el) => { slideRefs.current[idx] = el }}
-            style={{ scrollSnapAlign: 'start', height: '100dvh' }}
-            className="relative bg-black"
-          >
-            {idx === activeIdx && (
-              <VideoPortal
-                sourceRef={currentRef}
-                parkRef={parkRef}
-                onTogglePlay={togglePlay}
-              />
-            )}
-          </div>
-        ))}
+        {items.map((item, idx) => {
+          const thumb = item.media?.thumbnailUrl || item.media?.mediaUrl
+          return (
+            <div
+              key={item._id ?? item.instagramMediaId ?? idx}
+              ref={(el) => { slideRefs.current[idx] = el }}
+              style={{ scrollSnapAlign: 'start', height: '100dvh' }}
+              className="relative bg-black overflow-hidden"
+            >
+              {/* thumbnail shown on all slides; hidden once video portal is active */}
+              {thumb && idx !== activeIdx && (
+                <img
+                  src={thumb}
+                  alt=""
+                  className="absolute inset-0 h-full w-full object-cover opacity-40 blur-sm scale-105"
+                />
+              )}
+              {idx === activeIdx && (
+                <VideoPortal
+                  sourceRef={currentRef}
+                  parkRef={parkRef}
+                  onTogglePlay={togglePlay}
+                />
+              )}
+            </div>
+          )
+        })}
       </div>
 
     </div>
