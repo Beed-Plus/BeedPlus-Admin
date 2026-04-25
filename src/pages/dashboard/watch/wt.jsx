@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { instagramApi } from '../../../utils/instagramApi'
-
+import { proxyVideoUrl } from '../../../utils/api'
 
 // ─── Right-side icon button ───────────────────────────────────────────────────
 function RightBtn({ onClick, label, children, large = false, active = false }) {
@@ -75,9 +75,9 @@ function ReelPlayer({ items, startIndex, onClose, onLoadMore, loadingMore }) {
   // rebind all 3 sources and play whenever activeIdx changes
   useEffect(() => {
     activeIdxRef.current = activeIdx
-    bindSource(prevRef.current,    items[activeIdx - 1]?.media?.mediaUrl ?? null)
-    bindSource(currentRef.current, items[activeIdx]?.media?.mediaUrl     ?? null)
-    bindSource(nextRef.current,    items[activeIdx + 1]?.media?.mediaUrl ?? null)
+    bindSource(prevRef.current,    items[activeIdx - 1] ? proxyVideoUrl(items[activeIdx - 1].media?.mediaUrl) : null)
+    bindSource(currentRef.current, items[activeIdx]     ? proxyVideoUrl(items[activeIdx].media?.mediaUrl)     : null)
+    bindSource(nextRef.current,    items[activeIdx + 1] ? proxyVideoUrl(items[activeIdx + 1].media?.mediaUrl) : null)
     playCurrent()
     if (onLoadMore && activeIdx >= items.length - 3) onLoadMore()
   }, [activeIdx, items.length])
@@ -303,7 +303,7 @@ function VideoTile({ item, rank, onClick }) {
 
       <video
         ref={videoRef}
-        src={item.media?.mediaUrl}
+        src={proxyVideoUrl(item.media?.mediaUrl)}
         muted
         loop
         playsInline
