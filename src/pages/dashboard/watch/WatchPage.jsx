@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { instagramApi } from '../../../utils/instagramApi'
 import { proxyVideoUrl } from '../../../utils/api'
 
@@ -16,23 +16,151 @@ function RightBtn({ onClick, label, children, large = false, active = false }) {
   )
 }
 
-// ─── Single reel slide — only the video + bottom info ────────────────────────
-function ReelSlide({ item, playing, muted, onTogglePlay, onEnded, setVideoEl }) {
-  return (
-    <div className="relative w-full h-full flex items-center justify-center bg-black">
-      <video
-        ref={setVideoEl}
-        src={proxyVideoUrl(item.media?.mediaUrl)}
-        playsInline
-        muted={muted}
-        onClick={onTogglePlay}
-        onEnded={onEnded}
-        className="h-full w-full object-cover sm:object-contain cursor-pointer"
-      />
+// ─── VideoPortal: moves the persistent currentRef video into the active slide ─
+// On cleanup it parks the video back in the hidden container so it never
+// leaves the DOM (removing from DOM resets iOS Safari buffering).
+function VideoPortal({ sourceRef, parkRef, onTogglePlay }) {
+  const hostRef = useRef(null)
+  useEffect(() => {
+    const host  = hostRef.current
+    const video = sourceRef.current
+    if (!host || !video) return
+    video.className = 'h-full w-full object-cover sm:object-contain block cursor-pointer'
+    host.appendChild(video)
+    return () => {
+      if (parkRef.current) {
+        video.className = ''
+        parkRef.current.appendChild(video)
+      }
+    }
+  }, [])
+  return <div ref={hostRef} className="w-full h-full" onClick={onTogglePlay} />
+}
 
-      {/* centre play overlay when paused */}
+// ─── Full-screen reel player — 3 persistent video elements ───────────────────
+function ReelPlayer({ items, startIndex, onClose, onLoadMore, loadingMore }) {
+  const containerRef = useRef(null)
+  const parkRef      = useRef(null)  // videos live here when not portaled into a slide
+  const prevRef      = useRef(null)
+  const currentRef   = useRef(null)
+  const nextRef      = useRef(null)
+  const scrollTimer  = useRef(null)
+  const slideRefs    = useRef([])
+  const activeIdxRef = useRef(startIndex)
+
+  const [activeIdx, setActiveIdx] = useState(startIndex)
+  const [playing, setPlaying]     = useState(false)
+  const [muted, setMuted]         = useState(true)
+
+  function bindSource(el, url) {
+    if (!el) return
+    if (!url) { el.pause(); el.removeAttribute('src'); el.load(); return }
+    if (el.dataset.src === url) return
+    el.pause()
+    el.src = url
+    el.load()
+    el.dataset.src = url
+  }
+
+  async function playCurrent() {
+    prevRef.current?.pause()
+    nextRef.current?.pause()
+    const v = currentRef.current
+    if (!v) return
+    v.muted = muted
+    try { await v.play(); setPlaying(true) }
+    catch { setPlaying(false) }
+  }
+
+  // rebind all 3 sources and play whenever activeIdx changes
+  useEffect(() => {
+    activeIdxRef.current = activeIdx
+    bindSource(prevRef.current,    items[activeIdx - 1] ? proxyVideoUrl(items[activeIdx - 1].media?.mediaUrl) : null)
+    bindSource(currentRef.current, items[activeIdx]     ? proxyVideoUrl(items[activeIdx].media?.mediaUrl)     : null)
+    bindSource(nextRef.current,    items[activeIdx + 1] ? proxyVideoUrl(items[activeIdx + 1].media?.mediaUrl) : null)
+    playCurrent()
+    if (onLoadMore && activeIdx >= items.length - 3) onLoadMore()
+  }, [activeIdx, items.length])
+
+  // auto-advance on video end
+  useEffect(() => {
+    const v = currentRef.current
+    if (!v) return
+    function onEnded() {
+      slideRefs.current[activeIdxRef.current + 1]?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+    v.addEventListener('ended', onEnded)
+    return () => v.removeEventListener('ended', onEnded)
+  }, [])
+
+  // jump to startIndex instantly on open
+  useEffect(() => {
+    requestAnimationFrame(() => {
+      slideRefs.current[startIndex]?.scrollIntoView({ behavior: 'instant', block: 'start' })
+    })
+  }, [])
+
+  // scroll settles → derive index from actual slide pixel height
+  function onScroll() {
+    clearTimeout(scrollTimer.current)
+    scrollTimer.current = setTimeout(() => {
+      const el = containerRef.current
+      if (!el) return
+      const slideH = slideRefs.current[0]?.offsetHeight || el.clientHeight
+      const idx = Math.round(el.scrollTop / slideH)
+      if (idx !== activeIdxRef.current && idx >= 0 && idx < items.length) {
+        setActiveIdx(idx)
+      }
+    }, 120)
+  }
+
+  function goTo(idx) {
+    if (idx < 0 || idx >= items.length) return
+    slideRefs.current[idx]?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+
+  function togglePlay() {
+    const v = currentRef.current
+    if (!v) return
+    if (v.paused) { v.play(); setPlaying(true) }
+    else          { v.pause(); setPlaying(false) }
+  }
+
+  function toggleMute() {
+    setMuted((m) => {
+      if (currentRef.current) currentRef.current.muted = !m
+      return !m
+    })
+  }
+
+  useEffect(() => {
+    function onKey(e) {
+      if (e.key === 'Escape')                               onClose()
+      if (e.key === 'ArrowDown' || e.key === 'ArrowRight')  goTo(activeIdxRef.current + 1)
+      if (e.key === 'ArrowUp'   || e.key === 'ArrowLeft')   goTo(activeIdxRef.current - 1)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
+
+  useEffect(() => {
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = '' }
+  }, [])
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black flex flex-col">
+
+      {/* parking container — videos stored here when not portaled into a slide */}
+      <div ref={parkRef} aria-hidden="true" style={{ position: 'absolute', width: 0, height: 0, overflow: 'hidden' }}>
+        <video ref={prevRef}    playsInline preload="metadata" />
+        <video ref={currentRef} playsInline preload="auto" />
+        <video ref={nextRef}    playsInline preload="metadata" />
+      </div>
+
+      {/* ── centre play overlay ── */}
       {!playing && (
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+        <div className="fixed inset-0 z-10 flex items-center justify-center pointer-events-none">
           <div className="rounded-full bg-black/40 p-5">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-white" fill="currentColor" viewBox="0 0 24 24">
               <path d="M8 5v14l11-7z" />
@@ -40,115 +168,6 @@ function ReelSlide({ item, playing, muted, onTogglePlay, onEnded, setVideoEl }) 
           </div>
         </div>
       )}
-
-    </div>
-  )
-}
-
-// ─── Full-screen reel player ───────────────────────────────────────────────────
-function ReelPlayer({ items, startIndex, onClose, onLoadMore, loadingMore }) {
-  const [currentIdx, setCurrentIdx] = useState(startIndex)
-  const [playing, setPlaying]       = useState(false)
-  const [muted, setMuted]           = useState(true)
-  const slideRefs  = useRef([])
-  const videoRefs  = useRef([])
-  const debounceRef = useRef(null)
-
-  // helpers
-  const currentVideo = () => videoRefs.current[currentIdx]
-  function goTo(idx) {
-    slideRefs.current[idx]?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-  }
-  function goPrev() { goTo(currentIdx - 1) }
-  function goNext() { goTo(currentIdx + 1) }
-
-  function togglePlay() {
-    const v = currentVideo()
-    if (!v) return
-    if (v.paused) { v.play(); setPlaying(true) }
-    else          { v.pause(); setPlaying(false) }
-  }
-
-  function toggleMute() {
-    const v = currentVideo()
-    setMuted((m) => {
-      if (v) v.muted = !m
-      return !m
-    })
-  }
-
-  // when currentIdx changes: pause old, play current, imperatively buffer next 2
-  useEffect(() => {
-    videoRefs.current.forEach((v, i) => {
-      if (!v) return
-      // non-iOS: hint via preload attribute
-      v.preload = i >= currentIdx && i <= currentIdx + 2 ? 'auto' : 'none'
-      if (i !== currentIdx) { v.pause(); v.currentTime = 0 }
-    })
-
-    // iOS-compatible: explicit load() after user gesture buffers the next videos
-    // iOS ignores preload but honors video.load() triggered by a user interaction
-    for (let offset = 1; offset <= 2; offset++) {
-      const next = videoRefs.current[currentIdx + offset]
-      if (next && next.readyState === 0) next.load()
-    }
-
-    const v = videoRefs.current[currentIdx]
-    if (v) {
-      v.muted = muted
-      v.play().then(() => setPlaying(true)).catch(() => setPlaying(false))
-    }
-  }, [currentIdx])
-
-  // scroll to start slide instantly on open
-  useEffect(() => {
-    slideRefs.current[startIndex]?.scrollIntoView({ behavior: 'instant', block: 'start' })
-  }, [])
-
-  // IntersectionObserver — detect current slide + trigger load-more near end
-  useEffect(() => {
-    const observers = []
-    slideRefs.current.forEach((el, idx) => {
-      if (!el) return
-      const obs = new IntersectionObserver(
-        ([entry]) => {
-          if (entry.isIntersecting) {
-            clearTimeout(debounceRef.current)
-            debounceRef.current = setTimeout(() => {
-              setCurrentIdx(idx)
-              if (onLoadMore && idx >= items.length - 3) onLoadMore()
-            }, 120)
-          }
-        },
-        { threshold: 0.6 },
-      )
-      obs.observe(el)
-      observers.push(obs)
-    })
-    return () => observers.forEach((o) => o.disconnect())
-  }, [items.length])
-
-  // keyboard
-  useEffect(() => {
-    function onKey(e) {
-      if (e.key === 'Escape')                            onClose()
-      if (e.key === 'ArrowDown' || e.key === 'ArrowRight') goNext()
-      if (e.key === 'ArrowUp'   || e.key === 'ArrowLeft')  goPrev()
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [currentIdx])
-
-  // lock body scroll
-  useEffect(() => {
-    document.body.style.overflow = 'hidden'
-    return () => { document.body.style.overflow = '' }
-  }, [])
-
-  const item = items[currentIdx]
-
-  return (
-    <div className="fixed inset-0 z-50 bg-black">
 
       {/* ── fixed top bar ── */}
       <div className="fixed top-0 inset-x-0 z-20 flex items-center justify-end gap-2 px-4 py-3">
@@ -171,7 +190,7 @@ function ReelPlayer({ items, startIndex, onClose, onLoadMore, loadingMore }) {
       {/* ── fixed right-side controls ── */}
       <div className="fixed right-3 top-1/2 -translate-y-1/2 z-20 flex flex-col items-center gap-4">
 
-        <RightBtn onClick={goPrev} label="Prev">
+        <RightBtn onClick={() => goTo(activeIdx - 1)} label="Prev">
           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" />
           </svg>
@@ -189,7 +208,7 @@ function ReelPlayer({ items, startIndex, onClose, onLoadMore, loadingMore }) {
           )}
         </RightBtn>
 
-        <RightBtn onClick={goNext} label="Next">
+        <RightBtn onClick={() => goTo(activeIdx + 1)} label="Next">
           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
           </svg>
@@ -211,44 +230,31 @@ function ReelPlayer({ items, startIndex, onClose, onLoadMore, loadingMore }) {
 
       </div>
 
-      {/* ── scrollable video list ── */}
+      {/* ── scroll-snap feed — video portaled into active slide ── */}
       <div
-        className="h-full w-full overflow-y-scroll"
+        ref={containerRef}
+        onScroll={onScroll}
+        className="flex-1 overflow-y-scroll"
         style={{ scrollSnapType: 'y mandatory', scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
-        {items.map((item, idx) => {
-          // only mount slide content within ±2 of current — everything else
-          // is a black placeholder that keeps scroll-snap positions intact
-          const isNear = Math.abs(idx - currentIdx) <= 2
-
-          return (
-            <div
-              key={item._id ?? item.instagramMediaId ?? idx}
-              ref={(el) => { slideRefs.current[idx] = el }}
-              style={{ scrollSnapAlign: 'start', height: '100dvh' }}
-            >
-              {isNear ? (
-                <ReelSlide
-                  item={item}
-                  playing={idx === currentIdx ? playing : false}
-                  muted={muted}
-                  onTogglePlay={togglePlay}
-                  onEnded={goNext}
-                  setVideoEl={(el) => {
-                    videoRefs.current[idx] = el
-                    if (el) el.preload = idx >= startIndex && idx <= startIndex + 2 ? 'auto' : 'none'
-                  }}
-                />
-              ) : (
-                <div
-                  className="w-full h-full bg-black"
-                  ref={() => { videoRefs.current[idx] = null }}
-                />
-              )}
-            </div>
-          )
-        })}
+        {items.map((item, idx) => (
+          <div
+            key={item._id ?? item.instagramMediaId ?? idx}
+            ref={(el) => { slideRefs.current[idx] = el }}
+            style={{ scrollSnapAlign: 'start', height: '100dvh' }}
+            className="relative bg-black"
+          >
+            {idx === activeIdx && (
+              <VideoPortal
+                sourceRef={currentRef}
+                parkRef={parkRef}
+                onTogglePlay={togglePlay}
+              />
+            )}
+          </div>
+        ))}
       </div>
+
     </div>
   )
 }
