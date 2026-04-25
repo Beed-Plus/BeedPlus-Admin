@@ -320,7 +320,7 @@ function VideoTile({ item, rank, onClick }) {
   )
 }
 
-const LIMIT = 5
+const LIMIT = 100
 
 // ─── Page ──────────────────────────────────────────────────────────────────────
 export default function WatchPage() {
