@@ -2,7 +2,10 @@
   "permissions": {
     "allow": [
       "Bash(git commit -m ':*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(grep -E \"\\\\.\\(jsx|css|js\\)$\")",
+      "Read(//c/c/Users/HP/Documents/**)",
+      "Bash(awk -F/ '{depth=NF-1; printf \"%s%s\\\\n\", substr\\(\"  \", 1, depth*2\\), $NF}')"
     ]
   }
 }

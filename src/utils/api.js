@@ -18,11 +18,22 @@ export function proxyVideoUrl(url) {
  * @param {string} [opts.method] - HTTP method (defaults to POST when body present, GET otherwise).
  * @param {string} [opts.token]  - Bearer token appended to the Authorization header.
  */
+const STORAGE_KEY = 'beedplus_admin_auth'
+
+function getStoredToken() {
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEY))?.token ?? null
+  } catch {
+    return null
+  }
+}
+
 export async function apiFetch(path, { body, method, token, ...rest } = {}) {
   const resolvedMethod = method ?? (body !== undefined ? 'POST' : 'GET')
 
+  const resolvedToken = token ?? getStoredToken()
   const headers = { 'Content-Type': 'application/json' }
-  if (token) headers['Authorization'] = `Bearer ${token}`
+  if (resolvedToken) headers['Authorization'] = `Bearer ${resolvedToken}`
 
   const res = await fetch(`${BASE}${path}`, {
     method: resolvedMethod,
