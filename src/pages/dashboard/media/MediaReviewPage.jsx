@@ -61,10 +61,10 @@ function PreviewModal({ item, categories, subCatOptions, onClose, onApprove, onR
       onClick={handleOverlay}
       className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
     >
-      <div className="w-full max-w-3xl rounded-2xl bg-white dark:bg-gray-900 shadow-2xl overflow-hidden flex flex-row max-h-[88vh]">
+      <div className="w-full max-w-[69.6rem] rounded-2xl bg-white dark:bg-gray-900 shadow-2xl overflow-hidden flex flex-row max-h-[88vh]">
 
         {/* Left — video / image */}
-        <div className="w-64 flex-shrink-0 bg-gray-950 flex items-center justify-center">
+        <div className="w-[32rem] flex-shrink-0 bg-gray-950 flex items-center justify-center">
           {isVideo && item.media?.mediaUrl ? (
             <video
               controls

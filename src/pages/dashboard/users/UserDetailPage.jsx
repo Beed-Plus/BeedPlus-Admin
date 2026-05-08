@@ -608,6 +608,7 @@ export default function UserDetailPage() {
                   <th className="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">Ranking</th>
                   <th className="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">Beed+ Score</th>
                   <th className="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">Submitted</th>
+                  <th className="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">Status</th>
                   <th className="px-6 py-3 text-right text-[11px] font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">View</th>
                 </tr>
               </thead>
@@ -674,6 +675,22 @@ export default function UserDetailPage() {
                       <td className="px-6 py-4 text-sm text-gray-400 whitespace-nowrap">
                         {fmtDate(post.createdAt)}
                       </td>
+                      {/* Status */}
+                      <td className="px-6 py-4">
+                        {(() => {
+                          const s = post.status
+                          const cfg = {
+                            approved: 'bg-green-50 text-green-600',
+                            pending:  'bg-amber-50 text-amber-600',
+                            rejected: 'bg-red-50 text-red-500',
+                          }
+                          return s ? (
+                            <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize ${cfg[s] ?? 'bg-gray-100 text-gray-500'}`}>
+                              {s}
+                            </span>
+                          ) : <span className="text-gray-300 text-sm">—</span>
+                        })()}
+                      </td>
                       {/* View button → modal */}
                       <td className="px-6 py-4 text-right">
                         <button
@@ -693,12 +710,12 @@ export default function UserDetailPage() {
 
       </div>
 
-      {/* Instagram Media (live feed — admin browse & direct submit) */}
+      {/* Unsubmitted Videos */}
       <div className="flex flex-col rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm overflow-hidden">
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-800">
           <div>
-            <p className="text-sm font-bold text-gray-800 dark:text-gray-100">Instagram Media</p>
-            <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Live feed — admin can submit directly to rankings</p>
+            <p className="text-sm font-bold text-gray-800 dark:text-gray-100">Unsubmitted Videos</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Videos not yet submitted to rankings</p>
           </div>
           {!igMediaLoading && (
             <span className="text-xs text-gray-400">{igMedia.length} post{igMedia.length !== 1 ? 's' : ''}</span>
