@@ -290,7 +290,6 @@ export default function UserDetailPage() {
   // Admin direct-submit modal state
   const [submitModal, setSubmitModal]     = useState(null)
   const [submitCat1, setSubmitCat1]       = useState('')
-  const [submitCat2, setSubmitCat2]       = useState('')
   const [submitSubCat, setSubmitSubCat]   = useState('')
   const [subCatOptions, setSubCatOptions] = useState([])
   const [subCatOpen, setSubCatOpen]       = useState(false)
@@ -392,7 +391,7 @@ export default function UserDetailPage() {
   }, [submitModal])
 
   async function handleAdminSubmit() {
-    const category = [submitCat1, submitCat2].filter(Boolean)
+    const category = [submitCat1].filter(Boolean)
     if (category.length === 0) return
     setSubmitting(true)
     setSubmitMsg(null)
@@ -767,7 +766,7 @@ export default function UserDetailPage() {
                       <td className="px-6 py-4 text-sm text-gray-400 whitespace-nowrap">{fmtDate(post.timestamp)}</td>
                       <td className="px-6 py-4 text-right">
                         <button
-                          onClick={() => { setSubmitModal(post); setSubmitCat1(''); setSubmitCat2(''); setSubmitSubCat(''); setSubCatOpen(false); setSubmitMsg(null) }}
+                          onClick={() => { setSubmitModal(post); setSubmitCat1(''); setSubmitSubCat(''); setSubCatOpen(false); setSubmitMsg(null) }}
                           className="rounded-lg bg-orange-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-orange-600 transition"
                         >
                           Submit
@@ -878,26 +877,6 @@ export default function UserDetailPage() {
                     const name = cat.name ?? cat
                     return <option key={name} value={name}>{name}</option>
                   })}
-                </select>
-              </div>
-
-              {/* Secondary category */}
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-1">
-                  Secondary Category <span className="text-gray-300 dark:text-gray-600">(optional)</span>
-                </label>
-                <select
-                  value={submitCat2}
-                  onChange={(e) => setSubmitCat2(e.target.value)}
-                  className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-100"
-                >
-                  <option value="">— None —</option>
-                  {categories
-                    .filter((cat) => (cat.name ?? cat) !== submitCat1)
-                    .map((cat) => {
-                      const name = cat.name ?? cat
-                      return <option key={name} value={name}>{name}</option>
-                    })}
                 </select>
               </div>
 
