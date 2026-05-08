@@ -5,6 +5,7 @@ import { useAuth } from '../../../hooks/useAuth'
 import { usersApi } from '../../../utils/usersApi'
 import { instagramApi } from '../../../utils/instagramApi'
 import { categoriesApi } from '../../../utils/categoriesApi'
+import { subCategoriesApi } from '../../../utils/subCategoriesApi'
 import UserAvatar from '../../../components/dashboard/users/UserAvatar'
 import StatusBadge from '../../../components/ui/StatusBadge'
 import Badge from '../../../components/ui/Badge'
@@ -287,12 +288,15 @@ export default function UserDetailPage() {
   const [igMediaError, setIgMediaError]     = useState(null)
 
   // Admin direct-submit modal state
-  const [submitModal, setSubmitModal]   = useState(null) // the IG post object
-  const [submitCats, setSubmitCats]     = useState([])   // selected categories (max 2)
-  const [submitSubCat, setSubmitSubCat] = useState('')
-  const [submitting, setSubmitting]     = useState(false)
-  const [submitMsg, setSubmitMsg]       = useState(null)  // { ok, text }
-  const [categories, setCategories]     = useState([])
+  const [submitModal, setSubmitModal]     = useState(null)
+  const [submitCat1, setSubmitCat1]       = useState('')
+  const [submitCat2, setSubmitCat2]       = useState('')
+  const [submitSubCat, setSubmitSubCat]   = useState('')
+  const [subCatOptions, setSubCatOptions] = useState([])
+  const [subCatOpen, setSubCatOpen]       = useState(false)
+  const [submitting, setSubmitting]       = useState(false)
+  const [submitMsg, setSubmitMsg]         = useState(null)
+  const [categories, setCategories]       = useState([])
   async function handleApprove() {
     setApproving(true)
     setApproveError(null)
@@ -380,21 +384,21 @@ export default function UserDetailPage() {
     } catch {}
   }
 
-  function toggleCat(name) {
-    setSubmitCats((prev) =>
-      prev.includes(name)
-        ? prev.filter((c) => c !== name)
-        : prev.length < 2 ? [...prev, name] : prev,
-    )
-  }
+  useEffect(() => {
+    if (!submitModal) return
+    subCategoriesApi.getSubCategories()
+      .then((res) => setSubCatOptions(Array.isArray(res) ? res : (res?.subCategories ?? [])))
+      .catch(() => {})
+  }, [submitModal])
 
   async function handleAdminSubmit() {
-    if (submitCats.length === 0) return
+    const category = [submitCat1, submitCat2].filter(Boolean)
+    if (category.length === 0) return
     setSubmitting(true)
     setSubmitMsg(null)
     try {
       await instagramApi.adminDirectSubmit(
-        { userId: id, mediaId: submitModal.id, category: submitCats, subCategory: submitSubCat || undefined },
+        { userId: id, mediaId: submitModal.id, category, subCategory: submitSubCat || undefined },
         token,
       )
       setSubmitMsg({ ok: true, text: 'Media submitted successfully.' })
@@ -763,7 +767,7 @@ export default function UserDetailPage() {
                       <td className="px-6 py-4 text-sm text-gray-400 whitespace-nowrap">{fmtDate(post.timestamp)}</td>
                       <td className="px-6 py-4 text-right">
                         <button
-                          onClick={() => { setSubmitModal(post); setSubmitCats([]); setSubmitSubCat(''); setSubmitMsg(null) }}
+                          onClick={() => { setSubmitModal(post); setSubmitCat1(''); setSubmitCat2(''); setSubmitSubCat(''); setSubCatOpen(false); setSubmitMsg(null) }}
                           className="rounded-lg bg-orange-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-orange-600 transition"
                         >
                           Submit
@@ -826,13 +830,23 @@ export default function UserDetailPage() {
       {/* Admin direct-submit modal */}
       {submitModal && createPortal(
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="w-full max-w-sm rounded-2xl bg-white dark:bg-gray-900 shadow-2xl overflow-hidden">
-            {/* Preview */}
-            <div className="relative bg-gray-900 aspect-video">
-              {submitModal.thumbnail_url ? (
-                <img src={submitModal.thumbnail_url} alt="" className="h-full w-full object-cover" />
+          <div className="w-full max-w-3xl rounded-2xl bg-white dark:bg-gray-900 shadow-2xl overflow-hidden flex flex-row max-h-[88vh]">
+
+            {/* Left — video player */}
+            <div className="w-64 flex-shrink-0 bg-gray-950 flex items-center justify-center">
+              {submitModal.media_url ? (
+                <video
+                  controls
+                  playsInline
+                  poster={submitModal.thumbnail_url || undefined}
+                  src={submitModal.media_url}
+                  className="w-full h-full object-contain"
+                  style={{ maxHeight: '88vh' }}
+                />
+              ) : submitModal.thumbnail_url ? (
+                <img src={submitModal.thumbnail_url} alt="" className="w-full h-full object-contain" />
               ) : (
-                <div className="flex h-full items-center justify-center text-gray-600">
+                <div className="flex h-full w-full items-center justify-center text-gray-600 p-8">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 10l4.553-2.069A1 1 0 0121 8.82v6.36a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z" />
                   </svg>
@@ -840,7 +854,8 @@ export default function UserDetailPage() {
               )}
             </div>
 
-            <div className="p-5 space-y-4">
+            {/* Right — form */}
+            <div className="flex-1 min-w-0 flex flex-col gap-4 p-6 overflow-y-auto">
               <div>
                 <p className="text-sm font-bold text-gray-900 dark:text-white">Submit to Rankings</p>
                 {submitModal.caption && (
@@ -848,45 +863,78 @@ export default function UserDetailPage() {
                 )}
               </div>
 
-              {/* Category checkboxes */}
+              {/* Primary category */}
               <div>
-                <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-2">
-                  Category <span className="text-gray-300">(max 2)</span>
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {categories.length > 0
-                    ? categories.map((cat) => {
-                        const name = cat.name ?? cat
-                        const selected = submitCats.includes(name)
-                        return (
-                          <button
-                            key={name}
-                            onClick={() => toggleCat(name)}
-                            className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
-                              selected
-                                ? 'bg-orange-500 text-white'
-                                : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
-                            }`}
-                          >
-                            {name}
-                          </button>
-                        )
-                      })
-                    : <p className="text-xs text-gray-400">No categories loaded.</p>
-                  }
-                </div>
+                <label className="block text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-1">
+                  Primary Category <span className="text-red-400">*</span>
+                </label>
+                <select
+                  value={submitCat1}
+                  onChange={(e) => setSubmitCat1(e.target.value)}
+                  className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-100"
+                >
+                  <option value="">— Select category —</option>
+                  {categories.map((cat) => {
+                    const name = cat.name ?? cat
+                    return <option key={name} value={name}>{name}</option>
+                  })}
+                </select>
               </div>
 
-              {/* SubCategory */}
+              {/* Secondary category */}
               <div>
-                <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-1">Sub-category <span className="text-gray-300">(optional)</span></p>
-                <input
-                  type="text"
-                  value={submitSubCat}
-                  onChange={(e) => setSubmitSubCat(e.target.value)}
-                  placeholder="e.g. Dancing"
+                <label className="block text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-1">
+                  Secondary Category <span className="text-gray-300 dark:text-gray-600">(optional)</span>
+                </label>
+                <select
+                  value={submitCat2}
+                  onChange={(e) => setSubmitCat2(e.target.value)}
                   className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-100"
-                />
+                >
+                  <option value="">— None —</option>
+                  {categories
+                    .filter((cat) => (cat.name ?? cat) !== submitCat1)
+                    .map((cat) => {
+                      const name = cat.name ?? cat
+                      return <option key={name} value={name}>{name}</option>
+                    })}
+                </select>
+              </div>
+
+              {/* Sub-category autocomplete */}
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-1">
+                  Sub-category <span className="text-gray-300 dark:text-gray-600">(optional)</span>
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={submitSubCat}
+                    onChange={(e) => { setSubmitSubCat(e.target.value); setSubCatOpen(true) }}
+                    onFocus={() => setSubCatOpen(true)}
+                    onBlur={() => setTimeout(() => setSubCatOpen(false), 150)}
+                    placeholder="Type to search or create new…"
+                    className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-100"
+                  />
+                  {subCatOpen && (() => {
+                    const filtered = subCatOptions.filter((s) =>
+                      !submitSubCat || s.name.toLowerCase().includes(submitSubCat.toLowerCase())
+                    )
+                    return filtered.length > 0 ? (
+                      <ul className="absolute z-20 top-full left-0 right-0 mt-1 max-h-40 overflow-y-auto rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-lg">
+                        {filtered.map((s) => (
+                          <li
+                            key={s._id}
+                            onMouseDown={() => { setSubmitSubCat(s.name); setSubCatOpen(false) }}
+                            className="px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-orange-50 dark:hover:bg-gray-700 cursor-pointer"
+                          >
+                            {s.name}
+                          </li>
+                        ))}
+                      </ul>
+                    ) : null
+                  })()}
+                </div>
               </div>
 
               {/* Feedback */}
@@ -897,10 +945,10 @@ export default function UserDetailPage() {
               )}
 
               {/* Buttons */}
-              <div className="flex gap-2">
+              <div className="flex gap-2 mt-auto">
                 <button
                   onClick={handleAdminSubmit}
-                  disabled={submitting || submitCats.length === 0}
+                  disabled={submitting || !submitCat1}
                   className="flex-1 rounded-xl bg-orange-500 py-2.5 text-sm font-semibold text-white hover:bg-orange-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {submitting ? 'Submitting…' : 'Submit'}
