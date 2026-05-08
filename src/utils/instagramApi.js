@@ -107,8 +107,8 @@ export const instagramApi = {
     apiFetch(`${IG}/admin/pending-media?status=${status}`, { token }),
 
   /** POST /api/instagram/admin/pending-media/:id/approve  (admin) */
-  approvePendingMedia: (id, token) =>
-    apiFetch(`${IG}/admin/pending-media/${id}/approve`, { body: {}, token }),
+  approvePendingMedia: (id, { category, subCategory } = {}, token) =>
+    apiFetch(`${IG}/admin/pending-media/${id}/approve`, { body: { category, subCategory }, token }),
 
   /** POST /api/instagram/admin/pending-media/:id/reject  (admin) */
   rejectPendingMedia: (id, { reason } = {}, token) =>
