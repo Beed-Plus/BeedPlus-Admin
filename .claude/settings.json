@@ -5,7 +5,9 @@
       "Bash(git push:*)",
       "Bash(grep -E \"\\\\.\\(jsx|css|js\\)$\")",
       "Read(//c/c/Users/HP/Documents/**)",
-      "Bash(awk -F/ '{depth=NF-1; printf \"%s%s\\\\n\", substr\\(\"  \", 1, depth*2\\), $NF}')"
+      "Bash(awk -F/ '{depth=NF-1; printf \"%s%s\\\\n\", substr\\(\"  \", 1, depth*2\\), $NF}')",
+      "Bash(node --experimental-vm-modules scripts/refreshMediaUrls.js)",
+      "Bash(node --use-system-ca scripts/refreshMediaUrls.js)"
     ]
   }
 }

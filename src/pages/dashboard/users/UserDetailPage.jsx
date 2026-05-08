@@ -4,6 +4,7 @@ import { createPortal } from 'react-dom'
 import { useAuth } from '../../../hooks/useAuth'
 import { usersApi } from '../../../utils/usersApi'
 import { instagramApi } from '../../../utils/instagramApi'
+import { categoriesApi } from '../../../utils/categoriesApi'
 import UserAvatar from '../../../components/dashboard/users/UserAvatar'
 import StatusBadge from '../../../components/ui/StatusBadge'
 import Badge from '../../../components/ui/Badge'
@@ -277,6 +278,21 @@ export default function UserDetailPage() {
   const [selectedPost, setSelectedPost] = useState(null)
   const [approving, setApproving]       = useState(false)
   const [approveError, setApproveError] = useState(null)
+
+  // Instagram media (live feed) for admin browse + direct submit
+  const [igMedia, setIgMedia]               = useState([])
+  const [igMediaLoading, setIgMediaLoading] = useState(true)
+  const [igMediaCursor, setIgMediaCursor]   = useState(null)
+  const [igMediaHasMore, setIgMediaHasMore] = useState(false)
+  const [igMediaError, setIgMediaError]     = useState(null)
+
+  // Admin direct-submit modal state
+  const [submitModal, setSubmitModal]   = useState(null) // the IG post object
+  const [submitCats, setSubmitCats]     = useState([])   // selected categories (max 2)
+  const [submitSubCat, setSubmitSubCat] = useState('')
+  const [submitting, setSubmitting]     = useState(false)
+  const [submitMsg, setSubmitMsg]       = useState(null)  // { ok, text }
+  const [categories, setCategories]     = useState([])
   async function handleApprove() {
     setApproving(true)
     setApproveError(null)
@@ -325,10 +341,70 @@ export default function UserDetailPage() {
       }
     }
 
+    async function loadIgMedia() {
+      setIgMediaLoading(true)
+      setIgMediaError(null)
+      try {
+        const res = await instagramApi.adminGetUserInstagramMedia(id, token)
+        if (!cancelled) {
+          setIgMedia(Array.isArray(res.media) ? res.media : [])
+          setIgMediaCursor(res.pagination?.nextCursor ?? null)
+          setIgMediaHasMore(res.pagination?.hasMore ?? false)
+        }
+      } catch (err) {
+        if (!cancelled) setIgMediaError(err.message ?? 'Failed to load Instagram media')
+      } finally {
+        if (!cancelled) setIgMediaLoading(false)
+      }
+    }
+
     loadUser()
     loadPosts()
+    loadIgMedia()
     return () => { cancelled = true }
   }, [id, token])
+
+  useEffect(() => {
+    categoriesApi.getCategories()
+      .then((res) => setCategories(Array.isArray(res) ? res : (res?.categories ?? [])))
+      .catch(() => {})
+  }, [])
+
+  async function loadMoreIgMedia() {
+    if (!igMediaCursor) return
+    try {
+      const res = await instagramApi.adminGetUserInstagramMedia(id, token, { after: igMediaCursor })
+      setIgMedia((prev) => [...prev, ...(res.media ?? [])])
+      setIgMediaCursor(res.pagination?.nextCursor ?? null)
+      setIgMediaHasMore(res.pagination?.hasMore ?? false)
+    } catch {}
+  }
+
+  function toggleCat(name) {
+    setSubmitCats((prev) =>
+      prev.includes(name)
+        ? prev.filter((c) => c !== name)
+        : prev.length < 2 ? [...prev, name] : prev,
+    )
+  }
+
+  async function handleAdminSubmit() {
+    if (submitCats.length === 0) return
+    setSubmitting(true)
+    setSubmitMsg(null)
+    try {
+      await instagramApi.adminDirectSubmit(
+        { userId: id, mediaId: submitModal.id, category: submitCats, subCategory: submitSubCat || undefined },
+        token,
+      )
+      setSubmitMsg({ ok: true, text: 'Media submitted successfully.' })
+      setTimeout(() => { setSubmitModal(null); setSubmitMsg(null) }, 1500)
+    } catch (err) {
+      setSubmitMsg({ ok: false, text: err.message ?? 'Submit failed.' })
+    } finally {
+      setSubmitting(false)
+    }
+  }
 
   if (error) {
     return (
@@ -485,36 +561,6 @@ export default function UserDetailPage() {
         )}
       </div>
 
-      {/* Daily Reach */}
-      <div className="flex flex-col rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-800">
-          <p className="text-sm font-bold text-gray-800 dark:text-gray-100">Daily Reach</p>
-          <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Per-day reach history</p>
-        </div>
-        {!user?.instagram?.dailyInsights?.length ? (
-          <p className="px-6 py-10 text-center text-sm text-gray-400 dark:text-gray-500">No daily reach data yet.</p>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[400px]">
-              <thead>
-                <tr className="border-b border-gray-100 dark:border-gray-800 bg-gray-50/60 dark:bg-gray-800/50">
-                  <th className="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">Date</th>
-                  <th className="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">Reach</th>
-                </tr>
-              </thead>
-              <tbody>
-                {[...user.instagram.dailyInsights].reverse().map((entry, i) => (
-                  <tr key={i} className="border-b border-gray-50 dark:border-gray-800/50 last:border-0 hover:bg-gray-50/40 dark:hover:bg-gray-800/40">
-                    <td className="px-6 py-3 text-sm text-gray-500 dark:text-gray-400">{fmtDate(entry.date)}</td>
-                    <td className="px-6 py-3 text-sm font-semibold text-gray-800 dark:text-gray-100">{fmt(entry.reach)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-
       {/* Submitted Posts */}
       <div className="flex flex-col rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm overflow-hidden">
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-800">
@@ -644,9 +690,232 @@ export default function UserDetailPage() {
 
       </div>
 
+      {/* Instagram Media (live feed — admin browse & direct submit) */}
+      <div className="flex flex-col rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm overflow-hidden">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-800">
+          <div>
+            <p className="text-sm font-bold text-gray-800 dark:text-gray-100">Instagram Media</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Live feed — admin can submit directly to rankings</p>
+          </div>
+          {!igMediaLoading && (
+            <span className="text-xs text-gray-400">{igMedia.length} post{igMedia.length !== 1 ? 's' : ''}</span>
+          )}
+        </div>
+
+        {igMediaError ? (
+          <p className="px-6 py-10 text-center text-sm text-red-400">{igMediaError}</p>
+        ) : igMediaLoading ? (
+          <div className="divide-y divide-gray-50 dark:divide-gray-800">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-4 px-6 py-4 animate-pulse">
+                <div className="h-10 w-10 shrink-0 rounded-lg bg-gray-100 dark:bg-gray-800" />
+                <div className="flex-1 space-y-1.5">
+                  <div className="h-3 w-40 rounded bg-gray-100 dark:bg-gray-800" />
+                  <div className="h-3 w-24 rounded bg-gray-100 dark:bg-gray-800" />
+                </div>
+                <div className="h-7 w-16 rounded-lg bg-gray-100 dark:bg-gray-800" />
+              </div>
+            ))}
+          </div>
+        ) : igMedia.length === 0 ? (
+          <p className="px-6 py-12 text-center text-sm text-gray-400 dark:text-gray-500">No qualifying Instagram posts found.</p>
+        ) : (
+          <>
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[640px]">
+                <thead>
+                  <tr className="border-b border-gray-100 dark:border-gray-800 bg-gray-50/60 dark:bg-gray-800/50">
+                    <th className="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">Post</th>
+                    <th className="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">Type</th>
+                    <th className="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">Views</th>
+                    <th className="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">Reach</th>
+                    <th className="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">Likes</th>
+                    <th className="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">Date</th>
+                    <th className="px-6 py-3 text-right text-[11px] font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">Submit</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {igMedia.map((post) => (
+                    <tr
+                      key={post.id}
+                      className="border-b border-gray-50 dark:border-gray-800/50 last:border-0 hover:bg-gray-50/40 dark:hover:bg-gray-800/40 transition-colors"
+                    >
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          {post.thumbnail_url ? (
+                            <img src={post.thumbnail_url} alt="" className="h-10 w-10 shrink-0 rounded-lg object-cover" />
+                          ) : (
+                            <div className="h-10 w-10 shrink-0 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-300 dark:text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.069A1 1 0 0121 8.82v6.36a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z" />
+                              </svg>
+                            </div>
+                          )}
+                          <p className="max-w-[180px] truncate text-sm font-medium text-gray-700 dark:text-gray-300" title={post.caption}>
+                            {truncate(post.caption, 30)}
+                          </p>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4"><MediaTypeBadge type={post.media_type} /></td>
+                      <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">{fmt(post.insights?.views)}</td>
+                      <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">{fmt(post.insights?.reach)}</td>
+                      <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">{fmt(post.insights?.likes)}</td>
+                      <td className="px-6 py-4 text-sm text-gray-400 whitespace-nowrap">{fmtDate(post.timestamp)}</td>
+                      <td className="px-6 py-4 text-right">
+                        <button
+                          onClick={() => { setSubmitModal(post); setSubmitCats([]); setSubmitSubCat(''); setSubmitMsg(null) }}
+                          className="rounded-lg bg-orange-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-orange-600 transition"
+                        >
+                          Submit
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {igMediaHasMore && (
+              <div className="border-t border-gray-100 dark:border-gray-800 px-6 py-3 text-center">
+                <button
+                  onClick={loadMoreIgMedia}
+                  className="text-sm font-semibold text-orange-500 hover:text-orange-600 transition"
+                >
+                  Load more
+                </button>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+
+      {/* Daily Reach */}
+      <div className="flex flex-col rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm overflow-hidden">
+        <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-800">
+          <p className="text-sm font-bold text-gray-800 dark:text-gray-100">Daily Reach</p>
+          <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Per-day reach history</p>
+        </div>
+        {!user?.instagram?.dailyInsights?.length ? (
+          <p className="px-6 py-10 text-center text-sm text-gray-400 dark:text-gray-500">No daily reach data yet.</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[400px]">
+              <thead>
+                <tr className="border-b border-gray-100 dark:border-gray-800 bg-gray-50/60 dark:bg-gray-800/50">
+                  <th className="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">Date</th>
+                  <th className="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">Reach</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[...user.instagram.dailyInsights].reverse().map((entry, i) => (
+                  <tr key={i} className="border-b border-gray-50 dark:border-gray-800/50 last:border-0 hover:bg-gray-50/40 dark:hover:bg-gray-800/40">
+                    <td className="px-6 py-3 text-sm text-gray-500 dark:text-gray-400">{fmtDate(entry.date)}</td>
+                    <td className="px-6 py-3 text-sm font-semibold text-gray-800 dark:text-gray-100">{fmt(entry.reach)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
       {/* Media preview modal */}
       {selectedPost && (
         <MediaModal post={selectedPost} onClose={() => setSelectedPost(null)} />
+      )}
+
+      {/* Admin direct-submit modal */}
+      {submitModal && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="w-full max-w-sm rounded-2xl bg-white dark:bg-gray-900 shadow-2xl overflow-hidden">
+            {/* Preview */}
+            <div className="relative bg-gray-900 aspect-video">
+              {submitModal.thumbnail_url ? (
+                <img src={submitModal.thumbnail_url} alt="" className="h-full w-full object-cover" />
+              ) : (
+                <div className="flex h-full items-center justify-center text-gray-600">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 10l4.553-2.069A1 1 0 0121 8.82v6.36a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z" />
+                  </svg>
+                </div>
+              )}
+            </div>
+
+            <div className="p-5 space-y-4">
+              <div>
+                <p className="text-sm font-bold text-gray-900 dark:text-white">Submit to Rankings</p>
+                {submitModal.caption && (
+                  <p className="mt-0.5 text-xs text-gray-400 line-clamp-2">{submitModal.caption}</p>
+                )}
+              </div>
+
+              {/* Category checkboxes */}
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-2">
+                  Category <span className="text-gray-300">(max 2)</span>
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {categories.length > 0
+                    ? categories.map((cat) => {
+                        const name = cat.name ?? cat
+                        const selected = submitCats.includes(name)
+                        return (
+                          <button
+                            key={name}
+                            onClick={() => toggleCat(name)}
+                            className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
+                              selected
+                                ? 'bg-orange-500 text-white'
+                                : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                            }`}
+                          >
+                            {name}
+                          </button>
+                        )
+                      })
+                    : <p className="text-xs text-gray-400">No categories loaded.</p>
+                  }
+                </div>
+              </div>
+
+              {/* SubCategory */}
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-1">Sub-category <span className="text-gray-300">(optional)</span></p>
+                <input
+                  type="text"
+                  value={submitSubCat}
+                  onChange={(e) => setSubmitSubCat(e.target.value)}
+                  placeholder="e.g. Dancing"
+                  className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-100"
+                />
+              </div>
+
+              {/* Feedback */}
+              {submitMsg && (
+                <p className={`text-xs font-semibold ${submitMsg.ok ? 'text-green-500' : 'text-red-500'}`}>
+                  {submitMsg.text}
+                </p>
+              )}
+
+              {/* Buttons */}
+              <div className="flex gap-2">
+                <button
+                  onClick={handleAdminSubmit}
+                  disabled={submitting || submitCats.length === 0}
+                  className="flex-1 rounded-xl bg-orange-500 py-2.5 text-sm font-semibold text-white hover:bg-orange-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {submitting ? 'Submitting…' : 'Submit'}
+                </button>
+                <button
+                  onClick={() => setSubmitModal(null)}
+                  className="flex-1 rounded-xl border border-gray-200 dark:border-gray-700 py-2.5 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>,
+        document.body,
       )}
     </div>
   )

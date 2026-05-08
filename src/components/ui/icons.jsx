@@ -186,3 +186,14 @@ export const WatchIcon = (p) =>
     />,
     p,
   )
+
+export const ReviewIcon = (p) =>
+  s(
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="1.8"
+      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+    />,
+    p,
+  )

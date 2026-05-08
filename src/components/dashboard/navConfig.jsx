@@ -14,6 +14,7 @@ import {
   FormulaIcon,
   WatchlistIcon,
   WatchIcon,
+  ReviewIcon,
 } from '../ui/icons'
 
 const navConfig = [
@@ -31,6 +32,7 @@ const navConfig = [
         ],
       },
       { label: 'Posts',          path: '/dashboard/posts',         icon: PostsIcon },
+      { label: 'Media Review',   path: '/dashboard/media-review',  icon: ReviewIcon },
       { label: 'Watch',           path: '/dashboard/watch',          icon: WatchIcon },
       { label: 'Watchlist',      path: '/dashboard/watchlist',     icon: WatchlistIcon },
       { label: 'Compare Posts',  path: '/dashboard/posts/compare', icon: CompareIcon },

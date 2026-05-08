@@ -99,4 +99,33 @@ export const instagramApi = {
   /** GET /api/instagram/watch-feed?page=1&limit=20  (public) */
   getWatchFeed: ({ page = 1, limit = 20 } = {}) =>
     apiFetch(`${IG}/watch-feed?page=${page}&limit=${limit}`),
+
+  // ─── Pending media review ──────────────────────────────────────────────────
+
+  /** GET /api/instagram/admin/pending-media?status=pending  (admin) */
+  getPendingMediaForAdmin: (token, status = 'pending') =>
+    apiFetch(`${IG}/admin/pending-media?status=${status}`, { token }),
+
+  /** POST /api/instagram/admin/pending-media/:id/approve  (admin) */
+  approvePendingMedia: (id, token) =>
+    apiFetch(`${IG}/admin/pending-media/${id}/approve`, { body: {}, token }),
+
+  /** POST /api/instagram/admin/pending-media/:id/reject  (admin) */
+  rejectPendingMedia: (id, { reason } = {}, token) =>
+    apiFetch(`${IG}/admin/pending-media/${id}/reject`, { method: 'POST', body: { reason }, token }),
+
+  // ─── Admin creator media tools ─────────────────────────────────────────────
+
+  /** GET /api/instagram/admin/user/:userId/instagram-media  (admin) */
+  adminGetUserInstagramMedia: (userId, token, { after, limit } = {}) => {
+    const qs = new URLSearchParams()
+    if (after)  qs.set('after',  after)
+    if (limit)  qs.set('limit',  limit)
+    const q = qs.toString()
+    return apiFetch(`${IG}/admin/user/${userId}/instagram-media${q ? `?${q}` : ''}`, { token })
+  },
+
+  /** POST /api/instagram/admin/direct-submit  (admin) */
+  adminDirectSubmit: ({ userId, mediaId, category, subCategory }, token) =>
+    apiFetch(`${IG}/admin/direct-submit`, { body: { userId, mediaId, category, subCategory }, token }),
 }
