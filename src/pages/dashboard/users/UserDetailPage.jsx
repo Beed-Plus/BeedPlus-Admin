@@ -846,10 +846,10 @@ export default function UserDetailPage() {
       {/* Admin direct-submit modal */}
       {submitModal && createPortal(
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="w-full max-w-3xl rounded-2xl bg-white dark:bg-gray-900 shadow-2xl overflow-hidden flex flex-row max-h-[88vh]">
+          <div className="w-full max-w-4xl rounded-2xl bg-white dark:bg-gray-900 shadow-2xl overflow-hidden flex flex-row max-h-[90dvh] min-h-[520px]">
 
             {/* Left — video player */}
-            <div className="w-64 flex-shrink-0 bg-gray-950 flex items-center justify-center">
+            <div className="w-[26rem] flex-shrink-0 bg-gray-950 flex items-center justify-center self-stretch">
               {submitModal.media_url ? (
                 <video
                   controls
@@ -857,7 +857,6 @@ export default function UserDetailPage() {
                   poster={submitModal.thumbnail_url || undefined}
                   src={submitModal.media_url}
                   className="w-full h-full object-contain"
-                  style={{ maxHeight: '88vh' }}
                 />
               ) : submitModal.thumbnail_url ? (
                 <img src={submitModal.thumbnail_url} alt="" className="w-full h-full object-contain" />
@@ -941,7 +940,7 @@ export default function UserDetailPage() {
               )}
 
               {/* Buttons */}
-              <div className="flex gap-2 mt-auto">
+              <div className="flex gap-2 pt-2">
                 <button
                   onClick={handleAdminSubmit}
                   disabled={submitting || !submitCat1}
