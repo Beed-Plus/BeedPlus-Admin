@@ -18,7 +18,7 @@ export function AuthProvider({ children }) {
   const [auth, setAuth] = useState(loadStored) // { token, user } | null
 
   const login = useCallback(async (email, password) => {
-    const data = await apiFetch('/api/auth/login', { body: { email, password } })
+    const data = await apiFetch('/api/auth/login/admin', { body: { email, password } })
     const { token, user } = data
 
     if (!ADMIN_ROLES.includes(user.role?.toLowerCase())) {
