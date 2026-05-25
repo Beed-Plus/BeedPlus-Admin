@@ -3,7 +3,7 @@ import { apiFetch } from '../utils/api'
 
 export const AuthContext = createContext(null)
 
-const ADMIN_ROLES = ['admin', 'super_admin']
+const ADMIN_ROLES = ['admin', 'superadmin']
 const STORAGE_KEY = 'beedplus_admin_auth'
 
 function loadStored() {
