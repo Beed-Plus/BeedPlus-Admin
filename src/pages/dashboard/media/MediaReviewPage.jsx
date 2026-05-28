@@ -107,7 +107,7 @@ function PreviewModal({ item, categories, subCatOptions, onClose, onApprove, onR
 
           {/* Submitted category pills */}
             <div className="flex flex-wrap gap-1.5">
-                <span key={c} className="rounded-full bg-orange-50 border border-orange-200 px-2.5 py-0.5 text-xs font-semibold text-orange-500">{c}</span>
+                <span key={item.userData?.category} className="rounded-full bg-orange-50 border border-orange-200 px-2.5 py-0.5 text-xs font-semibold text-orange-500">{item.userData?.category}</span>
             </div>
 
           {/* Meta */}
@@ -326,7 +326,7 @@ export default function MediaReviewPage() {
                           </td>
                           <td className="px-6 py-4">
                             <div className="flex flex-wrap gap-1">
-                                    <span key={item.userData.category} className="rounded-full bg-gray-100 dark:bg-gray-800 px-2.5 py-0.5 text-xs font-semibold text-gray-600 dark:text-gray-300">{item?.userData?.category}</span>
+                                    <span key={item.userData.category} className="rounded-full bg-gray-100 dark:bg-gray-800 px-2.5 py-0.5 text-xs font-semibold text-gray-600 dark:text-gray-300">{item?.userData?.category || "-"}</span>
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400 dark:text-gray-500">
