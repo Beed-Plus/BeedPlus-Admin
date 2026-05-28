@@ -319,14 +319,14 @@ export default function MediaReviewPage() {
                                 <div className="h-7 w-7 shrink-0 rounded-full bg-gray-100 dark:bg-gray-800" />
                               )}
                               <div className="min-w-0">
-                                <p className="text-sm font-medium text-gray-700 dark:text-gray-200">@{item.userData?.username || '—'}</p>
+                                <p className="text-sm font-medium text-gray-700 dark:text-gray-200">@{item.userData?.instagramUsername || '—'}</p>
                                 {item.userData?.country && <p className="text-[11px] text-gray-400">{item.userData.country}</p>}
                               </div>
                             </div>
                           </td>
                           <td className="px-6 py-4">
                             <div className="flex flex-wrap gap-1">
-                                    <span key={item.userData.category} className="rounded-full bg-gray-100 dark:bg-gray-800 px-2.5 py-0.5 text-xs font-semibold text-gray-600 dark:text-gray-300">{item?.userData?.category || "-"}</span>
+                                    <span key={item.category} className="rounded-full bg-gray-100 dark:bg-gray-800 px-2.5 py-0.5 text-xs font-semibold text-gray-600 dark:text-gray-300">{item?.category || "-"}</span>
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400 dark:text-gray-500">
