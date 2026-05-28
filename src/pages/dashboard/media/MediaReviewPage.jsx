@@ -53,7 +53,6 @@ function PreviewModal({ item, categories, subCatOptions, onClose, onApprove, onR
   )
 
   const isVideo = item.media?.mediaType?.toUpperCase() === 'VIDEO'
-  const cats    = Array.isArray(item.category) ? item.category : []
 
   return createPortal(
     <div
@@ -96,7 +95,7 @@ function PreviewModal({ item, categories, subCatOptions, onClose, onApprove, onR
               <div className="h-9 w-9 shrink-0 rounded-full bg-gray-100 dark:bg-gray-800" />
             )}
             <div>
-              <p className="text-sm font-bold text-gray-900 dark:text-white">@{item.userData?.username || '—'}</p>
+              <p className="text-sm font-bold text-gray-900 dark:text-white">@{item.userData?.instagramUsername || '—'}</p>
               {item.userData?.country && <p className="text-xs text-gray-400">{item.userData.country}</p>}
             </div>
           </div>
@@ -107,13 +106,9 @@ function PreviewModal({ item, categories, subCatOptions, onClose, onApprove, onR
           )}
 
           {/* Submitted category pills */}
-          {cats.length > 0 && (
             <div className="flex flex-wrap gap-1.5">
-              {cats.map((c) => (
                 <span key={c} className="rounded-full bg-orange-50 border border-orange-200 px-2.5 py-0.5 text-xs font-semibold text-orange-500">{c}</span>
-              ))}
             </div>
-          )}
 
           {/* Meta */}
           <div className="flex items-center gap-3 text-xs text-gray-400">
@@ -297,7 +292,6 @@ export default function MediaReviewPage() {
                 {loading
                   ? Array.from({ length: 5 }).map((_, i) => <RowSkeleton key={i} />)
                   : items.map((item) => {
-                      const cats = Array.isArray(item.category) ? item.category : []
                       const busy = actionId === item._id
                       return (
                         <tr
@@ -332,12 +326,7 @@ export default function MediaReviewPage() {
                           </td>
                           <td className="px-6 py-4">
                             <div className="flex flex-wrap gap-1">
-                              {cats.length > 0
-                                ? cats.map((c) => (
-                                    <span key={c} className="rounded-full bg-gray-100 dark:bg-gray-800 px-2.5 py-0.5 text-xs font-semibold text-gray-600 dark:text-gray-300">{c}</span>
-                                  ))
-                                : <span className="text-gray-300 dark:text-gray-600 text-sm">—</span>
-                              }
+                                    <span key={item.userData.category} className="rounded-full bg-gray-100 dark:bg-gray-800 px-2.5 py-0.5 text-xs font-semibold text-gray-600 dark:text-gray-300">{item?.userData?.category}</span>
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400 dark:text-gray-500">
