@@ -25,7 +25,7 @@ function RowSkeleton() {
 function PreviewModal({ item, categories, subCatOptions, onClose, onApprove, onReject, busy }) {
   const overlayRef = useRef(null)
 
-  const [cat, setCat]               = useState((item.category ?? [])[0] ?? '')
+  const [cat, setCat]               = useState(item.category ?? '')
   const [subCat, setSubCat]         = useState('')
   const [subCatOpen, setSubCatOpen] = useState(false)
 
@@ -176,7 +176,7 @@ function PreviewModal({ item, categories, subCatOptions, onClose, onApprove, onR
           {/* Action buttons */}
           <div className="flex gap-2">
             <button
-              onClick={() => onApprove(item, { category: cat ? [cat] : undefined, subCategory: subCat || undefined })}
+              onClick={() => onApprove(item, { category: cat ? cat : undefined, subCategory: subCat || undefined })}
               disabled={busy || !cat}
               className="flex-1 rounded-xl bg-green-500 py-2.5 text-sm font-semibold text-white hover:bg-green-600 transition disabled:opacity-60 disabled:cursor-not-allowed"
             >
