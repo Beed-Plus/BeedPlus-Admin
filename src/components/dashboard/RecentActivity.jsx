@@ -126,6 +126,7 @@ export default function RecentActivity() {
       setError(null)
       try {
         const data = await activitiesApi.getActivities(auth?.token, 20)
+        console.log('Loaded activities:', data)
         if (!cancelled) setActivities(Array.isArray(data) ? data : [])
       } catch (err) {
         if (!cancelled) setError(err.message ?? 'Failed to load activity')
@@ -180,12 +181,11 @@ export default function RecentActivity() {
                 <tr className="border-b border-gray-50 dark:border-gray-800 bg-gray-50/60 dark:bg-gray-800/50">
                   <th className="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">User</th>
                   <th className="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">Activity</th>
-                  <th className="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">Details</th>
-                  <th className="px-6 py-3 text-right text-[11px] font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">Time</th>
+                  <th className="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">Time</th>
                 </tr>
               </thead>
               <tbody>
-                {activities.map((row) => {
+                {activities.slice(0, 9).map((row) => {
                   const cfg  = TYPE_CONFIG[row.type] ?? FALLBACK
                   const meta = metaLine(row)
                   return (
@@ -202,10 +202,6 @@ export default function RecentActivity() {
                           {cfg.icon}
                           {cfg.label}
                         </span>
-                      </td>
-                      {/* Meta */}
-                      <td className="px-6 py-3.5 text-xs text-gray-400 dark:text-gray-500">
-                        {meta ?? <span className="text-gray-200 dark:text-gray-700">—</span>}
                       </td>
                       {/* Time */}
                       <td className="px-6 py-3.5 text-xs text-gray-400 dark:text-gray-500 text-right whitespace-nowrap">

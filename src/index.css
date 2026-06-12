@@ -2,6 +2,20 @@
 
 @variant dark (&:where(.dark, .dark *));
 
+@theme {
+  --color-light: #fef2e8;
+  --color-light-hover: #feebdc;
+  --color-light-active: #fdd6b6;
+  --color-normal: #f87a15;
+  --color-normal-hover: #df6e13;
+  --color-normal-active: #c66211;
+  --color-dark: #ba5c10;
+  --color-dark-hover: #95490d;
+  --color-dark-active: #703709;
+  --color-darker: #572b07;
+  /* ... */
+}
+
 /* Global scrollbar — tiny and transparent */
 html {
   scrollbar-width: thin;
@@ -53,9 +67,16 @@ select {
   scrollbar-width: thin;
   scrollbar-color: rgba(0, 0, 0, 0.12) transparent;
 }
-select::-webkit-scrollbar { width: 3px; }
-select::-webkit-scrollbar-track { background: transparent; }
-select::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.12); border-radius: 9999px; }
+select::-webkit-scrollbar {
+  width: 3px;
+}
+select::-webkit-scrollbar-track {
+  background: transparent;
+}
+select::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.12);
+  border-radius: 9999px;
+}
 
 /* react-day-picker overrides */
 .rdp-root {

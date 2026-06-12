@@ -1,34 +1,36 @@
-import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { useAuth } from '../../../hooks/useAuth'
-import { usersApi } from '../../../utils/usersApi'
-import { categoriesApi } from '../../../utils/categoriesApi'
-import { countriesApi } from '../../../utils/countriesApi'
-import Badge from '../../ui/Badge'
-import StatusBadge from '../../ui/StatusBadge'
-import UserAvatar from './UserAvatar'
-import UserActions from './UserActions'
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../../hooks/useAuth";
+import { usersApi } from "../../../utils/usersApi";
+import { categoriesApi } from "../../../utils/categoriesApi";
+import { countriesApi } from "../../../utils/countriesApi";
+import Badge from "../../ui/Badge";
+import StatusBadge from "../../ui/StatusBadge";
+import UserAvatar from "./UserAvatar";
+import UserActions from "./UserActions";
+import { CloseIcon, DeleteIcon, SuspendIcon } from "../../icons";
 
-const COL = 'px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-widest text-gray-400'
+const COL = "px-6 py-3 text-[11px] font-bold tracking-widest text-[#3A3A3AB2]";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 function displayName(user) {
   return user.instagram?.instagramUsername
     ? `@${user.instagram.instagramUsername}`
     : user.instagramUsername
-    ? `@${user.instagramUsername}`
-    : user.email ?? '—'
+      ? `@${user.instagramUsername}`
+      : (user.email ?? "—");
 }
 
 function avatarSrc(user) {
-  return user.instagram?.profilePictureUrl ?? user.profilePicture ?? null
+  return user.instagram?.profilePictureUrl ?? user.profilePicture ?? null;
 }
 
 function fmtFollowers(n) {
-  if (!n && n !== 0) return <span className="text-gray-300">—</span>
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1).replace(/\.0$/, '')}M`
-  if (n >= 1_000)     return `${(n / 1_000).toFixed(1).replace(/\.0$/, '')}k`
-  return n.toLocaleString()
+  if (!n && n !== 0) return <span className="text-gray-300">—</span>;
+  if (n >= 1_000_000)
+    return `${(n / 1_000_000).toFixed(1).replace(/\.0$/, "")}M`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(1).replace(/\.0$/, "")}k`;
+  return n.toLocaleString();
 }
 
 // ─── Skeleton ─────────────────────────────────────────────────────────────────
@@ -36,7 +38,7 @@ function SkeletonRow() {
   return (
     <tr className="border-b border-gray-50 dark:border-gray-800/50">
       <td className="px-6 py-4">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center min-w-[200px] gap-3">
           <div className="h-10 w-10 rounded-full bg-gray-100 dark:bg-gray-800 animate-pulse shrink-0" />
           <div className="space-y-1.5">
             <div className="h-3 w-28 rounded bg-gray-100 dark:bg-gray-800 animate-pulse" />
@@ -44,245 +46,343 @@ function SkeletonRow() {
           </div>
         </div>
       </td>
-      <td className="px-6 py-4"><div className="h-3 w-16 rounded bg-gray-100 dark:bg-gray-800 animate-pulse" /></td>
-      <td className="px-6 py-4"><div className="h-3 w-16 rounded bg-gray-100 dark:bg-gray-800 animate-pulse" /></td>
-      <td className="px-6 py-4"><div className="h-3 w-12 rounded bg-gray-100 dark:bg-gray-800 animate-pulse" /></td>
-      <td className="px-6 py-4"><div className="h-3 w-24 rounded bg-gray-100 dark:bg-gray-800 animate-pulse" /></td>
-      <td className="px-6 py-4"><div className="h-5 w-14 rounded-full bg-gray-100 dark:bg-gray-800 animate-pulse" /></td>
-      <td className="px-6 py-4"><div className="h-5 w-20 rounded-full bg-gray-100 dark:bg-gray-800 animate-pulse" /></td>
-      <td className="px-6 py-4"><div className="h-5 w-16 rounded-full bg-gray-100 dark:bg-gray-800 animate-pulse" /></td>
-      <td className="px-6 py-4"><div className="h-3 w-16 rounded bg-gray-100 dark:bg-gray-800 animate-pulse" /></td>
-      <td className="px-6 py-4" />
+      <td className="px-6 py-4  ">
+        <div className="h-3 w-16 min-w-[172px] rounded bg-gray-100 dark:bg-gray-800 animate-pulse" />
+      </td>
+      <td className="px-6 py-4  ">
+        <div className="h-3 w-16 min-w-[172px] rounded bg-gray-100 dark:bg-gray-800 animate-pulse" />
+      </td>
+      <td className="px-6 py-4  ">
+        <div className="h-3 w-12 min-w-[172px] rounded bg-gray-100 dark:bg-gray-800 animate-pulse" />
+      </td>
+      <td className="px-6 py-4  ">
+        <div className="h-3 w-24 min-w-[172px] rounded bg-gray-100 dark:bg-gray-800 animate-pulse" />
+      </td>
+      <td className="px-6 py-4  ">
+        <div className="h-5 w-14 min-w-[172px] rounded-full bg-gray-100 dark:bg-gray-800 animate-pulse" />
+      </td>
+      <td className="px-6 py-4  ">
+        <div className="h-5 w-20 min-w-[172px] rounded-full bg-gray-100 dark:bg-gray-800 animate-pulse" />
+      </td>
+      <td className="px-6 py-4  " />
     </tr>
-  )
+  );
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
-export default function UserTable({ users: initialUsers, loading, currentPage, totalPages, totalItems, onPageChange }) {
-  const navigate = useNavigate()
-  const { auth } = useAuth()
-  const token = auth?.token
+export default function UserTable({
+  users: initialUsers,
+  loading,
+  currentPage,
+  totalPages,
+  totalItems,
+  onPageChange,
+}) {
+  const navigate = useNavigate();
+  const { auth } = useAuth();
+  const token = auth?.token;
 
-  const [localUsers, setLocalUsers] = useState(null)
-  const [approvingIds, setApprovingIds] = useState(new Set())
-  const [confirmDelete, setConfirmDelete] = useState(null)
-  const [deleting, setDeleting] = useState(false)
-  const [editUser, setEditUser] = useState(null)
-  const [editCategory, setEditCategory] = useState('')
-  const [editCountry, setEditCountry] = useState('')
-  const [categories, setCategories] = useState([])
-  const [countries, setCountries] = useState([])
-  const [saving, setSaving] = useState(false)
-  const displayUsers = localUsers ?? initialUsers
+  const [localUsers, setLocalUsers] = useState(null);
+  const [approvingIds, setApprovingIds] = useState(new Set());
+  const [confirmDelete, setConfirmDelete] = useState(null);
+  const [suspendUser, setSuspendUser] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+  const [editUser, setEditUser] = useState(null);
+  const [editCategory, setEditCategory] = useState("");
+  const [editCountry, setEditCountry] = useState("");
+  const [categories, setCategories] = useState([]);
+  const [countries, setCountries] = useState([]);
+  const [saving, setSaving] = useState(false);
+  const displayUsers = localUsers ?? initialUsers;
 
   useEffect(() => {
-    categoriesApi.getCategories()
-      .then((res) => setCategories(Array.isArray(res) ? res : (res.categories ?? [])))
-      .catch(() => {})
-    countriesApi.getCountries()
-      .then((res) => setCountries(Array.isArray(res) ? res : (res.countries ?? [])))
-      .catch(() => {})
-  }, [])
+    categoriesApi
+      .getCategories()
+      .then((res) =>
+        setCategories(Array.isArray(res) ? res : (res.categories ?? [])),
+      )
+      .catch(() => {});
+    countriesApi
+      .getCountries()
+      .then((res) =>
+        setCountries(Array.isArray(res) ? res : (res.countries ?? [])),
+      )
+      .catch(() => {});
+  }, []);
 
   async function handleAction(action, user) {
-    if (action === 'View Profile') {
-      navigate(`/dashboard/users/${user._id}`)
-    } else if (action === 'Approve User') {
-      setApprovingIds((prev) => new Set(prev).add(user._id))
+    if (action === "View Profile") {
+      navigate(`/dashboard/users/${user._id}`);
+    } else if (action === "Approve User") {
+      setApprovingIds((prev) => new Set(prev).add(user._id));
       try {
-        await usersApi.approveUser(user._id, token)
+        await usersApi.approveUser(user._id, token);
         setLocalUsers((prev) =>
           (prev ?? initialUsers).map((u) =>
             u._id === user._id
-              ? { ...u, instagramApproval: { ...(u.instagramApproval ?? {}), status: 'approved' } }
+              ? {
+                  ...u,
+                  instagramApproval: {
+                    ...(u.instagramApproval ?? {}),
+                    status: "approved",
+                  },
+                }
               : u,
           ),
-        )
+        );
       } catch (err) {
-        alert(`Approve failed: ${err.message}`)
+        alert(`Approve failed: ${err.message}`);
       } finally {
-        setApprovingIds((prev) => { const next = new Set(prev); next.delete(user._id); return next })
+        setApprovingIds((prev) => {
+          const next = new Set(prev);
+          next.delete(user._id);
+          return next;
+        });
       }
-    } else if (action === 'Edit User') {
-      setEditUser(user)
-      setEditCategory(Array.isArray(user.category) ? user.category[0] ?? '' : user.category ?? '')
-      setEditCountry(user.country ?? '')
-    } else if (action === 'Suspend User') {
-      alert('Suspend endpoint not yet available.')
-    } else if (action === 'Delete User') {
-      setConfirmDelete(user)
+    } else if (action === "Edit User") {
+      setEditUser(user);
+      setEditCategory(
+        Array.isArray(user.category)
+          ? (user.category[0] ?? "")
+          : (user.category ?? ""),
+      );
+      setEditCountry(user.country ?? "");
+    } else if (action === "Suspend User") {
+      setSuspendUser(user);
+    } else if (action === "Delete User") {
+      setConfirmDelete(user);
     }
   }
 
   async function saveEditUser() {
-    if (!editUser || (!editCategory && !editCountry)) return
-    setSaving(true)
+    if (!editUser || (!editCategory && !editCountry)) return;
+    setSaving(true);
     try {
-      await usersApi.updateUserCategory(editUser._id, { category: editCategory || undefined, country: editCountry || undefined }, token)
+      await usersApi.updateUserCategory(
+        editUser._id,
+        {
+          category: editCategory || undefined,
+          country: editCountry || undefined,
+        },
+        token,
+      );
       setLocalUsers((prev) =>
         (prev ?? initialUsers).map((u) =>
           u._id === editUser._id
-            ? { ...u, ...(editCategory && { category: editCategory }), ...(editCountry && { country: editCountry }) }
-            : u
-        )
-      )
-      setEditUser(null)
+            ? {
+                ...u,
+                ...(editCategory && { category: editCategory }),
+                ...(editCountry && { country: editCountry }),
+              }
+            : u,
+        ),
+      );
+      setEditUser(null);
     } catch (err) {
-      alert(`Failed to update user: ${err.message}`)
+      alert(`Failed to update user: ${err.message}`);
     } finally {
-      setSaving(false)
+      setSaving(false);
     }
   }
 
   async function confirmDeleteUser() {
-    if (!confirmDelete) return
-    setDeleting(true)
+    if (!confirmDelete) return;
+    setDeleting(true);
     try {
-      await usersApi.deleteUser(confirmDelete._id, token)
-      setLocalUsers((prev) => (prev ?? initialUsers).filter((u) => u._id !== confirmDelete._id))
-      setConfirmDelete(null)
+      await usersApi.deleteUser(confirmDelete._id, token);
+      setLocalUsers((prev) =>
+        (prev ?? initialUsers).filter((u) => u._id !== confirmDelete._id),
+      );
+      setConfirmDelete(null);
     } catch (err) {
-      alert(`Delete failed: ${err.message}`)
+      alert(`Delete failed: ${err.message}`);
     } finally {
-      setDeleting(false)
+      setDeleting(false);
     }
   }
 
   return (
-    <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm overflow-hidden">
+    <div className="rounded-t-2xl border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full min-w-[900px]">
           <thead>
-            <tr className="border-b border-gray-100 dark:border-gray-800 bg-gray-50/60 dark:bg-gray-800/50">
-              <th className={COL}>User</th>
-              <th className={COL}>User ID</th>
-              <th className={COL}>Followers</th>
-              <th className={COL}>Category</th>
-              <th className={COL}>Country</th>
-              <th className={COL}>Gender</th>
-              <th className={COL}>Instagram</th>
-              <th className={COL}>Approval</th>
-              <th className={COL}>Connected</th>
-              <th className={`${COL} text-right`}>Actions</th>
+            <tr className="border-b border-gray-100 dark:border-gray-800 bg-[#DDDDDD] dark:bg-gray-800/50">
+              <th className={`${COL} min-w-[200px] text-left`}>User</th>
+              <th className={`${COL} min-w-[172px] text-center`}>Category</th>
+              <th className={`${COL} min-w-[172px] text-center`}>Country</th>
+              <th className={`${COL} min-w-[172px] text-center`}>Post</th>
+              <th className={`${COL} min-w-[172px] text-center`}>Views</th>
+              <th className={`${COL} min-w-[172px] text-center`}>Status</th>
+              <th className={`${COL} min-w-[172px] text-center`}>Joined</th>
+              <th className={`${COL} text-center`}>Actions</th>
             </tr>
           </thead>
           <tbody>
-            {loading && Array.from({ length: 8 }).map((_, i) => <SkeletonRow key={i} />)}
+            {loading &&
+              Array.from({ length: 8 }).map((_, i) => <SkeletonRow key={i} />)}
 
             {!loading && displayUsers.length === 0 && (
               <tr>
-                <td colSpan={10} className="px-6 py-16 text-center text-sm text-gray-400 dark:text-gray-500">
+                <td
+                  colSpan={10}
+                  className="px-6 py-16 text-center text-sm text-gray-400 dark:text-gray-500"
+                >
                   No users found
                 </td>
               </tr>
             )}
 
-            {!loading && displayUsers.map((user) => {
-              const name     = displayName(user)
-              const src      = avatarSrc(user)
-              const status    = user.instagramApproval?.status ?? 'pending'
-              const category  = user.category
-              const connected = user.instagram?.connected === true
+            {!loading &&
+              displayUsers.map((user) => {
+                const name = displayName(user);
+                const src = avatarSrc(user);
+                const status = user.instagramApproval?.status ?? "pending";
+                const category = user.category;
+                const instagram = user.instagram;
+                console.log("status", status);
 
-              return (
-                <tr
-                  key={user._id}
-                  className="border-b border-gray-50 dark:border-gray-800/50 last:border-0 hover:bg-gray-50/40 dark:hover:bg-gray-800/40 transition-colors cursor-pointer"
-                  onClick={() => navigate(`/dashboard/users/${user._id}`)}
-                >
-                  {/* User */}
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-3">
-                      <UserAvatar name={name.replace('@', '') || 'U'} src={src} />
-                      <div>
-                        <p className="text-sm font-semibold text-gray-800 dark:text-gray-100">{name}</p>
-                        <p className="text-xs text-gray-400 dark:text-gray-500">{user.email}</p>
+                const statusColor = {
+                  approved: {
+                    label: "Approved",
+                    style: "bg-green-50 text-green-600",
+                  },
+                  pending: {
+                    label: "Pending",
+                    style: "bg-amber-50 text-amber-600",
+                  },
+                  rejected: {
+                    label: "Rejected",
+                    style: "bg-red-50 text-red-500",
+                  },
+                };
+                return (
+                  <tr
+                    key={user._id}
+                    className="border-b border-[#DDDDDD] dark:border-gray-800/50  hover:bg-gray-50/40 dark:hover:bg-gray-800/40 transition-colors cursor-pointer"
+                    onClick={() => navigate(`/dashboard/users/${user._id}`)}
+                  >
+                    {/* User */}
+                    <td className="px-6 py-4 min-w-[200px]">
+                      <div className="flex items-center gap-3">
+                        <UserAvatar
+                          name={name.replace("@", "") || "U"}
+                          src={src}
+                        />
+                        <div>
+                          <p className="text-sm font-bold text-[#3A3A3A] dark:text-gray-100">
+                            {name}
+                          </p>
+                          <p className="text-xs text-[#3A3A3A] dark:text-gray-500">
+                            {user.email}
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                  </td>
+                    </td>
 
-                  {/* User ID */}
-                  <td className="px-6 py-4 text-xs text-gray-400 dark:text-gray-500 font-mono">
-                    {user._id}
-                  </td>
+                    {/* man is man but the authentic realization of man is education. hdfjh */}
+                    {/* Category */}
+                    <td className="px-6 py-4 font-medium min-w-[172px] text-center">
+                      {category ? (
+                        <span
+                          className={`inline-flex items-center text-[#3A3A3A] dark:text-gray-400 rounded-full px-3 py-1 text-sm font-medium `}
+                        >
+                          {category}
+                        </span>
+                      ) : (
+                        <span className="text-gray-300 dark:text-gray-600 text-sm">
+                          —
+                        </span>
+                      )}
+                    </td>
 
-                  {/* Followers */}
-                  <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
-                    {fmtFollowers(user.instagram?.followersCount)}
-                  </td>
-{/* man is man but the authentic realization of man is education. hdfjh */}
-                  {/* Category */}
-                  <td className="px-6 py-4">
-                    {category
-                      ? <Badge label={category} variant="orange" />
-                      : <span className="text-gray-300 dark:text-gray-600 text-sm">—</span>
-                    }
-                  </td>
+                    {/* Country */}
+                    <td className="px-6 py-4 text-sm text-[#3A3A3A] dark:text-gray-400 font-medium min-w-[172px] text-center">
+                      {user.country || (
+                        <span className="text-[#3A3A3A] dark:text-gray-600">
+                          —
+                        </span>
+                      )}
+                    </td>
 
-                  {/* Country */}
-                  <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
-                    {user.country || <span className="text-gray-300 dark:text-gray-600">—</span>}
-                  </td>
+                    {/* POST */}
+                    <td className="px-6 py-4 text-sm text-[#3A3A3A] dark:text-gray-400 capitalize font-medium min-w-[172px] text-center">
+                      {instagram.mediaCount || (
+                        <span className="text-[#3A3A3A] dark:text-gray-600">
+                          —
+                        </span>
+                      )}
+                    </td>
 
-                  {/* Gender */}
-                  <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400 capitalize">
-                    {user.gender || <span className="text-gray-300 dark:text-gray-600">—</span>}
-                  </td>
+                    {/* Instagram link */}
+                    <td
+                      className="px-6 py-4 text-[#3A3A3A] font-medium text-sm min-w-[172px] text-center"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {instagram?.insights.views ? (
+                        instagram?.insights.views
+                      ) : (
+                        <span className="text-[#3A3A3A] dark:text-gray-600">
+                          —
+                        </span>
+                      )}
+                    </td>
 
-                  {/* Instagram link */}
-                  <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
-                    {user?.instagramUsername ? (
-                      <a
-                        href={`https://instagram.com/${user.instagramUsername}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center rounded-xl bg-orange-50 dark:bg-orange-500/10 px-3 py-1.5 text-xs font-semibold text-orange-500 hover:bg-orange-100 dark:hover:bg-orange-500/20 transition"
-                      >
-                        Link
-                      </a>
-                    ) : (
-                      <span className="text-gray-300 dark:text-gray-600">—</span>
-                    )}
-                  </td>
+                    {/* Approval status */}
+                    <td className="px-6 py-4 font-medium min-w-[172px] text-center">
+                      {approvingIds.has(user._id) ? (
+                        <div className="flex items-center justify-center">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-4 w-4 animate-spin text-gray-400 dark:text-gray-500"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                            />
+                          </svg>
+                        </div>
+                      ) : (
+                        <Badge
+                          label={statusColor[status]?.label ?? status}
+                          custom={`${statusColor[status]?.style ?? ""}`}
+                        />
+                      )}
+                    </td>
 
-                  {/* Approval status */}
-                  <td className="px-6 py-4">
-                    {approvingIds.has(user._id) ? (
-                      <div className="flex items-center justify-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 animate-spin text-gray-400 dark:text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                        </svg>
-                      </div>
-                    ) : (
-                      <StatusBadge status={status} />
-                    )}
-                  </td>
+                    {/* Connected */}
+                    <td className="px-6 py-4 min-w-[172px] text-center">
+                      {user.createdAt ? (
+                        <span className="inline-flex items-center rounded-full px-3 py-1 text-sm font-medium ">
+                          {new Date(user.createdAt).toLocaleDateString(
+                            "en-US",
+                            { month: "short", day: "numeric", year: "numeric" },
+                          )}
+                        </span>
+                      ) : (
+                        <span className="text-gray-300 dark:text-gray-600">
+                          —
+                        </span>
+                      )}
+                    </td>
 
-                   {/* Connected */}
-                  <td className="px-6 py-4">
-                    {connected ? (
-                      <span className="inline-flex items-center gap-1.5 rounded-full bg-green-50 dark:bg-green-500/10 px-2.5 py-1 text-xs font-semibold text-green-600 dark:text-green-400">
-                        <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
-                        Connected
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1.5 rounded-full bg-gray-100 dark:bg-gray-800 px-2.5 py-1 text-xs font-medium text-gray-400 dark:text-gray-500">
-                        <span className="h-1.5 w-1.5 rounded-full bg-gray-300 dark:bg-gray-600" />
-                        Not connected
-                      </span>
-                    )}
-                  </td>
-
-                  {/* Actions */}
-                  <td className="px-6 py-4 text-right" onClick={(e) => e.stopPropagation()}>
-                    <UserActions
-                      approvalStatus={status}
-                      onAction={(action) => handleAction(action, user)}
-                    />
-                  </td>
-                </tr>
-              )
-            })}
+                    {/* Actions */}
+                    <td
+                      className="px-6 py-4 text-right"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <UserActions
+                        approvalStatus={status}
+                        onAction={(action) => handleAction(action, user)}
+                      />
+                    </td>
+                  </tr>
+                );
+              })}
           </tbody>
         </table>
       </div>
@@ -290,21 +390,32 @@ export default function UserTable({ users: initialUsers, loading, currentPage, t
       {/* Edit User modal */}
       {editUser && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => !saving && setEditUser(null)} />
+          <div
+            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+            onClick={() => !saving && setEditUser(null)}
+          />
           <div className="relative w-full max-w-sm rounded-2xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 shadow-2xl p-6 flex flex-col gap-5">
+            <button
+              type="button"
+              onClick={() => setEditUser(null)}
+              className="absolute top-8 right-6"
+            >
+              <CloseIcon />
+            </button>
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-500/10">
-                <svg className="h-5 w-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                </svg>
-              </div>
               <div>
-                <h3 className="text-base font-bold text-gray-900 dark:text-gray-100">Edit User</h3>
-                <p className="text-xs text-gray-400 dark:text-gray-500">{displayName(editUser)}</p>
+                <h3 className="text-base font-bold text-gray-900 dark:text-gray-100">
+                  Edit User
+                </h3>
+                <p className="text-xs text-gray-400 dark:text-gray-500">
+                  {displayName(editUser)}
+                </p>
               </div>
             </div>
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">Category</label>
+              <label className="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">
+                Category
+              </label>
               <select
                 value={editCategory}
                 onChange={(e) => setEditCategory(e.target.value)}
@@ -312,12 +423,16 @@ export default function UserTable({ users: initialUsers, loading, currentPage, t
               >
                 <option value="">Select a category…</option>
                 {categories.map((c) => (
-                  <option key={c._id ?? c.name} value={c.name}>{c.name}</option>
+                  <option key={c._id ?? c.name} value={c.name}>
+                    {c.name}
+                  </option>
                 ))}
               </select>
             </div>
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">Country</label>
+              <label className="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">
+                Country
+              </label>
               <select
                 value={editCountry}
                 onChange={(e) => setEditCountry(e.target.value)}
@@ -325,11 +440,13 @@ export default function UserTable({ users: initialUsers, loading, currentPage, t
               >
                 <option value="">Select a country…</option>
                 {countries.map((c) => (
-                  <option key={c._id ?? c.name} value={c.name}>{c.name}</option>
+                  <option key={c._id ?? c.name} value={c.name}>
+                    {c.name}
+                  </option>
                 ))}
               </select>
             </div>
-            <div className="flex gap-3">
+            <div className="flex items-center justify-center mx-auto w-3/4 gap-3 mt-4">
               <button
                 onClick={() => setEditUser(null)}
                 disabled={saving}
@@ -340,9 +457,9 @@ export default function UserTable({ users: initialUsers, loading, currentPage, t
               <button
                 onClick={saveEditUser}
                 disabled={saving || (!editCategory && !editCountry)}
-                className="flex-1 rounded-xl bg-orange-500 py-2.5 text-sm font-semibold text-white hover:bg-orange-600 transition disabled:opacity-60"
+                className="flex-1 rounded-xl bg-[#2F3134] py-2.5 text-sm font-semibold text-white hover:bg-[#2F3134] transition disabled:opacity-60"
               >
-                {saving ? 'Saving…' : 'Save'}
+                {saving ? "Saving…" : "Save"}
               </button>
             </div>
           </div>
@@ -352,21 +469,27 @@ export default function UserTable({ users: initialUsers, loading, currentPage, t
       {/* Delete confirmation modal */}
       {confirmDelete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => !deleting && setConfirmDelete(null)} />
+          <div
+            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+            onClick={() => !deleting && setConfirmDelete(null)}
+          />
           <div className="relative w-full max-w-sm rounded-2xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 shadow-2xl p-6 flex flex-col gap-4">
             {/* Icon */}
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-50 dark:bg-red-500/10 mx-auto">
-              <svg className="h-6 w-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M9 7h6m2 0H7m2-3h6a1 1 0 011 1v1H8V5a1 1 0 011-1z" />
-              </svg>
+            <div className="flex h-17.5 w-17.5 items-center justify-center rounded-full bg-red-50 dark:bg-red-500/10">
+              <DeleteIcon />
             </div>
-            <div className="text-center">
-              <h3 className="text-base font-bold text-gray-900 dark:text-gray-100">Delete User?</h3>
+            <div className="text">
+              <h3 className="text-base font-bold text-gray-900 dark:text-gray-100">
+                Delete User?
+              </h3>
               <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                <span className="font-semibold text-gray-700 dark:text-gray-200">{displayName(confirmDelete)}</span> will be permanently removed. This cannot be undone.
+                <span className="font-semibold text-gray-700 dark:text-gray-200">
+                  {displayName(confirmDelete)}
+                </span>{" "}
+                will be permanently removed. This cannot be undone.
               </p>
             </div>
-            <div className="flex gap-3">
+            <div className="flex gap-3 w-3/4 mx-auto">
               <button
                 onClick={() => setConfirmDelete(null)}
                 disabled={deleting}
@@ -379,12 +502,49 @@ export default function UserTable({ users: initialUsers, loading, currentPage, t
                 disabled={deleting}
                 className="flex-1 rounded-xl bg-red-500 py-2.5 text-sm font-semibold text-white hover:bg-red-600 transition disabled:opacity-60"
               >
-                {deleting ? 'Deleting…' : 'Delete'}
+                {deleting ? "Deleting…" : "Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {suspendUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+            onClick={() => !deleting && setSuspendUser(null)}
+          />
+          <div className="relative w-full max-w-sm rounded-2xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 shadow-2xl p-6 flex flex-col gap-4">
+            {/* Icon */}
+            <div className="flex h-17.5 w-17.5 items-center justify-center rounded-full bg-red-50 dark:bg-red-500/10">
+              <SuspendIcon />
+            </div>
+            <div className="text">
+              <h3 className="text-base font-bold text-gray-900 dark:text-gray-100">
+                Suspend User?
+              </h3>
+              <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                <span className="font-semibold text-gray-700 dark:text-gray-200">
+                  {displayName(suspendUser)}
+                </span>{" "}
+                will be suspended.
+              </p>
+            </div>
+            <div className="flex gap-3 w-3/4 mx-auto">
+              <button
+                onClick={() => setSuspendUser(null)}
+                disabled={deleting}
+                className="flex-1 rounded-xl border border-gray-200 dark:border-gray-700 py-2.5 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button className="flex-1 rounded-xl bg-red-500 py-2.5 text-sm font-semibold text-white hover:bg-red-600 transition disabled:opacity-60">
+                {deleting ? "Suspending…" : "Suspend"}
               </button>
             </div>
           </div>
         </div>
       )}
     </div>
-  )
+  );
 }

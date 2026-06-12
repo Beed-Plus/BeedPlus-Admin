@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../../hooks/useAuth'
-import { useWatchlist } from '../../../hooks/useWatchlist'
+import { useScenes } from "../../../hooks/useScenes";
 
 const SELECT = 'rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-600 dark:text-gray-300 outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition cursor-pointer'
 const COL    = 'px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-widest text-gray-400'
@@ -17,7 +17,7 @@ function MediaTypeBadge({ type }) {
   if (!type) return <span className="text-gray-300 text-xs">—</span>
   const cfg = MEDIA_TYPE_CONFIG[type?.toUpperCase()] ?? { label: type, color: 'bg-gray-100 text-gray-500' }
   return (
-    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold ${cfg.color}`}>
+    <span className={`inline-flex scenes-center rounded-full px-2 py-0.5 text-[11px] font-semibold ${cfg.color}`}>
       {cfg.label}
     </span>
   )
@@ -47,7 +47,7 @@ function Thumb({ src, alt }) {
       {src
         ? <img src={src} alt={alt} className="h-full w-full object-cover" />
         : (
-          <div className="flex h-full w-full items-center justify-center">
+          <div className="flex h-full w-full scenes-center justify-center">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
@@ -63,7 +63,7 @@ function SkeletonRow() {
   return (
     <tr className="border-b border-gray-50 dark:border-gray-800/50">
       <td className="px-6 py-4">
-        <div className="flex items-center gap-3">
+        <div className="flex scenes-center gap-3">
           <div className="h-12 w-12 rounded-xl bg-gray-100 dark:bg-gray-800 animate-pulse shrink-0" />
           <div className="space-y-1.5">
             <div className="h-3 w-36 rounded bg-gray-100 dark:bg-gray-800 animate-pulse" />
@@ -87,30 +87,30 @@ export default function WatchlistPage() {
   const { auth } = useAuth()
   const token = auth?.token
 
-  const { items, loading, remove } = useWatchlist(token)
+  const { scenes, loading } = useScenes(token)
 
   const [filterCategory, setFilterCategory] = useState('')
   const [filterCountry,  setFilterCountry]  = useState('')
   const [removing, setRemoving] = useState(null)
 
-  // Unique categories & countries derived from watchlist items
+  // Unique categories & countries derived from watchlist scenes
   const categories = useMemo(() => {
     const set = new Set()
-    items.forEach((item) => {
+    scenes.forEach((item) => {
       const cats = Array.isArray(item.category) ? item.category : [item.category].filter(Boolean)
       cats.forEach((c) => set.add(c))
     })
     return [...set].sort()
-  }, [items])
+  }, [scenes])
 
   const countries = useMemo(() => {
     const set = new Set()
-    items.forEach((item) => { if (item.userData?.country) set.add(item.userData.country) })
+    scenes.forEach((item) => { if (item.userData?.country) set.add(item.userData.country) })
     return [...set].sort()
-  }, [items])
+  }, [scenes])
 
   const filtered = useMemo(() => {
-    return items.filter((item) => {
+    return scenes.filter((item) => {
       if (filterCategory) {
         const cats = Array.isArray(item.category) ? item.category : [item.category].filter(Boolean)
         if (!cats.includes(filterCategory)) return false
@@ -118,7 +118,7 @@ export default function WatchlistPage() {
       if (filterCountry && item.userData?.country !== filterCountry) return false
       return true
     })
-  }, [items, filterCategory, filterCountry])
+  }, [scenes, filterCategory, filterCountry])
 
   async function handleRemove(e, mediaId) {
     e.stopPropagation()
@@ -135,20 +135,20 @@ export default function WatchlistPage() {
   return (
     <div className="flex flex-col gap-6">
       {/* Header */}
-      <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-1 sm:flex-row sm:scenes-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-black text-gray-900 dark:text-white">Watchlist</h1>
           <p className="mt-1 text-sm text-gray-400 dark:text-gray-500">Videos flagged for review or follow-up.</p>
         </div>
         {!loading && (
-          <span className="inline-flex items-center self-start rounded-full bg-amber-50 dark:bg-amber-500/10 px-3 py-1 text-sm font-semibold text-amber-500">
+          <span className="inline-flex scenes-center self-start rounded-full bg-amber-50 dark:bg-amber-500/10 px-3 py-1 text-sm font-semibold text-amber-500">
             {filtered.length.toLocaleString()} item{filtered.length !== 1 ? 's' : ''}
           </span>
         )}
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap items-center gap-3">
+      <div className="flex flex-wrap scenes-center gap-3">
         <select
           value={filterCategory}
           onChange={(e) => setFilterCategory(e.target.value)}
@@ -199,7 +199,7 @@ export default function WatchlistPage() {
               {!loading && filtered.length === 0 && (
                 <tr>
                   <td colSpan={8} className="px-6 py-20 text-center text-sm text-gray-400 dark:text-gray-500">
-                    {items.length === 0 ? 'No videos in the watchlist yet.' : 'No items match the current filters.'}
+                    {scenes.length === 0 ? 'No videos in the watchlist yet.' : 'No scenes match the current filters.'}
                   </td>
                 </tr>
               )}
@@ -222,16 +222,16 @@ export default function WatchlistPage() {
                   >
                     {/* Post */}
                     <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
+                      <div className="flex scenes-center gap-3">
                         <Thumb src={thumb} alt={caption} />
                         <div className="min-w-0">
                           <p className="text-sm font-semibold text-gray-800 dark:text-gray-100 leading-snug">
                             {truncate(caption)}
                           </p>
-                          <div className="mt-0.5 flex items-center gap-1.5 flex-wrap">
+                          <div className="mt-0.5 flex scenes-center gap-1.5 flex-wrap">
                             <MediaTypeBadge type={type} />
                             {country && (
-                              <span className="inline-flex items-center rounded-full bg-gray-100 dark:bg-gray-800 px-2 py-0.5 text-[11px] font-medium text-gray-500 dark:text-gray-400">
+                              <span className="inline-flex scenes-center rounded-full bg-gray-100 dark:bg-gray-800 px-2 py-0.5 text-[11px] font-medium text-gray-500 dark:text-gray-400">
                                 {country}
                               </span>
                             )}
@@ -258,7 +258,7 @@ export default function WatchlistPage() {
                       <div className="flex flex-wrap gap-1">
                         {cats.length > 0
                           ? cats.map((c) => (
-                              <span key={c} className="inline-flex items-center rounded-full bg-gray-100 dark:bg-gray-800 px-2.5 py-0.5 text-xs font-medium text-gray-600 dark:text-gray-300">
+                              <span key={c} className="inline-flex scenes-center rounded-full bg-gray-100 dark:bg-gray-800 px-2.5 py-0.5 text-xs font-medium text-gray-600 dark:text-gray-300">
                                 {c}
                               </span>
                             ))
@@ -270,7 +270,7 @@ export default function WatchlistPage() {
                     {/* Sub-Category */}
                     <td className="px-6 py-4">
                       {subCat
-                        ? <span className="inline-flex items-center rounded-full bg-blue-50 dark:bg-blue-500/10 px-2.5 py-0.5 text-xs font-medium text-blue-600 dark:text-blue-400">{subCat}</span>
+                        ? <span className="inline-flex scenes-center rounded-full bg-blue-50 dark:bg-blue-500/10 px-2.5 py-0.5 text-xs font-medium text-blue-600 dark:text-blue-400">{subCat}</span>
                         : <span className="text-gray-300 dark:text-gray-600">—</span>
                       }
                     </td>
@@ -295,7 +295,7 @@ export default function WatchlistPage() {
                       <button
                         disabled={isRemoving}
                         onClick={(e) => handleRemove(e, item.mediaId)}
-                        className="inline-flex items-center gap-1.5 rounded-lg bg-red-50 dark:bg-red-500/10 px-3 py-1.5 text-xs font-semibold text-red-500 hover:bg-red-100 dark:hover:bg-red-500/20 transition disabled:opacity-50"
+                        className="inline-flex scenes-center gap-1.5 rounded-lg bg-red-50 dark:bg-red-500/10 px-3 py-1.5 text-xs font-semibold text-red-500 hover:bg-red-100 dark:hover:bg-red-500/20 transition disabled:opacity-50"
                       >
                         {isRemoving
                           ? <svg className="h-3 w-3 animate-spin" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeDasharray="32" strokeDashoffset="12" /></svg>

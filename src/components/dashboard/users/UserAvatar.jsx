@@ -18,15 +18,14 @@ function initials(name) {
     .toUpperCase()
 }
 
-export default function UserAvatar({ name, src, size = 'md' }) {
+export default function UserAvatar({ name, src, size = 'md', style="default" }) {
   const dim = size === 'sm' ? 'h-8 w-8 text-xs' : size === 'xl' ? 'h-16 w-16 text-xl' : 'h-10 w-10 text-sm'
-
   if (src) {
     return (
       <img
         src={src}
         alt={name}
-        className={`${dim} rounded-full object-cover`}
+        className={style == "custom" ? `${size} rounded-full object-cover` : `${dim} rounded-full object-cover`}
       />
     )
   }

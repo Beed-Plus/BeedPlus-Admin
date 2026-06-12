@@ -57,11 +57,11 @@ export const instagramApi = {
 
   /** GET /api/instagram/creator-monthly-top-100  (public) */
   getCreatorMonthlyTop100: () =>
-    apiFetch(`${IG}/creator-monthly-top-100`),
+    apiFetch(`${IG}/rankings/creator`),
 
   /** GET /api/instagram/creator-monthly-top-10  (public) */
   getCreatorMonthlyTop10: () =>
-    apiFetch(`${IG}/creator-monthly-top-10`),
+    apiFetch(`${IG}/rankings/creator`),
 
   /** GET /api/instagram/top-hits  (public) */
   getTopHits: () =>
@@ -73,7 +73,7 @@ export const instagramApi = {
 
   /** GET /api/instagram/media-chart  (public) — all media with daily_reach > 0 */
   getMediaChart: () =>
-    apiFetch(`${IG}/media-chart`),
+    apiFetch(`${IG}/rankings/media`),
 
   /** GET /api/instagram/rankings/media?country=&category=  (public) */
   getMediaChartFiltered: ({ country, category } = {}) => {

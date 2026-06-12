@@ -1,85 +1,105 @@
-import { useEffect, useState, useRef } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
-import { createPortal } from 'react-dom'
-import { useAuth } from '../../../hooks/useAuth'
-import { usersApi } from '../../../utils/usersApi'
-import { instagramApi } from '../../../utils/instagramApi'
-import { categoriesApi } from '../../../utils/categoriesApi'
-import { subCategoriesApi } from '../../../utils/subCategoriesApi'
-import UserAvatar from '../../../components/dashboard/users/UserAvatar'
-import StatusBadge from '../../../components/ui/StatusBadge'
-import Badge from '../../../components/ui/Badge'
-import Breadcrumb from '../../../components/ui/Breadcrumb'
+import { useEffect, useState, useRef, useMemo } from "react";
+import { useParams, useNavigate, Link } from "react-router-dom";
+import { createPortal } from "react-dom";
+import { useAuth } from "../../../hooks/useAuth";
+import { usersApi } from "../../../utils/usersApi";
+import { instagramApi } from "../../../utils/instagramApi";
+import { categoriesApi } from "../../../utils/categoriesApi";
+import { subCategoriesApi } from "../../../utils/subCategoriesApi";
+import UserAvatar from "../../../components/dashboard/users/UserAvatar";
+import StatusBadge from "../../../components/ui/StatusBadge";
+import Badge from "../../../components/ui/Badge";
+import Breadcrumb from "../../../components/ui/Breadcrumb";
+import { useCategoriesProvider } from "../../../hooks/useCategoriesProvider";
+import CustomDropDownInput from "../../../components/CustomDropDownInput";
+import SelectSearch from "../../../components/SelectSearch";
+import CustomButton from "../../../components/CustomButton";
+import { CloseIcon, InstagramIcon, RetryIcon } from "../../../components/icons";
+import Loader from "../../../components/Loader";
 
 const CRUMBS = [
-  { label: 'Users', to: '/dashboard/users' },
-  { label: 'User Profile' },
-]
+  { label: "Users", to: "/dashboard/users" },
+  { label: "User Profile" },
+];
+
+const SELECT =
+  "w-36 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-black dark:text-gray-300 outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition cursor-pointer scrollbar-thin";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 function fmt(n) {
-  if (!n && n !== 0) return '—'
-  if (n >= 1_000_000) return (n / 1_000_000).toFixed(1).replace(/\.0$/, '') + 'M'
-  if (n >= 1_000)     return (n / 1_000).toFixed(1).replace(/\.0$/, '') + 'k'
-  return n.toLocaleString()
+  if (!n && n !== 0) return "—";
+  if (n >= 1_000_000)
+    return (n / 1_000_000).toFixed(1).replace(/\.0$/, "") + "M";
+  if (n >= 1_000) return (n / 1_000).toFixed(1).replace(/\.0$/, "") + "k";
+  return n.toLocaleString();
 }
 
 function fmtBeedScore(n) {
-  if (n == null) return '—'
-  return Number(n).toFixed(10)
+  return Number(n).toFixed(2);
 }
 
 function fmtDate(iso) {
-  if (!iso) return '—'
-  return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+  if (!iso) return "—";
+  return new Date(iso).toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
 }
 
 function truncate(str, max = 25) {
-  if (!str) return '—'
-  return str.length > max ? str.slice(0, max) + '…' : str
+  if (!str) return "—";
+  return str.length > max ? str.slice(0, max) + "…" : str;
 }
 
 const MEDIA_TYPE_CONFIG = {
-  VIDEO:           { label: 'Video',    color: 'bg-blue-50 text-blue-500' },
-  IMAGE:           { label: 'Image',    color: 'bg-green-50 text-green-600' },
-  CAROUSEL_ALBUM:  { label: 'Carousel', color: 'bg-purple-50 text-purple-500' },
-}
+  VIDEO: { label: "Video", color: "bg-blue-50 text-blue-500" },
+  IMAGE: { label: "Image", color: "bg-green-50 text-green-600" },
+  CAROUSEL_ALBUM: { label: "Carousel", color: "bg-purple-50 text-purple-500" },
+};
 
 function MediaTypeBadge({ type }) {
-  if (!type) return <span className="text-gray-300 text-xs">—</span>
-  const cfg = MEDIA_TYPE_CONFIG[type?.toUpperCase()] ?? { label: type, color: 'bg-gray-100 text-gray-500' }
+  if (!type) return <span className="text-gray-300 text-xs">—</span>;
+  const cfg = MEDIA_TYPE_CONFIG[type?.toUpperCase()] ?? {
+    label: type,
+    color: "bg-gray-100 text-gray-500",
+  };
   return (
-    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${cfg.color}`}>
+    <span
+      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${cfg.color}`}
+    >
       {cfg.label}
     </span>
-  )
+  );
 }
 
 // ─── Media Modal ──────────────────────────────────────────────────────────────
 function MediaModal({ post, onClose }) {
-  const overlayRef = useRef(null)
+  const overlayRef = useRef(null);
 
   // close on backdrop click
   function handleOverlayClick(e) {
-    if (e.target === overlayRef.current) onClose()
+    if (e.target === overlayRef.current) onClose();
   }
 
   // close on Escape
   useEffect(() => {
-    function onKey(e) { if (e.key === 'Escape') onClose() }
-    document.addEventListener('keydown', onKey)
-    return () => document.removeEventListener('keydown', onKey)
-  }, [onClose])
+    function onKey(e) {
+      if (e.key === "Escape") onClose();
+    }
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [onClose]);
 
   const categories = Array.isArray(post.category)
     ? post.category
-    : [post.category].filter(Boolean)
+    : [post.category].filter(Boolean);
 
-  const caption     = post.media?.caption
-  const thumbnailUrl = post.media?.thumbnailUrl
-  const mediaType   = post.media?.mediaType
-  const permalink   = post.media?.permalink
-  const isVideo     = mediaType?.toUpperCase() === 'VIDEO'
+  const caption = post.media?.caption;
+  const thumbnailUrl = post.media?.thumbnailUrl;
+  const mediaType = post.media?.mediaType;
+  const permalink = post.media?.permalink;
+  const isVideo = mediaType?.toUpperCase() === "VIDEO";
 
   return createPortal(
     <div
@@ -93,19 +113,45 @@ function MediaModal({ post, onClose }) {
           onClick={onClose}
           className="absolute right-4 top-4 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-black/20 text-white hover:bg-black/40 transition"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-4 w-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
           </svg>
         </button>
 
         {/* Media preview */}
         <div className="relative bg-gray-900 aspect-square">
           {thumbnailUrl ? (
-            <img src={thumbnailUrl} alt="Post thumbnail" className="h-full w-full object-cover" />
+            <img
+              src={thumbnailUrl}
+              alt="Post thumbnail"
+              className="h-full w-full object-cover"
+            />
           ) : (
             <div className="flex h-full items-center justify-center">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-12 w-12 text-gray-600"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                />
               </svg>
             </div>
           )}
@@ -113,7 +159,12 @@ function MediaModal({ post, onClose }) {
           {isVideo && thumbnailUrl && (
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="flex h-14 w-14 items-center justify-center rounded-full bg-black/50 text-white">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 translate-x-0.5" fill="currentColor" viewBox="0 0 24 24">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-6 w-6 translate-x-0.5"
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path d="M8 5v14l11-7z" />
                 </svg>
               </div>
@@ -125,30 +176,49 @@ function MediaModal({ post, onClose }) {
         <div className="overflow-y-auto p-5 space-y-4">
           {/* Caption */}
           {caption && (
-            <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed line-clamp-3">{caption}</p>
+            <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed line-clamp-3">
+              {caption}
+            </p>
           )}
 
           {/* Meta row */}
           <div className="flex flex-wrap gap-2">
             <MediaTypeBadge type={mediaType} />
             {categories.map((c) => (
-              <span key={c} className="rounded-full bg-gray-100 dark:bg-gray-800 px-2.5 py-0.5 text-xs font-semibold text-gray-600 dark:text-gray-300">{c}</span>
+              <span
+                key={c}
+                className="rounded-full bg-gray-100 dark:bg-gray-800 px-2.5 py-0.5 text-xs font-semibold text-gray-600 dark:text-gray-300"
+              >
+                {c}
+              </span>
             ))}
           </div>
 
           {/* Stats row */}
           <div className="grid grid-cols-3 gap-3">
             <div className="rounded-xl bg-orange-50 p-3 text-center">
-              <p className="text-lg font-black text-orange-500">{post.currentRank ? `#${post.currentRank}` : '—'}</p>
-              <p className="text-[10px] font-semibold uppercase tracking-wide text-orange-400">Rank</p>
+              <p className="text-lg font-black text-orange-500">
+                {post.currentRank ? `#${post.currentRank}` : "—"}
+              </p>
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-orange-400">
+                Rank
+              </p>
             </div>
             <div className="rounded-xl bg-gray-50 dark:bg-gray-800 p-3 text-center">
-              <p className="text-lg font-black text-gray-700 dark:text-gray-200">{fmt(post.insights?.views)}</p>
-              <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">Views</p>
+              <p className="text-lg font-black text-gray-700 dark:text-gray-200">
+                {fmt(post.insights?.views)}
+              </p>
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">
+                Views
+              </p>
             </div>
             <div className="rounded-xl bg-gray-50 dark:bg-gray-800 p-3 text-center">
-              <p className="text-lg font-black text-gray-700 dark:text-gray-200">{fmt(post.insights?.totalInteractions)}</p>
-              <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">Interactions</p>
+              <p className="text-lg font-black text-gray-700 dark:text-gray-200">
+                {fmt(post.insights?.totalInteractions)}
+              </p>
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">
+                Interactions
+              </p>
             </div>
           </div>
 
@@ -156,13 +226,20 @@ function MediaModal({ post, onClose }) {
           {post.insights && (
             <div className="grid grid-cols-3 gap-2">
               {[
-                { label: 'Reach',  value: fmt(post.insights.reach) },
-                { label: 'Shares', value: fmt(post.insights.shares) },
-                { label: 'Saved',  value: fmt(post.insights.saved) },
+                { label: "Reach", value: fmt(post.insights.reach) },
+                { label: "Shares", value: fmt(post.insights.shares) },
+                { label: "Saved", value: fmt(post.insights.saved) },
               ].map(({ label, value }) => (
-                <div key={label} className="rounded-xl border border-gray-100 dark:border-gray-700 p-2.5 text-center">
-                  <p className="text-sm font-bold text-gray-700 dark:text-gray-200">{value}</p>
-                  <p className="text-[10px] text-gray-400 dark:text-gray-500">{label}</p>
+                <div
+                  key={label}
+                  className="rounded-xl border border-gray-100 dark:border-gray-700 p-2.5 text-center"
+                >
+                  <p className="text-sm font-bold text-gray-700 dark:text-gray-200">
+                    {value}
+                  </p>
+                  <p className="text-[10px] text-gray-400 dark:text-gray-500">
+                    {label}
+                  </p>
                 </div>
               ))}
             </div>
@@ -176,8 +253,19 @@ function MediaModal({ post, onClose }) {
               rel="noopener noreferrer"
               className="flex w-full items-center justify-center gap-2 rounded-xl bg-orange-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-orange-600 transition"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                />
               </svg>
               View on Instagram
             </a>
@@ -186,33 +274,42 @@ function MediaModal({ post, onClose }) {
       </div>
     </div>,
     document.body,
-  )
+  );
 }
 
 function displayName(user) {
   return user.instagram?.instagramUsername
-    ? `@${user.instagram.instagramUsername}`
+    ? `${user.instagram.instagramUsername}`
     : user.instagramUsername
-    ? `@${user.instagramUsername}`
-    : user.email ?? '—'
+      ? `${user.instagramUsername}`
+      : (user.email ?? "—");
 }
 
 // ─── Stat card ────────────────────────────────────────────────────────────────
-function StatCard({ label, value, sub, icon, accent = 'bg-orange-50' }) {
+function StatCard({ label, globalValue, localValue }) {
   return (
-    <div className="flex flex-col gap-4 rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-sm">
-      <div className="flex items-center justify-between">
-        <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">{label}</p>
-        <div className={`flex h-9 w-9 items-center justify-center rounded-xl ${accent}`}>
-          {icon}
+    <div className="flex flex-col gap-6 rounded-[20px] border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 shadow-sm shadow-[#0000001A]">
+      <div className="flex items-center justify-between mb-1">
+        <p className="text-xs font-medium text-[#686969] dark:text-gray-500">
+          {label}
+        </p>
+      </div>
+      <div className="flex justify-center text-center">
+        <div className="text-center w-1/2">
+          <h4 className="text-sm font-normal text-[#A9A9A9]">Global</h4>
+          <p className="text-[28px] font-bold text-[#2F3134] dark:text-white">
+            {globalValue}
+          </p>
+        </div>
+        <div className="text-center  w-1/2">
+          <h4 className="text-sm font-normal text-[#A9A9A9]">Nigeria</h4>
+          <p className="text-[28px] font-bold text-[#2F3134] dark:text-white">
+            {localValue}
+          </p>
         </div>
       </div>
-      <div>
-        <p className="text-3xl font-black text-gray-900 dark:text-white">{value}</p>
-        {sub && <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">{sub}</p>}
-      </div>
     </div>
-  )
+  );
 }
 
 // ─── Skeletons ────────────────────────────────────────────────────────────────
@@ -226,7 +323,7 @@ function HeroSkeleton() {
         <div className="h-3 w-32 rounded bg-gray-100 dark:bg-gray-800" />
       </div>
     </div>
-  )
+  );
 }
 
 function StatSkeleton() {
@@ -239,173 +336,319 @@ function StatSkeleton() {
       <div className="h-8 w-24 rounded bg-gray-100 dark:bg-gray-800" />
       <div className="h-3 w-32 rounded bg-gray-100 dark:bg-gray-800" />
     </div>
-  )
+  );
 }
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 const ScoreIcon = (
-  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M13 10V3L4 14h7v7l9-11h-7z" />
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    className="h-5 w-5 text-orange-500"
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={1.8}
+      d="M13 10V3L4 14h7v7l9-11h-7z"
+    />
   </svg>
-)
+);
 const TrophyIcon = (
-  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    className="h-5 w-5 text-amber-500"
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={1.8}
+      d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"
+    />
   </svg>
-)
+);
 const RankIcon = (
-  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-violet-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    className="h-5 w-5 text-violet-500"
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={1.8}
+      d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+    />
   </svg>
-)
+);
 const FollowersIcon = (
-  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    className="h-5 w-5 text-blue-400"
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={1.8}
+      d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"
+    />
   </svg>
-)
+);
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export default function UserDetailPage() {
-  const { id } = useParams()
-  const navigate = useNavigate()
-  const { auth } = useAuth()
-  const token = auth?.token
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const { auth } = useAuth();
+  const token = auth?.token;
+  const { createSubCategory, fetchCategories, fetchSubCategories } =
+    useCategoriesProvider();
 
-  const [user, setUser]             = useState(null)
-  const [posts, setPosts]           = useState([])
-  const [loading, setLoading]       = useState(true)
-  const [postsLoading, setPostsLoading] = useState(true)
-  const [error, setError]           = useState(null)
-  const [selectedPost, setSelectedPost] = useState(null)
-  const [approving, setApproving]       = useState(false)
-  const [approveError, setApproveError] = useState(null)
+  const [user, setUser] = useState(null);
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [postsLoading, setPostsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [selectedPost, setSelectedPost] = useState(null);
+  const [approving, setApproving] = useState(false);
+  const [approveError, setApproveError] = useState(null);
 
   // Instagram media (live feed) for admin browse + direct submit
-  const [igMedia, setIgMedia]               = useState([])
-  const [igMediaLoading, setIgMediaLoading] = useState(true)
-  const [igMediaCursor, setIgMediaCursor]   = useState(null)
-  const [igMediaHasMore, setIgMediaHasMore] = useState(false)
-  const [igMediaError, setIgMediaError]     = useState(null)
+  const [igMedia, setIgMedia] = useState([]);
+  const [igMediaLoading, setIgMediaLoading] = useState(true);
+  const [igMediaCursor, setIgMediaCursor] = useState(null);
+  const [igMediaHasMore, setIgMediaHasMore] = useState(false);
+  const [igMediaError, setIgMediaError] = useState(null);
+
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const ITEMS_PER_PAGE = 20;
 
   // Admin direct-submit modal state
-  const [submitModal, setSubmitModal]     = useState(null)
-  const [submitCat1, setSubmitCat1]       = useState('')
-  const [submitSubCat, setSubmitSubCat]   = useState('')
-  const [subCatOptions, setSubCatOptions] = useState([])
-  const [subCatOpen, setSubCatOpen]       = useState(false)
-  const [submitting, setSubmitting]       = useState(false)
-  const [submitMsg, setSubmitMsg]         = useState(null)
-  const [categories, setCategories]       = useState([])
+  const [submitModal, setSubmitModal] = useState(null);
+  const [submitCat1, setSubmitCat1] = useState("");
+  const [submitSubCat, setSubmitSubCat] = useState("");
+  const [category, setCategory] = useState("");
+  const [subCategory, setSubCategory] = useState("");
+  const [subCatOpen, setSubCatOpen] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitMsg, setSubmitMsg] = useState(null);
+  const [search, setSearch] = useState("");
+  const [retryKey, setRetryKey] = useState(0);
+
   async function handleApprove() {
-    setApproving(true)
-    setApproveError(null)
+    setApproving(true);
+    setApproveError(null);
     try {
-      await usersApi.approveUser(id, token)
-      setUser((prev) => prev ? {
-        ...prev,
-        instagramApproval: { ...prev.instagramApproval, status: 'approved' },
-      } : prev)
+      await usersApi.approveUser(id, token);
+      setUser((prev) =>
+        prev
+          ? {
+              ...prev,
+              instagramApproval: {
+                ...prev.instagramApproval,
+                status: "approved",
+              },
+            }
+          : prev,
+      );
     } catch (err) {
-      setApproveError(err.message ?? 'Approval failed')
+      setApproveError(err.message ?? "Approval failed");
     } finally {
-      setApproving(false)
+      setApproving(false);
     }
   }
 
   useEffect(() => {
-    if (!id) return
-    let cancelled = false
+    if (!id) return;
+    let cancelled = false;
 
     async function loadUser() {
-      setLoading(true)
-      setError(null)
+      setLoading(true);
+      setError(null);
       try {
-        const res = await usersApi.getUserById(id, token)
-        if (!cancelled) setUser(res?.user ?? null)
+        const res = await usersApi.getUserById(id, token);
+        if (!cancelled) setUser(res?.user ?? null);
       } catch (err) {
-        if (!cancelled) setError(err.message ?? 'Failed to load user')
+        if (!cancelled) setError(err.message ?? "Failed to load user");
       } finally {
-        if (!cancelled) setLoading(false)
+        if (!cancelled) setLoading(false);
       }
     }
 
     async function loadPosts() {
-      setPostsLoading(true)
+      setPostsLoading(true);
       try {
-        const res = await instagramApi.getSubmittedMedia(id, token)
+        const res = await instagramApi.getSubmittedMedia(id, token);
         if (!cancelled) {
-          const arr = Array.isArray(res) ? res : (res?.media ?? [])
-          setPosts(arr)
+          const arr = Array.isArray(res) ? res : (res?.media ?? []);
+          setPosts(arr);
         }
       } catch {
-        if (!cancelled) setPosts([])
+        if (!cancelled) setPosts([]);
       } finally {
-        if (!cancelled) setPostsLoading(false)
+        if (!cancelled) setPostsLoading(false);
       }
     }
 
     async function loadIgMedia() {
-      setIgMediaLoading(true)
-      setIgMediaError(null)
+      setIgMediaLoading(true);
+      setIgMediaError(null);
       try {
-        const res = await instagramApi.adminGetUserInstagramMedia(id, token)
+        const res = await instagramApi.adminGetUserInstagramMedia(id, token);
         if (!cancelled) {
-          setIgMedia(Array.isArray(res.media) ? res.media : [])
-          setIgMediaCursor(res.pagination?.nextCursor ?? null)
-          setIgMediaHasMore(res.pagination?.hasMore ?? false)
+          setIgMedia(Array.isArray(res.media) ? res.media : []);
+          setIgMediaCursor(res.pagination?.nextCursor ?? null);
+          setIgMediaHasMore(res.pagination?.hasMore ?? false);
         }
       } catch (err) {
-        if (!cancelled) setIgMediaError(err.message ?? 'Failed to load Instagram media')
+        if (!cancelled)
+          setIgMediaError(err.message ?? "Failed to load Instagram media");
       } finally {
-        if (!cancelled) setIgMediaLoading(false)
+        if (!cancelled) setIgMediaLoading(false);
       }
     }
 
-    loadUser()
-    loadPosts()
-    loadIgMedia()
-    return () => { cancelled = true }
-  }, [id, token])
-
-  useEffect(() => {
-    categoriesApi.getCategories()
-      .then((res) => setCategories(Array.isArray(res) ? res : (res?.categories ?? [])))
-      .catch(() => {})
-  }, [])
+    loadUser();
+    loadPosts();
+    loadIgMedia();
+    fetchCategories();
+    fetchSubCategories();
+    return () => {
+      cancelled = true;
+    };
+  }, [id, token, retryKey]);
 
   async function loadMoreIgMedia() {
-    if (!igMediaCursor) return
+    if (!igMediaCursor) return;
+    setLoadingMore(true);
     try {
-      const res = await instagramApi.adminGetUserInstagramMedia(id, token, { after: igMediaCursor })
-      setIgMedia((prev) => [...prev, ...(res.media ?? [])])
-      setIgMediaCursor(res.pagination?.nextCursor ?? null)
-      setIgMediaHasMore(res.pagination?.hasMore ?? false)
-    } catch {}
+      const res = await instagramApi.adminGetUserInstagramMedia(id, token, {
+        after: igMediaCursor,
+      });
+      setIgMedia((prev) => [...prev, ...(res.media ?? [])]);
+      setIgMediaCursor(res.pagination?.nextCursor ?? null);
+      setIgMediaHasMore(res.pagination?.hasMore ?? false);
+    } catch {
+    } finally {
+      setLoadingMore(false);
+    }
   }
 
+  // Calculate pagination data
+  const totalItems = igMedia.length;
+  const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
+  const startIdx = (currentPage - 1) * ITEMS_PER_PAGE;
+  const endIdx = startIdx + ITEMS_PER_PAGE;
+
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    const hasFilters =
+      (category && category !== "All Categories") ||
+      (subCategory && subCategory !== "All Subcategories") ||
+      (q && q !== "");
+    console.log("Filtering with", { category, subCategory, q, hasFilters });
+    // If no filters applied, return all igMedia
+    if (!hasFilters) {
+      return igMedia;
+    }
+
+    // If filters applied, filter igMedia based on submitted posts
+    return igMedia.filter((m) => {
+      const submittedPost = posts.find((p) => p.instagramMediaId === m.id);
+      if (!submittedPost) return false; // Not submitted, exclude
+
+      // Apply filters to the submitted post
+      if (category) {
+        const cats = Array.isArray(submittedPost.category)
+          ? submittedPost.category
+          : [submittedPost.category].filter(Boolean);
+        if (!cats.includes(category)) return false;
+      }
+      if (subCategory) {
+        const sub =
+          submittedPost.subCategory?.name ?? submittedPost.subCategory;
+        if (sub !== subCategory) return false;
+      }
+      if (q) {
+        const caption = m.caption?.toLowerCase() ?? "";
+        if (!caption.includes(q)) return false;
+      }
+      return true;
+    });
+  }, [igMedia, posts, search, category, subCategory]);
+
+  const paginatedData = filtered.slice(startIdx, endIdx);
+
+  const categories = useMemo(() => {
+    if (posts.length === 0) return [];
+    const cats = new Set();
+    posts.forEach((p) => {
+      if (p.category) {
+        cats.add(p.category);
+      }
+    });
+    return Array.from(cats);
+  }, [posts]);
+  const subCategories = useMemo(() => {
+    if (posts.length === 0) return [];
+    const subCats = new Set();
+    posts.forEach((p) => {
+      if (p.subCategory) {
+        subCats.add(p.subCategory);
+      }
+    });
+    return Array.from(subCats);
+  }, [posts]);
+
+  // Auto-fetch more when reaching last page with remaining cursor items
   useEffect(() => {
-    if (!submitModal) return
-    subCategoriesApi.getSubCategories()
-      .then((res) => setSubCatOptions(Array.isArray(res) ? res : (res?.subCategories ?? [])))
-      .catch(() => {})
-  }, [submitModal])
+    if (
+      currentPage === totalPages &&
+      totalPages > 0 &&
+      igMediaHasMore &&
+      !igMediaLoading
+    ) {
+      loadMoreIgMedia();
+    }
+  }, [currentPage, totalPages, igMediaHasMore, igMediaLoading]);
 
   async function handleAdminSubmit() {
-    const category = [submitCat1].filter(Boolean)
-    if (category.length === 0) return
-    setSubmitting(true)
-    setSubmitMsg(null)
+    if (category.length === 0) return;
+    setSubmitting(true);
+    setSubmitMsg(null);
     try {
-      await instagramApi.adminDirectSubmit(
-        { userId: id, mediaId: submitModal.id, category, subCategory: submitSubCat || undefined },
+      const res = await instagramApi.adminDirectSubmit(
+        {
+          userId: id,
+          mediaId: submitModal.id,
+          category,
+          subCategory,
+        },
         token,
-      )
-      setSubmitMsg({ ok: true, text: 'Media submitted successfully.' })
-      setTimeout(() => { setSubmitModal(null); setSubmitMsg(null) }, 1500)
+      );
+      setPosts((prev) => [...prev, res?.media]);
+
+      setSubmitMsg({ ok: true, text: "Media submitted successfully." });
+      setSubmitModal(null);
+      setSubmitMsg(null);
+      setCategory("");
+      setSubCategory("");
     } catch (err) {
-      setSubmitMsg({ ok: false, text: err.message ?? 'Submit failed.' })
+      setSubmitMsg({ ok: false, text: err.message ?? "Submit failed." });
     } finally {
-      setSubmitting(false)
+      setSubmitting(false);
     }
   }
 
@@ -415,103 +658,107 @@ export default function UserDetailPage() {
         <Breadcrumb crumbs={CRUMBS} />
         <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-12 text-center shadow-sm">
           <p className="text-sm text-red-500">{error}</p>
-          <button onClick={() => navigate('/dashboard/users')} className="mt-4 text-sm text-orange-500 hover:underline">
+          <button
+            onClick={() => navigate("/dashboard/users")}
+            className="mt-4 text-sm text-orange-500 hover:underline"
+          >
             Back to Users
           </button>
         </div>
       </div>
-    )
+    );
   }
 
-  const name   = user ? displayName(user) : '—'
-  const status = user?.instagramApproval?.status ?? 'pending'
-
+  const name = user ? displayName(user) : "—";
+  const status = user?.instagramApproval?.status ?? "pending";
+  console.log("User data:", user);
   return (
     <div className="flex flex-col gap-6">
       <Breadcrumb crumbs={CRUMBS} />
 
       {/* Profile hero */}
-      {loading ? <HeroSkeleton /> : (
-        <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-sm">
+      {loading ? (
+        <HeroSkeleton />
+      ) : (
+        <div className="rounded-2xp-6">
           <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
             <UserAvatar
-              name={name.replace('@', '') || 'U'}
+              name={name.replace("@", "") || "U"}
               src={user?.instagram?.profilePictureUrl ?? null}
-              size="xl"
+              size="h-29 w-29 border-4 border-[#7E7E7E]"
+              style="custom"
             />
-
             <div className="flex flex-1 flex-col gap-1 min-w-0">
-              <div className="flex flex-wrap items-center gap-2">
-                <h2 className="text-xl font-black text-gray-900 dark:text-white">{name}</h2>
-                <StatusBadge status={status} />
-                {user?.category && <Badge label={user.category} variant="orange" />}
-                {user?.role && (
-                  <span className="rounded-full bg-gray-100 dark:bg-gray-800 px-2.5 py-0.5 text-xs font-semibold capitalize text-gray-500 dark:text-gray-400">
-                    {user.role}
-                  </span>
-                )}
+              <div className="flex flex-col items-start gap-2">
+                <h2 className="text-3xl font-black text-gray-900 dark:text-white">
+                  {name}
+                </h2>
+                <p className="text-base text-[#000000B2]">{user?.email}</p>
               </div>
 
-              <p className="text-sm text-gray-400">{user?.email}</p>
-
-              <div className="mt-2 flex flex-wrap gap-x-5 gap-y-1.5 text-xs text-gray-400">
+              <div className="mt-2 flex flex-wrap gap-x-2 gap-y-1 text-xs text-[#000000B2]">
+                {user?.category && (
+                  <span className="rounded-lg bg-[#2F3134] dark:bg-gray-800 px-2.5 py-1 text-sm font-medium capitalize text-white dark:text-gray-400">
+                    {user.category}
+                  </span>
+                )}
                 {user?.country && (
-                  <span className="flex items-center gap-1">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064" />
-                    </svg>
+                  <span className="flex items-center gap-1 border border-[#000000B2] rounded-lg px-2.5 py-0.5">
                     {user.country}
                   </span>
                 )}
-                <span className="flex items-center gap-1">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
+                <span className="flex items-center gap-1 border border-[#000000B2] rounded-lg px-2.5 py-0.5">
                   Joined {fmtDate(user?.createdAt)}
                 </span>
-                {user?.instagram?.connected && (
-                  <span className="flex items-center gap-1 text-green-500 font-medium">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-                    </svg>
-                    Instagram connected
-                  </span>
-                )}
-                {(user?.instagram?.instagramUsername || user?.instagramUsername) && (
-                  <a
-                    href={`https://www.instagram.com/${user.instagram?.instagramUsername ?? user.instagramUsername}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-1 text-pink-500 font-medium hover:text-pink-600 transition"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                    </svg>
-                    @{user.instagram?.instagramUsername ?? user.instagramUsername}
-                  </a>
-                )}
               </div>
             </div>
 
             {/* Action buttons */}
             <div className="flex shrink-0 flex-col gap-2 sm:items-end">
-              {status !== 'approved' && (
+              {status !== "approved" && (
                 <button
                   onClick={handleApprove}
                   disabled={approving}
                   className="flex items-center gap-2 rounded-xl bg-orange-500 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-orange-600 active:scale-95 transition disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   {approving ? (
-                    <svg className="h-4 w-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                    <svg
+                      className="h-4 w-4 animate-spin"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8v8H4z"
+                      />
                     </svg>
                   ) : (
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-4 w-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 13l4 4L19 7"
+                      />
                     </svg>
                   )}
-                  {approving ? 'Approving…' : 'Approve User'}
+                  {approving ? "Approving…" : "Approve User"}
                 </button>
               )}
 
@@ -519,46 +766,54 @@ export default function UserDetailPage() {
                 <p className="text-xs text-red-500">{approveError}</p>
               )}
 
-              <button
-                onClick={() => navigate('/dashboard/users')}
-                className="flex items-center gap-1.5 rounded-xl border border-gray-200 dark:border-gray-700 px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
-                Back
-              </button>
+              <div className="flex flex-col items-end">
+                <Link
+                  to={user?.instagramApproval?.instagramAccountLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <InstagramIcon />
+                </Link>
+                <p className="text-base text-[#00000080] dark:text-gray-500">
+                  ID: {user?._id}
+                </p>
+              </div>
             </div>
           </div>
         </div>
       )}
 
       {/* Stat cards */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
         {loading ? (
           Array.from({ length: 3 }).map((_, i) => <StatSkeleton key={i} />)
         ) : (
           <>
             <StatCard
-              label="Monthly Reach"
-              value={fmt(user?.monthlyReach)}
-              sub="30-day aggregate"
-              icon={TrophyIcon}
-              accent="bg-amber-50"
+              label="Beed+ Top Creators"
+              globalValue={
+                user?.beedPlusCreatorScore
+                  ? `${user.beedPlusCreatorScore}`
+                  : "—"
+              }
+              localValue={
+                user?.beedPlusCreatorScore
+                  ? `${user.beedPlusCreatorScore}`
+                  : "—"
+              }
             />
             <StatCard
-              label="Monthly Rank"
-              value={user?.monthlyCreatorRank ? `#${user.monthlyCreatorRank}` : '—'}
-              sub="Overall leaderboard"
-              icon={RankIcon}
-              accent="bg-violet-50"
-            />
-            <StatCard
-              label="Followers"
-              value={fmt(user?.instagram?.followersCount)}
-              sub={user?.instagram?.followsCount != null ? `Following ${fmt(user.instagram.followsCount)}` : 'Instagram followers'}
-              icon={FollowersIcon}
-              accent="bg-blue-50"
+              label={`${user.category} Top Creators`}
+              globalValue={
+                fmt(user?.categoryMonthlyCreatorRank)
+                  ? `${user.categoryMonthlyCreatorRank}`
+                  : "—"
+              }
+              localValue={
+                fmt(user?.categoryMonthlyCreatorRank)
+                  ? `${user.categoryMonthlyCreatorRank}`
+                  : "—"
+              }
             />
           </>
         )}
@@ -566,21 +821,13 @@ export default function UserDetailPage() {
 
       {/* Submitted Posts */}
       <div className="flex flex-col rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm overflow-hidden">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-800">
-          <div>
-            <p className="text-sm font-bold text-gray-800 dark:text-gray-100">Submitted Posts</p>
-            {!postsLoading && (
-              <p className="text-xs text-gray-400 dark:text-gray-500">
-                {posts.length} post{posts.length !== 1 ? 's' : ''}
-              </p>
-            )}
-          </div>
-        </div>
-
-        {postsLoading ? (
+        {igMediaLoading ? (
           <div className="divide-y divide-gray-50 dark:divide-gray-800">
             {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="flex items-center gap-4 px-6 py-4 animate-pulse">
+              <div
+                key={i}
+                className="flex items-center gap-4 px-6 py-4 animate-pulse"
+              >
                 <div className="h-10 w-10 shrink-0 rounded-lg bg-gray-100 dark:bg-gray-800" />
                 <div className="flex-1 space-y-1.5">
                   <div className="h-3 w-40 rounded bg-gray-100 dark:bg-gray-800" />
@@ -593,141 +840,395 @@ export default function UserDetailPage() {
               </div>
             ))}
           </div>
-        ) : posts.length === 0 ? (
+        ) : paginatedData.length === 0 ? (
           <div className="px-6 py-12 text-center text-sm text-gray-400">
-            No submitted posts found.
+            No posts found.
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[640px]">
-              <thead>
-                <tr className="border-b border-gray-100 dark:border-gray-800 bg-gray-50/60 dark:bg-gray-800/50">
-                  <th className="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">Post</th>
-                  <th className="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">Type</th>
-                  <th className="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">Category</th>
-                  <th className="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">Ranking</th>
-                  <th className="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">Beed+ Score</th>
-                  <th className="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">Submitted</th>
-                  <th className="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">Status</th>
-                  <th className="px-6 py-3 text-right text-[11px] font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">View</th>
-                </tr>
-              </thead>
-              <tbody>
-                {posts.map((post) => {
-                  const categories = Array.isArray(post.category)
-                    ? post.category
-                    : [post.category].filter(Boolean)
-                  return (
-                    <tr
-                      key={post._id ?? post.instagramMediaId}
-                      className="border-b border-gray-50 dark:border-gray-800/50 last:border-0 hover:bg-gray-50/40 dark:hover:bg-gray-800/40 transition-colors"
-                    >
-                      {/* Thumbnail + caption (max 25 chars) */}
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          {post.media?.thumbnailUrl ? (
-                            <img src={post.media.thumbnailUrl} alt="" className="h-10 w-10 shrink-0 rounded-lg object-cover" />
-                          ) : (
-                            <div className="h-10 w-10 shrink-0 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-300 dark:text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                              </svg>
-                            </div>
-                          )}
-                          <p className="text-sm font-medium text-gray-700 dark:text-gray-300" title={post.media?.caption}>
-                            {truncate(post.media?.caption)}
-                          </p>
-                        </div>
-                      </td>
-                      {/* Media type */}
-                      <td className="px-6 py-4">
-                        <MediaTypeBadge type={post.media?.mediaType} />
-                      </td>
-                      {/* Categories — grey pills */}
-                      <td className="px-6 py-4">
-                        <div className="flex flex-wrap gap-1">
-                          {categories.length > 0
-                            ? categories.map((c) => (
-                                <span key={c} className="rounded-full bg-gray-100 dark:bg-gray-800 px-2.5 py-0.5 text-xs font-semibold text-gray-600 dark:text-gray-300">{c}</span>
-                              ))
-                            : <span className="text-gray-300 text-sm">—</span>
-                          }
-                        </div>
-                      </td>
-                      {/* Ranking */}
-                      <td className="px-6 py-4">
-                        {post.currentRank != null ? (
-                          <span className="inline-flex items-center gap-1 text-sm font-semibold text-gray-700 dark:text-gray-300">
-                            <span className="text-xs font-normal text-gray-400 dark:text-gray-500">#</span>
-                            {post.currentRank}
-                          </span>
-                        ) : <span className="text-gray-300 text-sm">—</span>}
-                      </td>
-                      {/* Beed+ Score */}
-                      <td className="px-6 py-4">
-                        {post.beedPlusScore != null ? (
-                          <span className="inline-flex rounded-full bg-orange-50 px-2.5 py-0.5 text-xs font-bold text-orange-500">
-                            {fmtBeedScore(post.beedPlusScore)}
-                          </span>
-                        ) : <span className="text-gray-300 text-sm">—</span>}
-                      </td>
-                      {/* Submitted date */}
-                      <td className="px-6 py-4 text-sm text-gray-400 whitespace-nowrap">
-                        {fmtDate(post.createdAt)}
-                      </td>
-                      {/* Status */}
-                      <td className="px-6 py-4">
-                        {(() => {
-                          const s = post.status
-                          const cfg = {
-                            approved: 'bg-green-50 text-green-600',
-                            pending:  'bg-amber-50 text-amber-600',
-                            rejected: 'bg-red-50 text-red-500',
-                          }
-                          return s ? (
-                            <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize ${cfg[s] ?? 'bg-gray-100 text-gray-500'}`}>
-                              {s}
+          <div className="pt-6">
+            <div className="flex justify-between items-center px-4 mb-6">
+              <h3 className="text-xl font-bold"></h3>
+
+              <div className="flex gap-4">
+                <div className="flex flex-wrap items-center gap-3">
+                  {/* Search */}
+                  <input
+                    type="text"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Search username…"
+                    className="w-62 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-600 dark:text-gray-300 placeholder-gray-400 dark:placeholder-gray-500 outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition"
+                  />
+
+                  {/* Category */}
+                  <select
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value)}
+                    className={SELECT}
+                  >
+                    <option value="">All Categories</option>
+                    {categories.map((c) => (
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
+                    ))}
+                  </select>
+
+                  {/* Sub Category */}
+                  <select
+                    value={subCategory}
+                    onChange={(e) => setSubCategory(e.target.value)}
+                    className={SELECT}
+                  >
+                    <option value="">All Subcategories</option>
+                    {subCategories.map((c) => (
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex items-center gap-2 mt-1">
+                  <button
+                    onClick={() => setRetryKey((k) => k + 1)}
+                    disabled={loading}
+                    title="Refresh"
+                    className="flex h-8 w-8 items-center justify-center rounded-lg bg-white shadow-sm shadow-[#00000040] disabled:opacity-40"
+                  >
+                    <RetryIcon />
+                  </button>
+                  {!loading && !error && (
+                    <p className="px-3 py-1 text-base font-semibold">
+                      Posts: {posts?.length}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+            <div className="overflow-x-auto rounded-xl">
+              <table className="w-full min-w-160 rounded-xl">
+                <thead>
+                  <tr className="border-b border-[#3A3A3A1A] dark:border-gray-800 bg-[#433E3E1A] dark:bg-gray-800/50">
+                    <th className="px-6 py-3 text-left text-[12px] font-bold tracking-widest text-[#3A3A3AB2] dark:text-gray-500">
+                      Post
+                    </th>
+                    <th className="px-6 py-3 text-left text-[12px] font-bold tracking-widest text-[#3A3A3AB2] dark:text-gray-500 min-w-25">
+                      Global Ranking
+                    </th>
+                    <th className="px-6 py-3 text-left text-[12px] font-bold tracking-widest text-[#3A3A3AB2] dark:text-gray-500 min-w-25">
+                      Category Ranking
+                    </th>
+                    <th className="px-6 py-3 text-left text-[12px] font-bold tracking-widest text-[#3A3A3AB2] dark:text-gray-500 min-w-25">
+                      Category
+                    </th>
+                    <th className="px-6 py-3 text-left text-[12px] font-bold tracking-widest text-[#3A3A3AB2] dark:text-gray-500 min-w-25">
+                      Beedplus Score
+                    </th>
+                    <th className="px-6 py-3 text-left text-[12px] font-bold tracking-widest text-[#3A3A3AB2] dark:text-gray-500 min-w-25">
+                      Submitted
+                    </th>
+                    <th className="px-6 py-3 text-left text-[12px] font-bold tracking-widest text-[#3A3A3AB2] dark:text-gray-500 min-w-25">
+                      Status
+                    </th>
+                    <th className="px-6 py-3 text-right text-[12px] font-bold tracking-widest text-[#3A3A3AB2] dark:text-gray-500 min-w-25">
+                      Action
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {paginatedData?.map((post, i) => {
+                    const submittedMedia = posts.find(
+                      (p) => p.instagramMediaId == post.id,
+                    );
+
+                    return (
+                      <tr
+                        key={post.id ?? submittedMedia?.instagramMediaId}
+                        className="border-b border-gray-50 dark:border-gray-800/50 last:border-0 hover:bg-gray-50/40 dark:hover:bg-gray-800/40 transition-colors"
+                      >
+                        {/* Thumbnail + caption (max 25 chars) */}
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            {post.thumbnail_url ? (
+                              <img
+                                src={post.thumbnail_url}
+                                alt=""
+                                className="h-10 w-10 shrink-0 rounded-lg object-cover"
+                              />
+                            ) : (
+                              <div className="h-10 w-10 shrink-0 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  className="h-4 w-4 text-gray-300 dark:text-gray-600"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                  stroke="currentColor"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                                  />
+                                </svg>
+                              </div>
+                            )}
+                            <p
+                              className="text-sm font-bold text-[#3A3A3A] dark:text-gray-300"
+                              title={post.caption}
+                            >
+                              {truncate(post.caption)}
+                            </p>
+                          </div>
+                        </td>
+                        {/* Media type */}
+                        <td className="px-6 py-4">
+                          {submittedMedia?.globalRank ? (
+                            <span className="inline-flex items-center gap-1 text-sm font-semibold text-[#3A3A3A] dark:text-gray-300">
+                              <span className="text-xs font-bold text-[#3A3A3A] dark:text-gray-500">
+                                #
+                              </span>
+                              {submittedMedia?.globalRank}
                             </span>
-                          ) : <span className="text-gray-300 text-sm">—</span>
-                        })()}
-                      </td>
-                      {/* View button → modal */}
-                      <td className="px-6 py-4 text-right">
+                          ) : (
+                            <span className="text-[#3A3A3A] text-sm">—</span>
+                          )}
+                        </td>
+                        {/* Categories — grey pills */}
+                        <td className="px-6 py-4">
+                          {submittedMedia?.categoryRank ? (
+                            <span className="inline-flex items-center gap-1 text-sm font-bold text-[#3A3A3A] dark:text-gray-300">
+                              {submittedMedia?.categoryRank}
+                            </span>
+                          ) : (
+                            <span className="text-[#3A3A3A] text-sm">—</span>
+                          )}
+                        </td>
+                        {/* Ranking */}
+                        <td className="px-6 py-4">
+                          <div className="flex flex-wrap gap-1">
+                            {submittedMedia?.category ? (
+                              <span className="rounded-xl dark:bg-gray-800 px-3.5 py-1.5 text-sm font-medium text-[#4A4A4A] dark:text-gray-300">
+                                {submittedMedia?.category}
+                              </span>
+                            ) : (
+                              <span className="text-[#3A3A3A] text-sm">—</span>
+                            )}
+                          </div>
+                        </td>
+                        {/* Beed+ Score */}
+                        <td className="px-6 py-4">
+                          {submittedMedia?.beedplusScore != null ? (
+                            <span className="inline-flex px-2.5 py-0.5 text-xs font-bold text-[#3A3A3A]">
+                              {fmtBeedScore(submittedMedia?.beedplusScore)}
+                            </span>
+                          ) : (
+                            <span className="text-[#3A3A3A] text-sm">—</span>
+                          )}
+                        </td>
+                        {/* Submitted date */}
+                        <td className="px-6 py-4 text-sm text-[#3A3A3A] font-medium whitespace-nowrap">
+                          {fmtDate(submittedMedia?.createdAt)}
+                        </td>
+                        {/* Status */}
+                        <td className="px-6 py-4">
+                          {(() => {
+                            const s = submittedMedia?.status;
+                            const cfg = {
+                              approved: "bg-green-50 text-green-600",
+                              pending: "bg-amber-50 text-amber-600",
+                              rejected: "bg-red-50 text-red-500",
+                            };
+                            return s ? (
+                              <span
+                                className={`rounded-full px-2.5 py-0.5 text-sm font-semibold capitalize ${cfg[s] ?? "bg-gray-100 text-gray-500"}`}
+                              >
+                                {s}
+                              </span>
+                            ) : (
+                              <span className="text-[#3A3A3A] text-sm">—</span>
+                            );
+                          })()}
+                        </td>
+                        {/* View button → modal */}
+                        <td className="px-6 py-4 text-right">
+                          {submittedMedia?.status == "approved" ||
+                          submittedMedia?.status == "pending" ? (
+                            <button
+                              onClick={() =>
+                                navigate(
+                                  `/dashboard/posts/${submittedMedia._id}`,
+                                  {
+                                    state: { post: submittedMedia },
+                                  },
+                                )
+                              }
+                              className="rounded-lg bg-[#FFEFD0] px-3 py-1.5 text-xs font-semibold text-[#9B5A0A] hover:bg-orange-600 transition"
+                            >
+                              View
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => {
+                                setSubmitModal(post);
+                                setSubmitCat1("");
+                                setSubmitSubCat("");
+                                setSubCatOpen(false);
+                                setSubmitMsg(null);
+                              }}
+                              className="rounded-lg bg-orange-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-orange-600 transition"
+                            >
+                              Submit
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+            {totalPages > 1 && (
+              <div className="relative flex items-center justify-between border-t border-gray-100 dark:border-gray-800 px-6 py-4">
+                {/* Loading spinner overlay */}
+                {loadingMore && <Loader />}
+
+                <button
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage === 1 || loadingMore}
+                  className="flex items-center gap-1.5 rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Prev
+                </button>
+
+                <div className="flex items-center gap-1.5">
+                  {(() => {
+                    const pageButtons = [];
+                    const maxButtons = 5;
+                    let startPage = Math.max(
+                      1,
+                      currentPage - Math.floor(maxButtons / 2),
+                    );
+                    let endPage = Math.min(
+                      totalPages,
+                      startPage + maxButtons - 1,
+                    );
+
+                    if (endPage - startPage + 1 < maxButtons) {
+                      startPage = Math.max(1, endPage - maxButtons + 1);
+                    }
+
+                    if (startPage > 1) {
+                      pageButtons.push(
                         <button
-                          onClick={() => setSelectedPost(post)}
-                          className="rounded-lg bg-orange-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-orange-600 transition"
+                          key="first"
+                          onClick={() => setCurrentPage(1)}
+                          disabled={loadingMore}
+                          className="rounded-lg border border-gray-200 dark:border-gray-700 px-2.5 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition disabled:opacity-50"
                         >
-                          View
-                        </button>
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
+                          1
+                        </button>,
+                      );
+                      if (startPage > 2) {
+                        pageButtons.push(
+                          <span
+                            key="ellipsis-start"
+                            className="text-gray-400 dark:text-gray-600"
+                          >
+                            …
+                          </span>,
+                        );
+                      }
+                    }
+
+                    for (let page = startPage; page <= endPage; page++) {
+                      pageButtons.push(
+                        <button
+                          key={page}
+                          onClick={() => setCurrentPage(page)}
+                          disabled={loadingMore}
+                          className={`rounded-lg px-2.5 py-1.5 text-xs font-medium transition ${
+                            page === currentPage
+                              ? "bg-[#3A3A3A] text-white shadow-md"
+                              : "border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50"
+                          }`}
+                        >
+                          {page}
+                        </button>,
+                      );
+                    }
+
+                    if (endPage < totalPages) {
+                      if (endPage < totalPages - 1) {
+                        pageButtons.push(
+                          <span
+                            key="ellipsis-end"
+                            className="text-gray-400 dark:text-gray-600"
+                          >
+                            …
+                          </span>,
+                        );
+                      }
+                      pageButtons.push(
+                        <button
+                          key="last"
+                          onClick={() => setCurrentPage(totalPages)}
+                          disabled={loadingMore}
+                          className="rounded-lg border border-gray-200 dark:border-gray-700 px-2.5 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition disabled:opacity-50"
+                        >
+                          {totalPages}
+                        </button>,
+                      );
+                    }
+
+                    return pageButtons;
+                  })()}
+                </div>
+
+                <button
+                  onClick={() =>
+                    setCurrentPage((p) => Math.min(totalPages, p + 1))
+                  }
+                  disabled={currentPage === totalPages || loadingMore}
+                  className="flex items-center gap-1.5 rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Next
+                </button>
+              </div>
+            )}
           </div>
         )}
-
       </div>
 
       {/* Unsubmitted Videos */}
-      <div className="flex flex-col rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm overflow-hidden">
+      {/* <div className="flex flex-col rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm overflow-hidden">
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-800">
           <div>
-            <p className="text-sm font-bold text-gray-800 dark:text-gray-100">Unsubmitted Videos</p>
-            <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Videos not yet submitted to rankings</p>
+            <p className="text-sm font-bold text-gray-800 dark:text-gray-100">
+              Unsubmitted Videos
+            </p>
+            <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+              Videos not yet submitted to rankings
+            </p>
           </div>
           {!igMediaLoading && (
-            <span className="text-xs text-gray-400">{igMedia.length} post{igMedia.length !== 1 ? 's' : ''}</span>
+            <span className="text-xs text-gray-400">
+              {igMedia.length} post{igMedia.length !== 1 ? "s" : ""}
+            </span>
           )}
         </div>
 
         {igMediaError ? (
-          <p className="px-6 py-10 text-center text-sm text-red-400">{igMediaError}</p>
+          <p className="px-6 py-10 text-center text-sm text-red-400">
+            {igMediaError}
+          </p>
         ) : igMediaLoading ? (
           <div className="divide-y divide-gray-50 dark:divide-gray-800">
             {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="flex items-center gap-4 px-6 py-4 animate-pulse">
+              <div
+                key={i}
+                className="flex items-center gap-4 px-6 py-4 animate-pulse"
+              >
                 <div className="h-10 w-10 shrink-0 rounded-lg bg-gray-100 dark:bg-gray-800" />
                 <div className="flex-1 space-y-1.5">
                   <div className="h-3 w-40 rounded bg-gray-100 dark:bg-gray-800" />
@@ -738,59 +1239,113 @@ export default function UserDetailPage() {
             ))}
           </div>
         ) : igMedia.length === 0 ? (
-          <p className="px-6 py-12 text-center text-sm text-gray-400 dark:text-gray-500">No qualifying Instagram posts found.</p>
+          <p className="px-6 py-12 text-center text-sm text-gray-400 dark:text-gray-500">
+            No qualifying Instagram posts found.
+          </p>
         ) : (
           <>
             <div className="overflow-x-auto">
               <table className="w-full min-w-[640px]">
                 <thead>
                   <tr className="border-b border-gray-100 dark:border-gray-800 bg-gray-50/60 dark:bg-gray-800/50">
-                    <th className="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">Post</th>
-                    <th className="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">Type</th>
-                    <th className="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">Views</th>
-                    <th className="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">Reach</th>
-                    <th className="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">Likes</th>
-                    <th className="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">Date</th>
-                    <th className="px-6 py-3 text-right text-[11px] font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">Submit</th>
+                    <th className="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">
+                      Post
+                    </th>
+                    <th className="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">
+                      Type
+                    </th>
+                    <th className="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">
+                      Views
+                    </th>
+                    <th className="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">
+                      Reach
+                    </th>
+                    <th className="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">
+                      Likes
+                    </th>
+                    <th className="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">
+                      Date
+                    </th>
+                    <th className="px-6 py-3 text-right text-[11px] font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">
+                      Submit
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {igMedia.map((post) => (
-                    <tr
-                      key={post.id}
-                      className="border-b border-gray-50 dark:border-gray-800/50 last:border-0 hover:bg-gray-50/40 dark:hover:bg-gray-800/40 transition-colors"
-                    >
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          {post.thumbnail_url ? (
-                            <img src={post.thumbnail_url} alt="" className="h-10 w-10 shrink-0 rounded-lg object-cover" />
-                          ) : (
-                            <div className="h-10 w-10 shrink-0 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-300 dark:text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.069A1 1 0 0121 8.82v6.36a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z" />
-                              </svg>
-                            </div>
-                          )}
-                          <p className="max-w-[180px] truncate text-sm font-medium text-gray-700 dark:text-gray-300" title={post.caption}>
-                            {truncate(post.caption, 30)}
-                          </p>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4"><MediaTypeBadge type={post.media_type} /></td>
-                      <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">{fmt(post.insights?.views)}</td>
-                      <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">{fmt(post.insights?.reach)}</td>
-                      <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">{fmt(post.insights?.likes)}</td>
-                      <td className="px-6 py-4 text-sm text-gray-400 whitespace-nowrap">{fmtDate(post.timestamp)}</td>
-                      <td className="px-6 py-4 text-right">
-                        <button
-                          onClick={() => { setSubmitModal(post); setSubmitCat1(''); setSubmitSubCat(''); setSubCatOpen(false); setSubmitMsg(null) }}
-                          className="rounded-lg bg-orange-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-orange-600 transition"
-                        >
-                          Submit
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
+                  {igMedia.map((post, i) => {
+                    // let submittedMedia = posts?.find((med: any)=> (med?.instagramMediaId == post?.id));
+                    console.log("posts[i]", post);
+                    return (
+                      <tr
+                        key={post.id}
+                        className="border-b border-gray-50 dark:border-gray-800/50 last:border-0 hover:bg-gray-50/40 dark:hover:bg-gray-800/40 transition-colors"
+                      >
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            {post.thumbnail_url ? (
+                              <img
+                                src={post.thumbnail_url}
+                                alt=""
+                                className="h-10 w-10 shrink-0 rounded-lg object-cover"
+                              />
+                            ) : (
+                              <div className="h-10 w-10 shrink-0 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  className="h-4 w-4 text-gray-300 dark:text-gray-600"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                  stroke="currentColor"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M15 10l4.553-2.069A1 1 0 0121 8.82v6.36a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"
+                                  />
+                                </svg>
+                              </div>
+                            )}
+                            <p
+                              className="max-w-[180px] truncate text-sm font-medium text-gray-700 dark:text-gray-300"
+                              title={post.caption}
+                            >
+                              {truncate(post.caption, 30)}
+                            </p>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <MediaTypeBadge type={post.media_type} />
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
+                          {fmt(post.insights?.views)}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
+                          {fmt(post.insights?.reach)}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
+                          {fmt(post.insights?.likes)}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-400 whitespace-nowrap">
+                          {fmtDate(post.timestamp)}
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                          <button
+                            onClick={() => {
+                              setSubmitModal(post);
+                              setSubmitCat1("");
+                              setSubmitSubCat("");
+                              setSubCatOpen(false);
+                              setSubmitMsg(null);
+                            }}
+                            className="rounded-lg bg-orange-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-orange-600 transition"
+                          >
+                            Submit
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -806,37 +1361,54 @@ export default function UserDetailPage() {
             )}
           </>
         )}
-      </div>
+      </div> */}
 
       {/* Daily Reach */}
-      <div className="flex flex-col rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm overflow-hidden">
+      {/* <div className="flex flex-col rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-800">
-          <p className="text-sm font-bold text-gray-800 dark:text-gray-100">Daily Reach</p>
-          <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Per-day reach history</p>
+          <p className="text-sm font-bold text-gray-800 dark:text-gray-100">
+            Daily Reach
+          </p>
+          <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+            Per-day reach history
+          </p>
         </div>
         {!user?.instagram?.dailyInsights?.length ? (
-          <p className="px-6 py-10 text-center text-sm text-gray-400 dark:text-gray-500">No daily reach data yet.</p>
+          <p className="px-6 py-10 text-center text-sm text-gray-400 dark:text-gray-500">
+            No daily reach data yet.
+          </p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[400px]">
               <thead>
                 <tr className="border-b border-gray-100 dark:border-gray-800 bg-gray-50/60 dark:bg-gray-800/50">
-                  <th className="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">Date</th>
-                  <th className="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">Reach</th>
+                  <th className="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">
+                    Date
+                  </th>
+                  <th className="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">
+                    Reach
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {[...user.instagram.dailyInsights].reverse().map((entry, i) => (
-                  <tr key={i} className="border-b border-gray-50 dark:border-gray-800/50 last:border-0 hover:bg-gray-50/40 dark:hover:bg-gray-800/40">
-                    <td className="px-6 py-3 text-sm text-gray-500 dark:text-gray-400">{fmtDate(entry.date)}</td>
-                    <td className="px-6 py-3 text-sm font-semibold text-gray-800 dark:text-gray-100">{fmt(entry.reach)}</td>
+                  <tr
+                    key={i}
+                    className="border-b border-gray-50 dark:border-gray-800/50 last:border-0 hover:bg-gray-50/40 dark:hover:bg-gray-800/40"
+                  >
+                    <td className="px-6 py-3 text-sm text-gray-500 dark:text-gray-400">
+                      {fmtDate(entry.date)}
+                    </td>
+                    <td className="px-6 py-3 text-sm font-semibold text-gray-800 dark:text-gray-100">
+                      {fmt(entry.reach)}
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
         )}
-      </div>
+      </div> */}
 
       {/* Media preview modal */}
       {selectedPost && (
@@ -844,122 +1416,58 @@ export default function UserDetailPage() {
       )}
 
       {/* Admin direct-submit modal */}
-      {submitModal && createPortal(
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="w-full max-w-4xl rounded-2xl bg-white dark:bg-gray-900 shadow-2xl overflow-hidden flex flex-row max-h-[90dvh] min-h-[520px]">
-
-            {/* Left — video player */}
-            <div className="w-[26rem] flex-shrink-0 bg-gray-950 flex items-center justify-center self-stretch">
-              {submitModal.media_url ? (
-                <video
-                  controls
-                  playsInline
-                  poster={submitModal.thumbnail_url || undefined}
-                  src={submitModal.media_url}
-                  className="w-full h-full object-contain"
-                />
-              ) : submitModal.thumbnail_url ? (
-                <img src={submitModal.thumbnail_url} alt="" className="w-full h-full object-contain" />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center text-gray-600 p-8">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 10l4.553-2.069A1 1 0 0121 8.82v6.36a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z" />
-                  </svg>
-                </div>
-              )}
-            </div>
-
-            {/* Right — form */}
-            <div className="flex-1 min-w-0 flex flex-col gap-4 p-6 overflow-y-auto">
-              <div>
-                <p className="text-sm font-bold text-gray-900 dark:text-white">Submit to Rankings</p>
-                {submitModal.caption && (
-                  <p className="mt-0.5 text-xs text-gray-400 line-clamp-2">{submitModal.caption}</p>
-                )}
-              </div>
-
-              {/* Primary category */}
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-1">
-                  Primary Category <span className="text-red-400">*</span>
-                </label>
-                <select
-                  value={submitCat1}
-                  onChange={(e) => setSubmitCat1(e.target.value)}
-                  className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-100"
-                >
-                  <option value="">— Select category —</option>
-                  {categories.map((cat) => {
-                    const name = cat.name ?? cat
-                    return <option key={name} value={name}>{name}</option>
-                  })}
-                </select>
-              </div>
-
-              {/* Sub-category autocomplete */}
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-1">
-                  Sub-category <span className="text-gray-300 dark:text-gray-600">(optional)</span>
-                </label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    value={submitSubCat}
-                    onChange={(e) => { setSubmitSubCat(e.target.value); setSubCatOpen(true) }}
-                    onFocus={() => setSubCatOpen(true)}
-                    onBlur={() => setTimeout(() => setSubCatOpen(false), 150)}
-                    placeholder="Type to search or create new…"
-                    className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-100"
-                  />
-                  {subCatOpen && (() => {
-                    const filtered = subCatOptions.filter((s) =>
-                      !submitSubCat || s.name.toLowerCase().includes(submitSubCat.toLowerCase())
-                    )
-                    return filtered.length > 0 ? (
-                      <ul className="absolute z-20 top-full left-0 right-0 mt-1 max-h-40 overflow-y-auto rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-lg">
-                        {filtered.map((s) => (
-                          <li
-                            key={s._id}
-                            onMouseDown={() => { setSubmitSubCat(s.name); setSubCatOpen(false) }}
-                            className="px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-orange-50 dark:hover:bg-gray-700 cursor-pointer"
-                          >
-                            {s.name}
-                          </li>
-                        ))}
-                      </ul>
-                    ) : null
-                  })()}
+      {submitModal &&
+        createPortal(
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+            <div className="bg-white p-6 lg:w-[467px] rounded-[8px] relative">
+              <button
+                type="button"
+                onClick={() => setSubmitModal(null)}
+                className="absolute top-8 right-6"
+              >
+                <CloseIcon />
+              </button>
+              <p className="text-[24px] font-bold">Select Category</p>
+              <CustomDropDownInput
+                value={category}
+                placeholder="Select your main category"
+                items={categories.map((c) => ({
+                  label: c,
+                  value: c,
+                }))}
+                onChange={(e) => {
+                  setCategory(e.target.value);
+                }}
+                label="Category"
+              />
+              <SelectSearch
+                label="Sub-Category"
+                value={subCategory}
+                placeholder="Select or add subcategory"
+                items={
+                  subCategories?.length > 0 ? subCategories.map((sc) => sc) : []
+                }
+                onChange={(val) => {
+                  setSubCategory(val);
+                }}
+                showEmptyButton
+                onNoResult={(val) => createSubCategory({ name: val.trim() })}
+              />
+              <div className="w-full mt-5">
+                <div className="w-[50%] m-auto">
+                  <button
+                    disabled={submitting || !category || !subCategory}
+                    onClick={handleAdminSubmit}
+                    className="flex-1 rounded-xl bg-[#2F3134] w-full py-2.5 text-sm font-semibold text-white hover:bg-[#2F3134] transition disabled:opacity-60"
+                  >
+                    Submit
+                  </button>
                 </div>
               </div>
-
-              {/* Feedback */}
-              {submitMsg && (
-                <p className={`text-xs font-semibold ${submitMsg.ok ? 'text-green-500' : 'text-red-500'}`}>
-                  {submitMsg.text}
-                </p>
-              )}
-
-              {/* Buttons */}
-              <div className="flex gap-2 pt-2">
-                <button
-                  onClick={handleAdminSubmit}
-                  disabled={submitting || !submitCat1}
-                  className="flex-1 rounded-xl bg-orange-500 py-2.5 text-sm font-semibold text-white hover:bg-orange-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {submitting ? 'Submitting…' : 'Submit'}
-                </button>
-                <button
-                  onClick={() => setSubmitModal(null)}
-                  className="flex-1 rounded-xl border border-gray-200 dark:border-gray-700 py-2.5 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition"
-                >
-                  Cancel
-                </button>
-              </div>
             </div>
-          </div>
-        </div>,
-        document.body,
-      )}
+          </div>,
+          document.body,
+        )}
     </div>
-  )
+  );
 }

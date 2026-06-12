@@ -1,82 +1,137 @@
-import { useEffect, useState } from 'react'
-import { useParams, useNavigate, useLocation, Link } from 'react-router-dom'
-import { useAuth } from '../../../hooks/useAuth'
-import { instagramApi } from '../../../utils/instagramApi'
-import { useWatchlist } from '../../../hooks/useWatchlist'
-import Breadcrumb from '../../../components/ui/Breadcrumb'
-import UserAvatar from '../../../components/dashboard/users/UserAvatar'
+import { useEffect, useState } from "react";
+import { useParams, useNavigate, useLocation, Link } from "react-router-dom";
+import { useAuth } from "../../../hooks/useAuth";
+import { instagramApi } from "../../../utils/instagramApi";
+import { useScenes } from "../../../hooks/useScenes";
+import Breadcrumb from "../../../components/ui/Breadcrumb";
+import UserAvatar from "../../../components/dashboard/users/UserAvatar";
+import {
+  BackArrowIcon,
+  BookmarkIcon,
+  EyeIcon,
+  CommentIcon,
+  ShareIcon,
+  ReachIcon,
+  LikeIcon,
+} from "../../../components/icons";
+import CustomDropDownInput from "../../../components/CustomDropDownInput";
 
 const CRUMBS = [
-  { label: 'Posts', to: '/dashboard/posts' },
-  { label: 'Post Details' },
-]
+  { label: "Posts", to: "/dashboard/posts" },
+  { label: "Post Details" },
+];
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 function fmt(n) {
-  if (!n && n !== 0) return '—'
-  return n.toLocaleString()
+  if (!n && n !== 0) return "—";
+  return n.toLocaleString();
 }
 
 function fmtBeedScore(n) {
-  if (n == null) return '—'
-  return Number(n).toFixed(2)
+  if (n == null) return "—";
+  return Number(n).toFixed(2);
 }
 
 function fmtDate(iso) {
-  if (!iso) return '—'
-  return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+  if (!iso) return "—";
+  return new Date(iso).toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
 }
 
 const MEDIA_TYPE_CONFIG = {
-  VIDEO:          { label: 'Video',    color: 'bg-blue-50 text-blue-500' },
-  IMAGE:          { label: 'Image',    color: 'bg-green-50 text-green-600' },
-  CAROUSEL_ALBUM: { label: 'Carousel', color: 'bg-purple-50 text-purple-500' },
-  REELS:          { label: 'Reels',    color: 'bg-pink-50 text-pink-500' },
-}
+  VIDEO: { label: "Video", color: "bg-[#FFFFFF] text-[#3A3A3A]" },
+  IMAGE: { label: "Image", color: "bg-[#FFFFFF] text-[#3A3A3A]" },
+  CAROUSEL_ALBUM: { label: "Carousel", color: "bg-[#FFFFFF] text-[#3A3A3A]" },
+  REELS: { label: "Reels", color: "bg-[#FFFFFF] text-[#3A3A3A]" },
+};
 
 function MediaTypeBadge({ type }) {
-  if (!type) return null
-  const cfg = MEDIA_TYPE_CONFIG[type?.toUpperCase()] ?? { label: type, color: 'bg-gray-100 text-gray-500' }
+  if (!type) return null;
+  const cfg = MEDIA_TYPE_CONFIG[type?.toUpperCase()] ?? {
+    label: type,
+    color: "bg-gray-100 text-gray-500",
+  };
   return (
-    <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${cfg.color}`}>
+    <span
+      className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${cfg.color}`}
+    >
       {cfg.label}
     </span>
-  )
+  );
 }
 
 // ─── Stat Card ────────────────────────────────────────────────────────────────
 function StatCard({ label, value, sub, iconBg, icon: Icon }) {
   return (
-    <div className="flex flex-col gap-3 rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 shadow-sm">
+    <div className="flex flex-col gap-3 rounded-lg bg-white dark:bg-gray-900 p-4.5 shadow-sm">
       <div className="flex items-start justify-between">
-        <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">{label}</p>
-        <div className={`flex h-9 w-9 items-center justify-center rounded-xl ${iconBg}`}>
-          <Icon className="h-5 w-5" />
-        </div>
+        <p className="text-xs font-medium text-[#0000004D] dark:text-gray-500">
+          {label}
+        </p>
       </div>
-      <p className="text-2xl font-black text-gray-900 dark:text-white">{value}</p>
-      {sub && <p className="text-xs text-gray-400 dark:text-gray-500">{sub}</p>}
+      <p className="text-xl font-semibold text-[#000] dark:text-white">
+        {value}
+      </p>
+      {sub && (
+        <p className="text-xs text-[#0000004D] dark:text-gray-500">{sub}</p>
+      )}
     </div>
-  )
+  );
 }
 
 // ─── Insight Row ──────────────────────────────────────────────────────────────
-function InsightRow({ label, value, color = 'text-gray-700' }) {
+function InsightRow({ label, value, icon }) {
   return (
-    <div className="flex items-center justify-between py-2.5 border-b border-gray-50 dark:border-gray-800/50 last:border-0">
-      <span className="text-sm text-gray-500 dark:text-gray-400">{label}</span>
-      <span className={`text-sm font-bold ${color}`}>{fmt(value)}</span>
+    <div className="flex gap-5 items-center p-2.5 px-4 bg-[#F4F4F44D] rounded-2xl">
+      <div className="h-6 w-6 flex justify-center">{icon && icon}</div>
+      <div className="flex flex-col gap-0.5">
+        <span className="text-2xl text-[#3A3A3A] font-semibold dark:text-gray-400">
+          {fmt(value)}
+        </span>
+        <span className={`text-xs font-medium text-[#BEB09B]`}>{label}</span>
+      </div>
     </div>
-  )
+  );
+}
+function Top100({ label, globalValue, localValue }) {
+  return (
+    <div className="flex flex-col gap-5 bg-white p-2.5 rounded-2xl">
+      <h4 className="text-lg font-medium text-black text-center p-2.5 rounded-lg bg-[#F4F4F4] shadow-sm">
+        {label}
+      </h4>
+      <div className="flex gap-4 ">
+        <div className="flex flex-col items-center gap-2.5 w-1/2 shadow-sm shadow-[#0000000D] rounded-lg py-2">
+          <span
+            className={`text-sm text-[#0000004D] font-medium dark:text-gray-400`}
+          >
+            Global
+          </span>
+          <span className="text-3xl text-[#000000] font-bold dark:text-gray-400">
+            {fmt(globalValue)}
+          </span>
+        </div>
+        <div className="flex flex-col items-center gap-2.5 w-1/2 shadow-sm shadow-[#0000000D] rounded-lg py-2">
+          <span
+            className={`text-sm text-[#0000004D] font-medium dark:text-gray-400`}
+          >
+            Nigeria
+          </span>
+          <span className="text-3xl text-[#000000] font-bold dark:text-gray-400">
+            {fmt(localValue)}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
 }
 
-// ─── Icons ────────────────────────────────────────────────────────────────────
-function ScoreIcon(p)    { return <svg {...p} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg> }
-function RankIcon(p)     { return <svg {...p} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg> }
-function ClickIcon(p)    { return <svg {...p} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5" /></svg> }
-function ViewsIcon(p)    { return <svg {...p} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg> }
-function LikesIcon(p)    { return <svg {...p} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg> }
-function CommentsIcon(p) { return <svg {...p} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg> }
+function truncate(str, max = 200) {
+  if (!str) return "—";
+  return str.length > max ? str.slice(0, max) + "…" : str;
+}
 
 // ─── Skeleton ─────────────────────────────────────────────────────────────────
 function PageSkeleton() {
@@ -100,152 +155,266 @@ function PageSkeleton() {
         ))}
       </div>
     </div>
-  )
+  );
 }
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export default function PostDetailPage() {
-  const { id } = useParams()
-  const navigate = useNavigate()
-  const location = useLocation()
-  const { auth } = useAuth()
-  const token = auth?.token
+  const { id } = useParams();
 
-  const { watchlistedIds, add: addToWatchlist, remove: removeFromWatchlist } = useWatchlist(token)
+  const navigate = useNavigate();
+  const location = useLocation();
+  
+  const [expandCaption, setExpandCaption] = useState(false);
 
-  const [post, setPost]       = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError]     = useState(null)
-  const [watchlistBusy, setWatchlistBusy] = useState(false)
+  const { auth } = useAuth();
+  const token = auth?.token;
+
+  const { updateScene } = useScenes(token);
+
+  const [post, setPost] = useState(location.state.post);
+
+  useEffect(() => {
+    console.log(
+      "PostDetailPage received post via location state:",
+      JSON.stringify(post, null, 2),
+    );
+  }, [post]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [watchlistBusy, setWatchlistBusy] = useState(false);
+  const [smallLoading, setSmallLoading] = useState(false);
 
   // Always fetch full data so dailyInsights (excluded from list endpoint) are included
-  useEffect(() => {
-    let cancelled = false
-    setLoading(true)
-    instagramApi.getMediaByIdForAdmin(id, token)
-      .then((res) => {
-        if (cancelled) return
-        if (res?.media?._id) setPost(res.media)
-        else setError('Post not found')
-      })
-      .catch((err) => {
-        if (!cancelled) setError(err.message ?? 'Failed to load post')
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false)
-      })
-    return () => { cancelled = true }
-  }, [id, token])
+  // useEffect(() => {
+  //   let cancelled = false;
+  //   setLoading(true);
+  //   instagramApi
+  //     .getMediaByIdForAdmin(id, token)
+  //     .then((res) => {
+  //       if (cancelled) return;
+  //       if (res?.media?._id) setPost(res.media);
+  //       else setError("Post not found");
+  //     })
+  //     .catch((err) => {
+  //       if (!cancelled) setError(err.message ?? "Failed to load post");
+  //     })
+  //     .finally(() => {
+  //       if (!cancelled) setLoading(false);
+  //     });
+  //   return () => {
+  //     cancelled = true;
+  //   };
+  // }, [id, token]);
 
-  if (loading) return <PageSkeleton />
+  if (loading) return <PageSkeleton />;
 
   if (error || !post) {
     return (
-      <div className="flex flex-col gap-6">
-        <Breadcrumb crumbs={CRUMBS} />
+      <div className="flex gap-6">
+        <BackArrowIcon />
         <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-12 text-center shadow-sm">
-          <p className="text-sm text-red-500">{error ?? 'Post not found'}</p>
-          <button onClick={() => navigate('/dashboard/posts')} className="mt-4 text-sm text-orange-500 hover:underline">
+          <p className="text-sm text-red-500">{error ?? "Post not found"}</p>
+          <button
+            onClick={() => navigate("/dashboard/posts")}
+            className="mt-4 text-sm text-orange-500 hover:underline"
+          >
             Back to Posts
           </button>
         </div>
       </div>
-    )
+    );
   }
 
-  const caption     = post.media?.caption
-  const mediaType   = post.media?.mediaType
-  const thumbnailUrl = post.media?.thumbnailUrl ?? post.media?.mediaUrl
-  const permalink   = post.media?.permalink
-  const isVideo     = mediaType?.toUpperCase() === 'VIDEO' || mediaType?.toUpperCase() === 'REELS'
-  const username    = post.instagramUsername || post.userData?.username
-  const country     = post.userData?.country
-  const profilePic  = post.userData?.profilePicture
-  const cats        = Array.isArray(post.category) ? post.category : [post.category].filter(Boolean)
+
+  // Get full and truncated captions
+  const fullCaption = post.media?.caption;
+  const truncatedCaption = truncate(fullCaption);
+  const isCaptionTruncated = fullCaption && fullCaption.length > 25;
+
+  const caption = truncate(post.media?.caption);
+  const mediaType = post.media?.mediaType;
+  const thumbnailUrl = post.media?.thumbnailUrl ?? post.media?.mediaUrl;
+  const permalink = post.media?.permalink;
+  const isVideo =
+    mediaType?.toUpperCase() === "VIDEO" ||
+    mediaType?.toUpperCase() === "REELS";
+  const username = post.instagramUsername || post.userData?.username;
+  const country = post.userData?.country;
+  const profilePic = post.userData?.profilePicture;
+  const cats = Array.isArray(post.category)
+    ? post.category
+    : [post.category].filter(Boolean);
 
   const DAILY_LABELS = {
-    daily_views:             'Daily Views',
-    daily_reach:             'Daily Reach',
-    daily_totalInteractions: 'Daily Interactions',
-    daily_shares:            'Daily Shares',
-    daily_saved:             'Daily Saved',
-    daily_likes:             'Daily Likes',
-    daily_comments:          'Daily Comments',
-    daily_impressions:       'Daily Impressions',
-  }
+    daily_views: "Daily Views",
+    daily_reach: "Daily Reach",
+    daily_totalInteractions: "Daily Interactions",
+    daily_shares: "Daily Shares",
+    daily_saved: "Daily Saved",
+    daily_likes: "Daily Likes",
+    daily_comments: "Daily Comments",
+    daily_impressions: "Daily Impressions",
+  };
 
   const dailyEntries = Object.entries(post.insights ?? {})
-    .filter(([k, v]) => k.startsWith('daily_') && v !== undefined && v !== null)
-    .map(([k, v]) => ({ key: k, label: DAILY_LABELS[k] ?? k.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()), value: v }))
+    .filter(([k, v]) => k.startsWith("daily_") && v !== undefined && v !== null)
+    .map(([k, v]) => ({
+      key: k,
+      label:
+        DAILY_LABELS[k] ??
+        k.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
+      value: v,
+    }));
 
-  const archivedRows = [...(post.insights?.archivedLifetimes ?? [])].reverse().slice(0, 2)
-  const dailyRows    = [...(post.insights?.dailyInsights ?? [])].reverse().slice(0, 2)
+  const archivedRows = [...(post.insights?.archivedLifetimes ?? [])]
+    .reverse()
+    .slice(0, 2);
+  const dailyRows = [...(post.insights?.dailyInsights ?? [])]
+    .reverse()
+    .slice(0, 2);
+
+  async function refreshData() {
+    setSmallLoading(true);
+    setError(null);
+
+    let lastErr = null;
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        const res = await instagramApi.getMediaByIdForAdmin(id, token);
+        if (res?.media?._id) setPost(res.media);
+        setSmallLoading(false);
+        return;
+      } catch (err) {
+        lastErr = err;
+        if (attempt < 3) {
+          await new Promise((r) => setTimeout(r, attempt * 1000));
+        }
+      }
+    }
+
+    setError(lastErr?.message ?? "Failed to load posts");
+    setSmallLoading(false);
+  }
+
+  const bookmarkScene = async (post) => {
+    try {
+      setSmallLoading(true);
+      await updateScene(post._id, post.inScenes);
+      await refreshData();
+    } catch (err) {
+      console.log(`Failed to update scene: ${err.message}`);
+    } finally {
+      setSmallLoading(false);
+    }
+  };
+
+  function BookmarkButton({ active, onClick, disabled }) {
+    return (
+      <button
+        onClick={onClick}
+        disabled={disabled}
+        title={active ? "Remove from scenes" : "Add to scenes"}
+      >
+        <BookmarkIcon fillColor={active} />
+      </button>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-6">
-      <Breadcrumb crumbs={CRUMBS} />
-
-      {/* Main card: thumbnail + details */}
-      <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-sm">
-        {/* Card top row */}
-        <div className="flex items-center justify-end gap-2 mb-4">
-          {/* Watchlist toggle */}
-          {post && (() => {
-            const isWatchlisted = watchlistedIds.has(post._id)
-            return (
-              <button
-                disabled={watchlistBusy}
-                onClick={async () => {
-                  setWatchlistBusy(true)
-                  try {
-                    if (isWatchlisted) await removeFromWatchlist(post._id)
-                    else await addToWatchlist(post._id)
-                  } finally {
-                    setWatchlistBusy(false)
-                  }
-                }}
-                className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-semibold transition disabled:opacity-50 ${
-                  isWatchlisted
-                    ? 'border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 text-amber-500 hover:bg-amber-100 dark:hover:bg-amber-500/20'
-                    : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:border-amber-200 hover:text-amber-500'
-                }`}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 24 24" fill={isWatchlisted ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-                </svg>
-                {isWatchlisted ? 'Watchlisted' : 'Add to Watchlist'}
-              </button>
-            )
-          })()}
-
+      <div className="flex justify-between items-center">
+        <div>
           <button
-            onClick={() => navigate('/dashboard/posts/compare', { state: { postA: post } })}
-            className="inline-flex items-center gap-1.5 rounded-xl border border-orange-200 dark:border-orange-500/30 bg-orange-50 dark:bg-orange-500/10 px-3 py-1.5 text-xs font-semibold text-orange-500 hover:bg-orange-100 dark:hover:bg-orange-500/20 transition"
+            onClick={() => navigate("/dashboard/posts")}
+            className="flex items-center gap-1.5 rounded-xl dark:border-gray-700 px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-300  transition"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-            </svg>
-            Compare
+            <BackArrowIcon />
+            Back to Posts
           </button>
         </div>
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
 
+        <div className="flex items-center gap-4">
+          {smallLoading ? (
+            <div
+              class="inline-block h-5 w-5 animate-spin rounded-full border-5 border-gray-200 border-t-[#3A3A3A]"
+              role="status"
+              aria-label="Loading"
+            ></div>
+          ) : (
+            <BookmarkButton
+              active={post.inScenes}
+              onClick={() => {
+                bookmarkScene(post);
+              }}
+              disabled={smallLoading}
+            />
+          )}
+
+          <button
+            onClick={() =>
+              navigate("/dashboard/posts/compare", { state: { postA: post } })
+            }
+            type="button "
+            class=" rounded-lg p-2.5 min-w-[157px] bg-white border border-white shadow-sm shadow-[#0000001A] font-medium"
+          >
+            Compare Post
+          </button>
+
+          <div className="min-w-29">
+            <CustomDropDownInput placeholder="Today" />
+          </div>
+        </div>
+      </div>
+
+      {/* Main card: thumbnail + details */}
+      <div className="flex justify-between rounded-[20px] border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-sm">
+        {/* Card top row */}
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
           {/* Thumbnail */}
           <div className="relative w-full shrink-0 overflow-hidden rounded-2xl bg-gray-900 lg:w-72 aspect-square lg:aspect-auto lg:h-72">
             {thumbnailUrl ? (
-              <img src={thumbnailUrl} alt="Post thumbnail" className="h-full w-full object-cover" />
+              <img
+                src={thumbnailUrl}
+                alt="Post thumbnail"
+                className="h-full w-full object-cover"
+              />
             ) : (
               <div className="flex h-full min-h-[200px] items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-14 w-14 text-gray-600"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1}
+                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                  />
                 </svg>
               </div>
             )}
+            <div className="absolute top-2 right-2">
+              <MediaTypeBadge type={mediaType} />
+            </div>
+
             {isVideo && (
               <div className="absolute inset-0 flex items-center justify-center">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-black/50">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M8 5v14l11-7z" />
+                <div className="flex h-12 w-12 items-center justify-center rounded-full ">
+                  <svg
+                    width="44"
+                    height="47"
+                    viewBox="0 0 44 47"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M4.01028e-08 3.52098C4.01028e-08 0.845978 2.86562 -0.847772 5.20937 0.439728L41.2719 20.2741C41.8238 20.5773 42.2842 21.0233 42.6049 21.5653C42.9255 22.1074 43.0947 22.7256 43.0947 23.3554C43.0947 23.9851 42.9255 24.6034 42.6049 25.1454C42.2842 25.6874 41.8238 26.1334 41.2719 26.4366L5.20937 46.271C4.67402 46.5653 4.0712 46.7151 3.46034 46.7054C2.84949 46.6958 2.25168 46.5272 1.72584 46.2162C1.2 45.9052 0.764293 45.4625 0.461657 44.9318C0.159022 44.4011 -9.22244e-05 43.8007 4.01028e-08 43.1897V3.52098Z"
+                      fill="white"
+                    />
                   </svg>
                 </div>
               </div>
@@ -253,252 +422,171 @@ export default function PostDetailPage() {
           </div>
 
           {/* Details */}
-          <div className="flex flex-1 flex-col gap-4 min-w-0">
+          <div className="flex flex-1 flex-col gap-3 min-w-0">
             {/* Badges */}
             <div className="flex flex-wrap items-center gap-2">
-              <MediaTypeBadge type={mediaType} />
               {cats.map((c) => (
-                <span key={c} className="inline-flex items-center rounded-full bg-gray-100 dark:bg-gray-800 px-3 py-1 text-xs font-medium text-gray-600 dark:text-gray-300">
+                <span
+                  key={c}
+                  className="inline-flex justify-center items-center min-w-[87px] rounded-[20px] bg-[#FFF5DE] dark:bg-gray-800 px-3 py-1 text-base font-medium text-[#A45308] dark:text-gray-300"
+                >
                   {c}
                 </span>
               ))}
+              {post.subCategory ? (
+                <span className="inline-flex justify-center items-center min-w-[87px] rounded-[20px] bg-[#D5D5D580] dark:bg-gray-800 px-3 py-1 text-base font-medium text-[#555555] dark:text-gray-300">
+                  {post.subCategory}
+                </span>
+              ) : null}
             </div>
 
             {/* Caption */}
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-1">Caption</p>
-              <p className="text-base leading-relaxed text-gray-800 dark:text-gray-100">
-                {caption ?? <span className="text-gray-300 dark:text-gray-600 italic">No caption</span>}
+            <div className="max-w-[362px]">
+              <p className="text-base font-medium tracking-widest text-[#0000004D] mb-1">
+                Caption
+              </p>
+              <p className="text-base font-medium leading-relaxed text-black dark:text-gray-100 ">
+                {!fullCaption ? (
+                  <span className="text-gray-300 dark:text-gray-600 italic">
+                    No caption
+                  </span>
+                ) : (
+                  <>
+                    {expandCaption ? fullCaption : truncatedCaption}
+                    {isCaptionTruncated && (
+                      <button
+                        onClick={() => setExpandCaption(!expandCaption)}
+                        className="ml-2 text-[#0000004D]  font-semibold transition"
+                      >
+                        {expandCaption ? "Less" : "More"}
+                      </button>
+                    )}
+                  </>
+                )}
               </p>
             </div>
 
-            {/* Meta row */}
-            <div className="flex flex-wrap gap-x-6 gap-y-2 text-xs text-gray-400">
-              <span>Submitted {fmtDate(post.createdAt)}</span>
-              {post.media?.timestamp && <span>Posted {fmtDate(post.media.timestamp)}</span>}
-              {post.media?.likeCount != null && <span>{fmt(post.media.likeCount)} likes</span>}
-              {post.media?.commentsCount != null && <span>{fmt(post.media.commentsCount)} comments</span>}
+            <div className="rounded-2xl bg-white dark:bg-gray-900 pt-2">
+              <button
+                type="button"
+                onClick={() => navigate(`/dashboard/users/${post.userId}`)}
+              >
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
+                  <UserAvatar
+                    name={
+                      post?.userData.instagramUsername?.replace("@", "") || "U"
+                    }
+                    src={post?.userData?.profilePicture ?? null}
+                    size="h-11 w-11 "
+                    style="custom"
+                  />
+                  <div className="flex flex-1 flex-col gap-1 min-w-0">
+                    <div className="flex flex-col items-start gap-2">
+                      <h2 className="text-3xl font-black text-gray-900 dark:text-white">
+                        {post?.userData?.instagramUsername}
+                      </h2>
+                      {/* <p className="text-base text-[#000000B2]">{user?.email}</p> */}
+                    </div>
+                  </div>
+                </div>
+              </button>
             </div>
 
-            {/* Permalink */}
-            {permalink && (
-              <a
-                href={permalink}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex w-fit items-center gap-1.5 rounded-xl bg-gray-900 px-4 py-2 text-sm font-semibold text-white hover:bg-gray-700 transition"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                </svg>
-                View on Instagram
-              </a>
-            )}
+            {/* Meta row */}
+            <div className="">
+              {post.media?.timestamp && (
+                <span className="text-base text-[#00000080] ">
+                  Posted {fmtDate(post.media.timestamp)}
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-1">
+            <span className="text-xl font-semibold">
+              {fmtDate(post.createdAt)}
+            </span>
+            <h4 className="text-base font-medium text-[#0000004D]">
+              Submitted
+            </h4>
+          </div>
+          <div className="flex flex-col gap-1">
+            <span className="text-sm font-semibold">{post._id}</span>
+            <h4 className="text-base font-medium text-[#0000004D]">Media Id</h4>
           </div>
         </div>
       </div>
 
       {/* Stat cards */}
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <StatCard label="Beed+ Score"  value={fmtBeedScore(post.beedPlusScore)}           sub="Overall score"    iconBg="bg-orange-50"  icon={(p) => <ScoreIcon {...p} className="h-5 w-5 text-orange-500" />} />
-        <StatCard label="Current Rank" value={post.currentRank ? `#${post.currentRank}` : '—'} sub="Overall ranking" iconBg="bg-violet-50"  icon={(p) => <RankIcon {...p} className="h-5 w-5 text-violet-500" />} />
-        <StatCard label="Clicks"       value={fmt(post.clicks)}                  sub="Total clicks"     iconBg="bg-blue-50"    icon={(p) => <ClickIcon {...p} className="h-5 w-5 text-blue-500" />} />
-        <StatCard label="Views"        value={fmt(post.insights?.views)}         sub="From insights"    iconBg="bg-teal-50"    icon={(p) => <ViewsIcon {...p} className="h-5 w-5 text-teal-500" />} />
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+        <StatCard
+          label="Beed+ Score"
+          value={fmtBeedScore(post.beedPlusScore)}
+        />
+        <StatCard label="Beed+ Clicks" value={fmt(post.clicks)} />
+        <StatCard label="Beed+ Views" value={fmt(post.insights?.views)} />
       </div>
 
       {/* Insights + Creator row */}
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-4">
         {/* Insights */}
-        <div className="lg:col-span-2 rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-sm">
-          <p className="mb-4 text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">Insights</p>
-          <div className="grid grid-cols-1 gap-0 sm:grid-cols-2 sm:gap-x-8">
-            <InsightRow label="Views"               value={post.insights?.views} />
-            <InsightRow label="Reach"               value={post.insights?.reach} />
-            <InsightRow label="Total Interactions"  value={post.insights?.totalInteractions} color="text-orange-500" />
-            <InsightRow label="Shares"              value={post.insights?.shares} />
-            <InsightRow label="Saved"               value={post.insights?.saved} />
-            <InsightRow label="Likes"               value={post.insights?.likes} />
-            <InsightRow label="Comments"            value={post.insights?.commentsCount} />
-            <InsightRow label="Category Rank"       value={post.categoryRank ? `#${post.categoryRank}` : null} />
-          </div>
-        </div>
-
-        {/* Creator */}
-        <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-sm">
-          <p className="mb-4 text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">Creator</p>
-          <div className="flex items-center gap-3">
-            <UserAvatar
-              name={username || 'U'}
-              src={profilePic ?? null}
-              size="lg"
+        <div className="lg:col-span-3 rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-sm">
+          <h3 className="mb-4 text-base font-medium dark:text-gray-500">
+            Instagram Insights
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-x-8">
+            <InsightRow
+              label="Views"
+              value={post.insights?.views}
+              icon={<EyeIcon />}
             />
-            <div className="min-w-0">
-              {username && (
-                <p className="text-sm font-bold text-gray-800 dark:text-gray-100 truncate">@{username}</p>
-              )}
-              {country && <p className="text-xs text-gray-400 dark:text-gray-500">{country}</p>}
-              {post.userId && (
-                <Link
-                  to={`/dashboard/users/${post.userId}`}
-                  className="mt-1 inline-block text-xs font-semibold text-orange-500 hover:text-orange-600 transition"
-                >
-                  View Profile →
-                </Link>
-              )}
-            </div>
+            <InsightRow
+              label="Reach"
+              value={post.insights?.reach}
+              icon={<ReachIcon />}
+            />
+            <InsightRow
+              label="Saved"
+              value={post.insights?.saved}
+              icon={<BookmarkIcon />}
+            />
+            <InsightRow
+              label="Likes"
+              value={post.insights?.likes}
+              icon={<LikeIcon />}
+            />
+            <InsightRow
+              label="Comments"
+              value={post.insights?.commentsCount}
+              icon={<CommentIcon />}
+            />
+            <InsightRow
+              label="Shares"
+              value={post.insights?.shares}
+              icon={<ShareIcon />}
+            />
           </div>
         </div>
-      </div>
 
-      {/* Daily Insights */}
-      {dailyEntries.length > 0 && (
-        <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-sm">
-          <p className="mb-4 text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">Daily Insights</p>
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-            {dailyEntries.map(({ key, label, value }) => (
-              <div key={key} className="rounded-xl border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50 p-4">
-                <p className="text-[11px] font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">{label}</p>
-                <p className="mt-1.5 text-xl font-black text-gray-900 dark:text-white">{fmt(value)}</p>
-              </div>
-            ))}
+        <div className="flex flex-col gap-3 shadow-sm">
+          <div className="">
+            <Top100
+              label="Beed+ Top Top100"
+              globalValue={post?.globalRank}
+              localValue={post?.categoryRank}
+            />
+          </div>
+          <div className="">
+            <Top100
+              label={`${post?.category} Top 100 Nigeria`}
+              globalValue={post.globalRank}
+              localValue={post?.categoryRank}
+            />
           </div>
         </div>
-      )}
-
-      {/* Daily Insights History Table */}
-      <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-800">
-          <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">Daily Insights History</p>
-        </div>
-
-        {dailyRows.length === 0 ? (
-          <div className="px-6 py-10 text-center text-sm text-gray-400 dark:text-gray-500">
-            No daily insights history available for this post.
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[700px]">
-              <thead>
-                <tr className="border-b border-gray-100 dark:border-gray-800 bg-gray-50/60 dark:bg-gray-800/50">
-                  {['Date', 'Views', 'Reach', 'Interactions', 'Likes', 'Comments', 'Shares', 'Saved'].map((h) => (
-                    <th key={h} className="px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-widest text-gray-400">{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {dailyRows.map((row, i) => (
-                  <tr key={i} className="border-b border-gray-50 dark:border-gray-800/50 last:border-0 hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors">
-                    <td className="px-5 py-3.5 text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">{fmtDate(row.date)}</td>
-                    <td className="px-5 py-3.5 text-sm text-gray-700 dark:text-gray-300 font-medium">{fmt(row.views)}</td>
-                    <td className="px-5 py-3.5 text-sm text-gray-600 dark:text-gray-400">{fmt(row.reach)}</td>
-                    <td className="px-5 py-3.5 text-sm text-orange-500 font-semibold">{fmt(row.totalInteractions)}</td>
-                    <td className="px-5 py-3.5 text-sm text-gray-600 dark:text-gray-400">{fmt(row.likes)}</td>
-                    <td className="px-5 py-3.5 text-sm text-gray-600 dark:text-gray-400">{fmt(row.comments ?? row.commentsCount)}</td>
-                    <td className="px-5 py-3.5 text-sm text-gray-600 dark:text-gray-400">{fmt(row.shares)}</td>
-                    <td className="px-5 py-3.5 text-sm text-gray-600 dark:text-gray-400">{fmt(row.saved)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-
-      {/* Archived Lifetimes */}
-      {/* <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-800">
-          <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">Archived Lifetime Snapshots</p>
-        </div>
-        {archivedRows.length === 0 ? (
-          <div className="px-6 py-10 text-center text-sm text-gray-400 dark:text-gray-500">
-            No archived lifetime data available for this post.
-          </div>
-        ) : (
-          <>
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[700px]">
-                <thead>
-                  <tr className="border-b border-gray-100 dark:border-gray-800 bg-gray-50/60 dark:bg-gray-800/50">
-                    {['Date', 'Views', 'Reach', 'Interactions', 'Shares', 'Saved'].map((h) => (
-                      <th key={h} className="px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-widest text-gray-400">{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {archivedPageRows.map((row, i) => (
-                    <tr key={i} className="border-b border-gray-50 dark:border-gray-800/50 last:border-0 hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors">
-                      <td className="px-5 py-3.5 text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">{fmtDate(row.datetime ?? row.createdAt)}</td>
-                      <td className="px-5 py-3.5 text-sm text-gray-700 dark:text-gray-300 font-medium">{fmt(row.views)}</td>
-                      <td className="px-5 py-3.5 text-sm text-gray-600 dark:text-gray-400">{fmt(row.reach)}</td>
-                      <td className="px-5 py-3.5 text-sm text-orange-500 font-semibold">{fmt(row.totalInteractions)}</td>
-                      <td className="px-5 py-3.5 text-sm text-gray-600 dark:text-gray-400">{fmt(row.shares)}</td>
-                      <td className="px-5 py-3.5 text-sm text-gray-600 dark:text-gray-400">{fmt(row.saved)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            {totalArchivedPages > 1 && (
-              <div className="flex items-center justify-between border-t border-gray-100 dark:border-gray-800 px-6 py-3">
-                <p className="text-sm text-gray-400 dark:text-gray-500">
-                  <span className="font-bold text-gray-700 dark:text-gray-300">
-                    {(archivedPage - 1) * PAGE_SIZE + 1}–{Math.min(archivedPage * PAGE_SIZE, archivedRows.length)}
-                  </span>
-                  {' '}of{' '}
-                  <span className="font-bold text-gray-700 dark:text-gray-300">{archivedRows.length}</span>
-                </p>
-                <div className="flex items-center gap-1">
-                  <button
-                    onClick={() => setArchivedPage((p) => p - 1)}
-                    disabled={archivedPage === 1}
-                    className="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 dark:border-gray-700 text-gray-400 hover:border-orange-300 hover:text-orange-500 transition disabled:opacity-40 disabled:cursor-not-allowed"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                    </svg>
-                  </button>
-                  {Array.from({ length: totalArchivedPages }, (_, i) => i + 1).map((p) => (
-                    <button
-                      key={p}
-                      onClick={() => setArchivedPage(p)}
-                      className={`flex h-8 w-8 items-center justify-center rounded-lg text-sm font-medium transition ${
-                        p === archivedPage
-                          ? 'bg-orange-500 text-white'
-                          : 'border border-gray-200 dark:border-gray-700 text-gray-500 hover:border-orange-300 hover:text-orange-500'
-                      }`}
-                    >
-                      {p}
-                    </button>
-                  ))}
-                  <button
-                    onClick={() => setArchivedPage((p) => p + 1)}
-                    disabled={archivedPage === totalArchivedPages}
-                    className="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 dark:border-gray-700 text-gray-400 hover:border-orange-300 hover:text-orange-500 transition disabled:opacity-40 disabled:cursor-not-allowed"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-            )}
-          </>
-        )}
-      </div> */}
-
-      {/* Back button */}
-      <div>
-        <button
-          onClick={() => navigate('/dashboard/posts')}
-          className="flex items-center gap-1.5 rounded-xl border border-gray-200 dark:border-gray-700 px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-          Back to Posts
-        </button>
       </div>
     </div>
-  )
+  );
 }

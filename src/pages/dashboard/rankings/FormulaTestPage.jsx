@@ -32,8 +32,8 @@ function RankDelta({ original, test, color }) {
 
 function FormulaPanel({ label, color, formula, onChange, onApply, onReset, error }) {
   const ring   = color === 'A' ? 'focus:border-blue-400 focus:ring-blue-100' : 'focus:border-orange-400 focus:ring-orange-100'
-  const badge  = color === 'A' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' : 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300'
-  const btn    = color === 'A' ? 'bg-blue-500 hover:bg-blue-600' : 'bg-orange-500 hover:bg-orange-600'
+  const badge  =   color === 'A' ? 'bg-[#98E7FF] text-[#03556E]' : 'bg-[#FFEE98] text-[#6E5903]'
+  const btn    = 'bg-[#F87A15]'
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-5 space-y-3 flex-1 min-w-0">
@@ -45,17 +45,17 @@ function FormulaPanel({ label, color, formula, onChange, onApply, onReset, error
         rows={3}
         value={formula}
         onChange={(e) => onChange(e.target.value)}
-        className={`w-full font-mono text-sm rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-100 px-4 py-3 outline-none focus:ring-2 resize-none transition ${ring}`}
+        className={`w-full font-mono text-xs font-medium rounded-xl border border-[#D9D9D9] dark:border-gray-600 bg-[#D9D9D94D] dark:bg-gray-900 text-[#000000B2] dark:text-gray-100 px-4 py-3 outline-none focus:ring-2 resize-none transition ${ring}`}
         placeholder="Enter formula…"
       />
 
       {error && <p className="text-xs text-red-500">{error}</p>}
 
       <div className="flex gap-2">
-        <button onClick={onApply} className={`px-4 py-1.5 rounded-xl text-white text-sm font-semibold transition ${btn}`}>
+        <button onClick={onApply} className={`px-4 py-1.5 rounded-md text-white text-xs font-semibold transition ${btn}`}>
           Apply
         </button>
-        <button onClick={onReset} className="px-4 py-1.5 rounded-xl border border-gray-200 dark:border-gray-600 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+        <button onClick={onReset} className="px-4 py-1.5 rounded-md border border-[#475569] dark:border-gray-600 text-xs text-gray-600 dark:text-gray-300 dark:hover:bg-gray-700 transition">
           Reset
         </button>
       </div>
@@ -170,11 +170,6 @@ export default function FormulaTestPage() {
         <h1 className="text-xl font-bold text-gray-900 dark:text-white">Formula Tester</h1>
         <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
           Compare two scoring formulas side by side and see how the rankings shift.
-        </p>
-        <p className="text-xs text-gray-400 mt-1">
-          Variables: {VARS.map((v) => (
-            <code key={v} className="bg-gray-100 dark:bg-gray-700 px-1 rounded mr-1">{v}</code>
-          ))}
         </p>
       </div>
 

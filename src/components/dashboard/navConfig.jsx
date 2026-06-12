@@ -1,3 +1,4 @@
+import { BookmarkIcon } from "../icons";
 import {
   DashboardIcon,
   UsersIcon,
@@ -15,54 +16,79 @@ import {
   WatchlistIcon,
   WatchIcon,
   ReviewIcon,
-} from '../ui/icons'
+} from "../ui/icons";
 
 const navConfig = [
   {
+    section: "General",
+    items: [{ label: "Overview", path: "/dashboard", icon: DashboardIcon }],
+  },
+  {
+    section: "Management",
     items: [
-      { label: 'Dashboard', path: '/dashboard',          icon: DashboardIcon },
       {
-        label: 'Users',
-        path: '/dashboard/users',
+        label: "Users",
+        path: "/dashboard/users",
         icon: UsersIcon,
-        children: [
-          { label: 'Approved', path: '/dashboard/users/approved' },
-          { label: 'Pending',  path: '/dashboard/users/pending' },
-          { label: 'Rejected', path: '/dashboard/users/rejected' },
-        ],
       },
-      { label: 'Media',          path: '/dashboard/posts',         icon: PostsIcon },
-      { label: 'Review',         path: '/dashboard/media-review',  icon: ReviewIcon },
-      { label: 'Watch',           path: '/dashboard/watch',          icon: WatchIcon },
-      { label: 'Scene',      path: '/dashboard/watchlist',     icon: WatchlistIcon },
-      { label: 'Compare Posts',  path: '/dashboard/posts/compare', icon: CompareIcon },
-      { label: 'Countries', path: '/dashboard/countries', icon: CountryIcon },
+      { label: "Media", path: "/dashboard/posts", icon: PostsIcon },
+      { label: "Review", path: "/dashboard/media-review", icon: ReviewIcon },
+      {
+        label: "Compare",
+        path: "/dashboard/posts/compare",
+        icon: CompareIcon,
+      },
     ],
   },
   {
-    section: 'Category',
+    section: "Organization",
     items: [
       // { label: 'Categories (Users)', path: '/dashboard/categories/users', icon: CategoriesUsersIcon },
-      { label: 'Categories', path: '/dashboard/categories/posts', icon: CategoriesPostsIcon },
-      { label: 'Sub-Categories', path: '/dashboard/sub-categories', icon: SubCategoriesIcon },
+      {
+        label: "Categories",
+        path: "/dashboard/categories/posts",
+        icon: CategoriesPostsIcon,
+      },
+      {
+        label: "Sub-Categories",
+        path: "/dashboard/sub-categories",
+        icon: SubCategoriesIcon,
+      },
+      { label: "Countries", path: "/dashboard/countries", icon: CountryIcon },
     ],
   },
   {
-    section: 'Charts',
+    section: "Analytics",
     items: [
-      { label: 'Top Creators', path: '/dashboard/rankings/top-creators', icon: TrophyIcon },
-      { label: 'Top Hits', path: '/dashboard/rankings/top-hits', icon: TopHitsIcon },
-      { label: 'Media Charts', path: '/dashboard/rankings/posts', icon: RankingsIcon },
-      { label: 'Formula Tester', path: '/dashboard/rankings/formula-test', icon: FormulaIcon },
+      {
+        label: "Creators",
+        path: "/dashboard/rankings/top-creators",
+        icon: TrophyIcon,
+      },
+      // {
+      //   label: "Top Hits",
+      //   path: "/dashboard/rankings/top-hits",
+      //   icon: TopHitsIcon,
+      // },
+      {
+        label: "Charts",
+        path: "/dashboard/rankings/posts",
+        icon: RankingsIcon,
+      },
+      { label: "Scenes", path: "/dashboard/scenes", icon: BookmarkIcon },
     ],
   },
   {
-    section: 'Messaging',
+    section: "Tools",
     items: [
-      { label: 'Email Users', path: '/dashboard/email', icon: EmailIcon },
+      {
+        label: "Tester",
+        path: "/dashboard/rankings/formula-test",
+        icon: CategoriesPostsIcon,
+      },
+      { label: "Emailing", path: "/dashboard/email", icon: EmailIcon },
     ],
   },
+];
 
-]
-
-export default navConfig
+export default navConfig;

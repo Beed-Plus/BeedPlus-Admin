@@ -1,171 +1,186 @@
-import { useState, useEffect, useMemo } from 'react'
-import { useAuth } from '../../../hooks/useAuth'
-import { usersApi } from '../../../utils/usersApi'
-import { categoriesApi } from '../../../utils/categoriesApi'
-import { countriesApi } from '../../../utils/countriesApi'
-import UserFilters from '../../../components/dashboard/users/UserFilters'
-import UserTable from '../../../components/dashboard/users/UserTable'
+import { useState, useEffect, useMemo } from "react";
+import { useAuth } from "../../../hooks/useAuth";
+import { usersApi } from "../../../utils/usersApi";
+import { categoriesApi } from "../../../utils/categoriesApi";
+import { countriesApi } from "../../../utils/countriesApi";
+import UserFilters from "../../../components/dashboard/users/UserFilters";
+import UserTable from "../../../components/dashboard/users/UserTable";
+import { useCategoriesProvider } from "../../../hooks/useCategoriesProvider";
+import { RetryIcon } from "../../../components/icons";
 
 function applyFilters(users, { search, followerSort }) {
-  let result = users
+  let result = users;
   if (search) {
-    const lower = search.toLowerCase()
+    const lower = search.toLowerCase();
     result = result.filter((u) => {
-      const username = (u.instagram?.instagramUsername ?? u.instagramUsername ?? '').toLowerCase()
-      const email    = (u.email ?? '').toLowerCase()
-      return username.includes(lower) || email.includes(lower)
-    })
+      const username = (
+        u.instagram?.instagramUsername ??
+        u.instagramUsername ??
+        ""
+      ).toLowerCase();
+      const email = (u.email ?? "").toLowerCase();
+      return username.includes(lower) || email.includes(lower);
+    });
   }
   if (followerSort) {
     result = [...result].sort((a, b) => {
-      const af = a.instagram?.followersCount ?? 0
-      const bf = b.instagram?.followersCount ?? 0
-      return followerSort === 'desc' ? bf - af : af - bf
-    })
+      const af = a.instagram?.followersCount ?? 0;
+      const bf = b.instagram?.followersCount ?? 0;
+      return followerSort === "desc" ? bf - af : af - bf;
+    });
   }
-  return result
+  return result;
 }
 
 export default function UsersPage() {
-  const { auth } = useAuth()
-  const token = auth?.token
+  const { auth } = useAuth();
+  const token = auth?.token;
 
-  const [users, setUsers]           = useState([])
-  const [pagination, setPagination] = useState({ total: 0, page: 1, pages: 1 })
-  const [loading, setLoading]       = useState(true)
-  const [error, setError]           = useState(null)
-  const [retryKey, setRetryKey]     = useState(0)
+  const [users, setUsers] = useState([]);
+  const [pagination, setPagination] = useState({ total: 0, page: 1, pages: 1 });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [retryKey, setRetryKey] = useState(0);
 
-  const [search, setSearch]                 = useState('')
-  const [followerSort, setFollowerSort]     = useState('')
-  const [category, setCategory]             = useState('')
-  const [country, setCountry]               = useState('')
-  const [approvalStatus, setApprovalStatus] = useState('')
-  const [gender, setGender] = useState('')
+  const [search, setSearch] = useState("");
+  const [followerSort, setFollowerSort] = useState("");
+  const [category, setCategory] = useState("");
+  const [subCategory, setSubCategory] = useState("");
+  const [country, setCountry] = useState("");
+  const [approvalStatus, setApprovalStatus] = useState("");
+  const [gender, setGender] = useState("");
 
+  // const [categories, setCategories] = useState([]);
+  const [countries, setCountries] = useState([]);
 
-  const [categories, setCategories] = useState([])
-  const [countries, setCountries]   = useState([])
+  const { categories, subCategories, fetchCategories, fetchSubCategories } =
+    useCategoriesProvider();
 
   useEffect(() => {
-    categoriesApi.getCategories()
-      .then((res) => setCategories((res?.categories ?? []).map((c) => c.name ?? c).filter(Boolean)))
-      .catch(() => {})
-    countriesApi.getCountries()
+    fetchCategories();
+    fetchSubCategories();
+    countriesApi
+      .getCountries()
       .then((res) => {
-        const list = Array.isArray(res) ? res : (res?.countries ?? [])
-        setCountries(list.map((c) => c.name ?? c).filter(Boolean).sort())
+        const list = Array.isArray(res) ? res : (res?.countries ?? []);
+        setCountries(
+          list
+            .map((c) => c.name ?? c)
+            .filter(Boolean)
+            .sort(),
+        );
       })
-      .catch(() => {})
-  }, [])
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
-    let cancelled = false
+    let cancelled = false;
 
     async function load() {
-      setLoading(true)
-      setError(null)
+      setLoading(true);
+      setError(null);
 
-      let lastErr = null
+      let lastErr = null;
       for (let attempt = 1; attempt <= 3; attempt++) {
         try {
           const res = await usersApi.getUsers(
             {
-              ...(category       ? { category }       : {}),
-              ...(gender ?        {gender}: {}),
-              ...(country        ? { country }        : {}),
+              ...(category ? { category } : {}),
+              ...(gender ? { gender } : {}),
+              ...(country ? { country } : {}),
               ...(approvalStatus ? { approvalStatus } : {}),
             },
             token,
-          )
-          if (cancelled) return
-          setUsers(res?.users ?? [])
-          setPagination(res?.pagination ?? { total: 0, page: 1, pages: 1 })
-          setLoading(false)
-          return // success
+          );
+          console.log("Fetched users:", JSON.stringify(res, null, 2));
+          if (cancelled) return;
+          setUsers(res?.users ?? []);
+          setPagination(res?.pagination ?? { total: 0, page: 1, pages: 1 });
+          setLoading(false);
+          return; // success
         } catch (err) {
-          if (cancelled) return
-          lastErr = err
+          if (cancelled) return;
+          lastErr = err;
           if (attempt < 3) {
             // wait before next attempt: 1s, then 2s
-            await new Promise((r) => setTimeout(r, attempt * 1000))
-            if (cancelled) return
+            await new Promise((r) => setTimeout(r, attempt * 1000));
+            if (cancelled) return;
           }
         }
       }
 
       // all attempts exhausted
-      setError(lastErr?.message ?? 'Failed to load users')
-      setLoading(false)
+      setError(lastErr?.message ?? "Failed to load users");
+      setLoading(false);
     }
 
-    load()
-    return () => { cancelled = true }
-  }, [category, country, gender, approvalStatus, token, retryKey])
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, [category, country, gender, approvalStatus, token, retryKey]);
 
   function handleFilter(setter) {
-    return (val) => { setter(val) }
+    return (val) => {
+      setter(val);
+    };
   }
 
   const visibleUsers = useMemo(
     () => applyFilters(users, { search, followerSort }),
     [users, search, followerSort],
-  )
+  );
 
   return (
     <div className="flex flex-col gap-6">
       {/* Header */}
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-black text-gray-900 dark:text-white">User Management</h1>
-          <p className="mt-1 text-sm text-gray-400">
-            Manage, audit, and monitor all registered users in the Beed+ ecosystem.
-          </p>
-        </div>
-        <div className="flex items-center gap-2 mt-1">
-          {!loading && !error && (
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-orange-50 px-3 py-1 text-sm font-semibold text-orange-500">
-              <span className="h-1.5 w-1.5 rounded-full bg-orange-400" />
-              {pagination.total.toLocaleString()} users
-            </span>
-          )}
-          <button
-            onClick={() => setRetryKey((k) => k + 1)}
-            disabled={loading}
-            title="Refresh"
-            className="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-400 hover:text-orange-500 hover:border-orange-300 dark:hover:border-orange-500/50 dark:hover:text-orange-400 transition disabled:opacity-40"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
-          </button>
-        </div>
-      </div>
 
-      {/* Tab bar */}
-      <div className="border-b border-gray-200">
-        <button className="relative pb-3 text-sm font-semibold text-orange-500 after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-full after:bg-orange-500">
-          All Users
-        </button>
-      </div>
+      {/* <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        {[
+          {
+            label: "Total Users",
+            value: loading ? "..." : users.length,
+            color: "text-[#FDD6B6] dark:text-gray-500",
+            boxColor: "bg-[#2F3134] shadow-sm",
+            headerColor: "text-[#DADADA]",
+          },
+          {
+            label: "Active Creator",
+            value: loading ? "..." : 0,
+            color: "text-[#2F3134] dark:text-white",
+            boxColor: "bg-[#F9F9F9] shadow-sm",
+            headerColor: "text-[#686969]",
+          },
+          {
+            label: "Suspended Account",
+            value: loading ? "..." : 0,
+            color: "text-[#2F3134] dark:text-white",
+            boxColor: "bg-[#F9F9F9] shadow-sm",
+            headerColor: "text-[#686969]",
+          },
+          {
+            label: "New Users Today",
+            value: loading ? "..." : 0,
+            color: "text-[#2F3134] dark:text-white",
+            boxColor: "bg-[#F9F9F9] shadow-sm",
+            headerColor: "text-[#686969]",
+          },
+        ].map(({ label, value, color, boxColor, headerColor }) => (
+          <div
+            key={label}
+            className={`rounded-[20px] flex flex-col gap-6  ${boxColor} p-5`}
+          >
+            <p
+              className={`text-base font-medium tracking-widest ${headerColor}`}
+            >
+              {label}
+            </p>
+            <p className={`mt-1 text-4xl font-bold ${color} `}>{value}</p>
+          </div>
+        ))}
+      </div> */}
 
       {/* Filters */}
-      <UserFilters
-        search={search}
-        gender={gender}
-        category={category}
-        country={country}
-        approvalStatus={approvalStatus}
-        categories={categories}
-        countries={countries}
-        followerSort={followerSort}
-        onSearchChange={setSearch}
-        onFollowerSortChange={setFollowerSort}
-        onCategoryChange={handleFilter(setCategory)}
-        onCountryChange={handleFilter(setCountry)}
-        onApprovalStatusChange={handleFilter(setApprovalStatus)}
-        onGenderChange={handleFilter(setGender)}
-      />
 
       {/* Error */}
       {error && (
@@ -179,12 +194,50 @@ export default function UsersPage() {
           </button>
         </div>
       )}
+      <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm overflow-hidden py-6">
+        <div className="flex justify-between items-center px-4 mb-6">
+          <h3 className="text-xl font-bold">User List</h3>
 
-      {/* Table */}
-      <UserTable
-        users={visibleUsers}
-        loading={loading}
-      />
+          <div className="flex gap-4">
+            <UserFilters
+              search={search}
+              gender={gender}
+              category={category}
+              subCategory={subCategory}
+              country={country}
+              approvalStatus={approvalStatus}
+              categories={categories}
+              subCategories={subCategories}
+              countries={countries}
+              followerSort={followerSort}
+              onSearchChange={setSearch}
+              onFollowerSortChange={setFollowerSort}
+              onCategoryChange={handleFilter(setCategory)}
+              onSubCategoryChange={handleFilter(setSubCategory)}
+              onCountryChange={handleFilter(setCountry)}
+              onApprovalStatusChange={handleFilter(setApprovalStatus)}
+              pagination={pagination}
+            />
+            <div className="flex items-center gap-2 mt-1">
+              <button
+                onClick={() => setRetryKey((k) => k + 1)}
+                disabled={loading}
+                title="Refresh"
+                className="flex h-8 w-8 items-center justify-center rounded-lg bg-white shadow-sm shadow-[#00000040] disabled:opacity-40"
+              >
+                <RetryIcon />
+              </button>
+              {!loading && !error && (
+                <p className="px-3 py-1 text-base font-semibold">
+                  Users: {pagination.total.toLocaleString()}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+        {/* Table */}
+        <UserTable users={visibleUsers} loading={loading} />
+      </div>
     </div>
-  )
+  );
 }

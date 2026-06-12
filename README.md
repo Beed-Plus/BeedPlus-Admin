@@ -122,7 +122,7 @@ BeedPlus-admin/
 │   │   ├── useSubCategories.js          # Sub-category CRUD methods
 │   │   ├── useCountries.js              # Country CRUD + suspend/activate methods
 │   │   ├── useUsers.js                  # User CRUD + role/category methods
-│   │   └── useWatchlist.js              # Watchlist state with optimistic add/remove
+│   │   └── uesScenes.js              # Watchlist state with optimistic add/remove
 │   │
 │   ├── layouts/
 │   │   ├── AuthLayout.jsx               # Split-panel: form left, orange graphic right
@@ -202,7 +202,7 @@ BeedPlus-admin/
 │       ├── subCategoriesApi.js
 │       ├── countriesApi.js
 │       ├── emailApi.js
-│       ├── watchlistApi.js
+│       ├── scenesApi.js
 │       └── activitiesApi.js
 │
 ├── index.html
@@ -487,7 +487,7 @@ Admin-curated list of media being actively monitored. Useful for tracking contro
 - Filter by category and country.
 - Remove items from the watchlist.
 - Items can also be added/removed directly from the **Posts** page table via the heart icon button.
-- Powered by `useWatchlist` hook with optimistic UI updates and a `Set` for O(1) membership checks.
+- Powered by `uesScenes` hook with optimistic UI updates and a `Set` for O(1) membership checks.
 
 ---
 
@@ -628,7 +628,7 @@ Paginated sortable data table for users. Handles filtering, pagination, status b
 
 ### `PostTable`
 
-Data table for media posts. Displays thumbnails, engagement metrics, and a watchlist toggle button per row. Integrates with `useWatchlist` for the toggle state.
+Data table for media posts. Displays thumbnails, engagement metrics, and a watchlist toggle button per row. Integrates with `uesScenes` for the toggle state.
 
 ### `CategoriesLayout`
 
@@ -695,10 +695,10 @@ await run(arg1, arg2)
 - `error` holds the error message string on failure.
 - `reset()` clears all state back to defaults.
 
-### `useWatchlist()`
+### `uesScenes()`
 
 ```js
-const { watchlistedIds, add, remove, loading } = useWatchlist()
+const { watchlistedIds, add, remove, loading } = uesScenes()
 watchlistedIds.has(mediaId) // O(1) lookup
 ```
 
@@ -759,7 +759,7 @@ Used to route video requests through the backend proxy, which handles Range-requ
 | `subCategoriesApi.js` | `getSubCategories`, `createSubCategory`, `updateSubCategory`, `deleteSubCategory`, `findOrCreate` |
 | `countriesApi.js` | `getCountries`, `createCountry`, `updateCountry`, `deleteCountry`, `suspendCountry`, `activateCountry` |
 | `emailApi.js` | `sendBulkEmail` |
-| `watchlistApi.js` | `getWatchlist`, `addToWatchlist`, `removeFromWatchlist` |
+| `scenesApi.js` | `getScenes`, `updateScene`, `removeFromWatchlist` |
 | `activitiesApi.js` | `getActivities` |
 
 ---
@@ -770,7 +770,7 @@ Used to route video requests through the backend proxy, which handles Range-requ
 |---|---|
 | Auth (token + user) | `AuthContext` + `localStorage` — shared across the whole app |
 | Theme (dark mode) | `useTheme` hook + `localStorage` + `document.documentElement.classList` |
-| Watchlist | `useWatchlist` hook — optimistic updates, `Set` for O(1) lookup |
+| Watchlist | `uesScenes` hook — optimistic updates, `Set` for O(1) lookup |
 | Page data | Local `useState` + `useEffect` in each page component — no caching between navigations |
 
 There is no global data store. Pages fetch fresh data on mount.
