@@ -441,6 +441,24 @@ export default function PostRankingsPage() {
     setActiveTab(idx);
   }
 
+  const filtered = useMemo(() => {
+    return rankings
+      .filter((p) => {
+        if (filterCategory) {
+          const cats = Array.isArray(p.category)
+            ? p.category
+            : [p.category].filter(Boolean);
+          if (!cats.includes(filterCategory)) return false;
+        }
+        if (filterSubCategory) {
+          const sub = p.subCategory?.name ?? p.subCategory;
+          if (sub !== filterSubCategory) return false;
+        }
+        return true;
+      })
+      .sort((a, b) => new Date(b.createdAt ?? 0) - new Date(a.createdAt ?? 0));
+  }, [rankings, filterCategory, filterSubCategory]);
+
   function handleFilter(setter) {
     return (val) => {
       setter(val);
@@ -574,7 +592,7 @@ export default function PostRankingsPage() {
           <div className="overflow-auto max-h-[75vh]">
             <table className="w-full min-w-[860px]">
               <thead className="border-b bg-[#dddddd] border-gray-100 dark:border-gray-800 dark:bg-gray-800/50 sticky top-0">
-                <tr >
+                <tr>
                   <th className={`${COL} w-12 text-center`}>Rank</th>
                   <th className={COL}>Post</th>
                   <th className={COL}>Creator</th>
@@ -594,7 +612,7 @@ export default function PostRankingsPage() {
                   ))}
 
                 {!loading &&
-                  rankings.map((item, idx) => {
+                  filtered.map((item, idx) => {
                     console.log("Rendering item:", item);
                     const rank = idx + 1;
                     const overallRank = null;
@@ -692,7 +710,7 @@ export default function PostRankingsPage() {
                         {/* Category */}
                         <td className="px-4 py-4">
                           {item.category ? (
-                            <span className="inline-flex items-center rounded-full bg-blue-50 dark:bg-blue-500/10 px-2.5 py-0.5 text-xs font-medium text-black dark:text-grey-100">
+                            <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium text-black dark:text-grey-100">
                               {item.category}
                             </span>
                           ) : (
@@ -705,7 +723,7 @@ export default function PostRankingsPage() {
                         {/* Sub-Category */}
                         <td className="px-4 py-4">
                           {item.subCategory ? (
-                            <span className="inline-flex items-center rounded-full bg-blue-50 dark:bg-blue-500/10 px-2.5 py-0.5 text-xs font-medium text-black dark:text-gray-100">
+                            <span className="inline-flex items-center rounded-fullpx-2.5 py-0.5 text-xs font-medium text-black dark:text-gray-100">
                               {item.subCategory}
                             </span>
                           ) : (

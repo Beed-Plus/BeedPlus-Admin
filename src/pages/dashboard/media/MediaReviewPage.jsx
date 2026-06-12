@@ -72,7 +72,8 @@ function PreviewModal({
   onClose,
   onApprove,
   onReject,
-  busy,
+  isApproving,
+  isRejecting,
 }) {
   const overlayRef = useRef(null);
   const [cat, setCat] = useState(item.category ?? "");
@@ -350,17 +351,17 @@ function PreviewModal({
                   subCategory: subCat || undefined,
                 })
               }
-              disabled={busy || !cat}
+              disabled={isApproving || isRejecting || !cat}
               className="flex-1 rounded-lg bg-[#1A9704] h-12 py-2.5 text-xl font-bold text-white hover:bg-green-600 transition disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              {busy ? "Approving…" : "Approve"}
+              {isApproving ? "Approving…" : "Approve"}
             </button>
             <button
               onClick={() => onReject(item)}
-              disabled={busy}
+              disabled={isApproving || isRejecting}
               className="flex-1 rounded-lg bg-[#FF0000] h-12 py-2.5 text-xl font-bold text-white hover:bg-red-600 transition disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              {busy ? "Rejecting…" : "Reject"}
+              {isRejecting ? "Rejecting…" : "Reject"}
             </button>
           </div>
 
@@ -394,6 +395,8 @@ export default function MediaReviewPage() {
 
   const { categories, subCategories } = useCategoriesProvider();
   const [expandCaption, setExpandCaption] = useState(false);
+  const [isApproving, setIsApproving] = useState(false);
+  const [isRejecting, setIsRejecting] = useState(false);
 
   // Get full and truncated captions
 
@@ -459,6 +462,7 @@ export default function MediaReviewPage() {
 
   async function handleApprove(item, { category, subCategory } = {}) {
     setActionId(item._id);
+    setIsApproving(true);
     try {
       await instagramApi.approvePendingMedia(
         item._id,
@@ -471,11 +475,13 @@ export default function MediaReviewPage() {
       alert(err.message ?? "Failed to approve");
     } finally {
       setActionId(null);
+      setIsApproving(false);
     }
   }
 
   async function handleReject(item) {
     setActionId(item._id);
+    setIsRejecting(true);
     try {
       await instagramApi.rejectPendingMedia(item._id, {}, token);
       setItems((prev) => prev.filter((i) => i._id !== item._id));
@@ -483,6 +489,7 @@ export default function MediaReviewPage() {
     } catch (err) {
       alert(err.message ?? "Failed to reject");
     } finally {
+      setIsRejecting(false);
       setActionId(null);
     }
   }
@@ -569,7 +576,8 @@ export default function MediaReviewPage() {
             onClose={() => setViewModal(null)}
             onApprove={handleApprove}
             onReject={handleReject}
-            busy={actionId === viewModal._id}
+            isApproving={isApproving}
+            isRejecting={isRejecting}
           />
         )}
       </div>

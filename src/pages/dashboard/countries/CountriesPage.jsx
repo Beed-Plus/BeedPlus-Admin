@@ -511,7 +511,7 @@ export default function CountriesPage() {
                         </span>
                       </td>
                       <td className="px-6 py-4">
-                        <span className="rounded-xl bg-[#ECECEC] dark:bg-gray-800 p-2.5 text-base font-medium tracking-widest text-black dark:text-gray-400">
+                        <span className="rounded-xl dark:bg-gray-800 p-2.5 text-base font-medium tracking-widest text-black dark:text-gray-400">
                           {country.code}
                         </span>
                       </td>

@@ -161,7 +161,7 @@ export default function Sidebar({
 
       <aside
         className={`
-          fixed inset-y-0 left-0 z-50 flex h-screen shrink-0 flex-col border-r border-gray-100 dark:border-gray-800 bg-light-hover dark:bg-gray-900 py-6 transition-all duration-300
+          fixed inset-y-0 left-0 z-50 flex h-screen shrink-0 flex-col border-r border-gray-100 dark:border-gray-800 bg-light-hover shadow-2xl shadow-[#0000001A] dark:bg-gray-900 py-6 transition-all duration-300
           lg:relative lg:z-auto lg:translate-x-0 rounded-br-4xl rounded-tr-4xl
           ${mobileOpen ? "translate-x-0" : "-translate-x-full"}
           ${collapsed ? "lg:w-[72px] lg:px-2 w-60 px-4" : "w-60 px-4"}

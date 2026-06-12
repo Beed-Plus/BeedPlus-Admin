@@ -264,7 +264,7 @@ export default function ScenesTable({
                           cats.map((c) => (
                             <span
                               key={c}
-                              className="inline-flex items-center rounded-xl bg-[#ECECEC] dark:bg-gray-800 px-2.5 py-0.5 text-base font-medium text-[#4A4A4A] dark:text-gray-300"
+                              className="inline-flex items-center rounded-xl px-2.5 py-0.5 text-base font-medium text-[#4A4A4A] dark:text-gray-300"
                             >
                               {c}
                             </span>
@@ -280,7 +280,7 @@ export default function ScenesTable({
                     {/* Sub-Category */}
                     <td className="px-6 py-4 min-w-30">
                       {subCat ? (
-                        <span className="inline-flex items-center rounded-xl bg-[#ECECEC] dark:bg-blue-500/10 px-2.5 py-0.5 text-base font-medium text-[#4A4A4A] dark:text-gray-300">
+                        <span className="inline-flex items-center rounded-xl px-2.5 py-0.5 text-base font-medium text-[#4A4A4A] dark:text-gray-300">
                           {subCat}
                         </span>
                       ) : (

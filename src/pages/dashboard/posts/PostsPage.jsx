@@ -228,14 +228,14 @@ export default function PostsPage() {
                 >
                   <RefreshIcon />
                 </button>
-                {!loading && (
+                {
                   <span className="p-2 rounded-md text-xl font-semibold text-black">
                     Post{filtered.length !== 1 ? "s" : ""}:{" "}
                     {filtered
                       .filter((post) => post.status == "approved")
                       .length.toLocaleString()}
                   </span>
-                )}
+                }
               </div>
             </div>
           </div>
