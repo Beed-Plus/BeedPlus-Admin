@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../../hooks/useAuth'
 import { useScenes } from "../../../hooks/useScenes";
+import CustomDropDownInput from "../../../components/CustomDropDownInput";
 
 const SELECT = 'rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-600 dark:text-gray-300 outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition cursor-pointer'
 const COL    = 'px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-widest text-gray-400'
@@ -92,6 +93,8 @@ export default function WatchlistPage() {
   const [filterCategory, setFilterCategory] = useState('')
   const [filterCountry,  setFilterCountry]  = useState('')
   const [removing, setRemoving] = useState(null)
+  const [currentPage, setCurrentPage] = useState(1)
+  const ITEMS_PER_PAGE = 15
 
   // Unique categories & countries derived from watchlist scenes
   const categories = useMemo(() => {
@@ -119,6 +122,18 @@ export default function WatchlistPage() {
       return true
     })
   }, [scenes, filterCategory, filterCountry])
+
+  // Reset to page 1 when filters change
+  const filtered2 = useMemo(() => {
+    setCurrentPage(1)
+    return filtered
+  }, [filtered])
+
+  // Pagination calculation
+  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE)
+  const startIdx = (currentPage - 1) * ITEMS_PER_PAGE
+  const endIdx = startIdx + ITEMS_PER_PAGE
+  const paginatedData = filtered.slice(startIdx, endIdx)
 
   async function handleRemove(e, mediaId) {
     e.stopPropagation()
@@ -148,24 +163,24 @@ export default function WatchlistPage() {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap scenes-center gap-3">
-        <select
-          value={filterCategory}
-          onChange={(e) => setFilterCategory(e.target.value)}
-          className={SELECT}
-        >
-          <option value="">All Categories</option>
-          {categories.map((c) => <option key={c} value={c}>{c}</option>)}
-        </select>
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="w-40">
+          <CustomDropDownInput
+            placeholder="All Categories"
+            value={filterCategory}
+            onChange={(e) => setFilterCategory(e.target.value)}
+            items={[{ label: "All Categories", value: "" }, ...categories.map((c) => ({ label: c, value: c }))]}
+          />
+        </div>
 
-        <select
-          value={filterCountry}
-          onChange={(e) => setFilterCountry(e.target.value)}
-          className={`${SELECT} ml-auto`}
-        >
-          <option value="">All Countries</option>
-          {countries.map((c) => <option key={c} value={c}>{c}</option>)}
-        </select>
+        <div className="w-40">
+          <CustomDropDownInput
+            placeholder="All Countries"
+            value={filterCountry}
+            onChange={(e) => setFilterCountry(e.target.value)}
+            items={[{ label: "All Countries", value: "" }, ...countries.map((c) => ({ label: c, value: c }))]}
+          />
+        </div>
 
         {anyFilter && (
           <button
@@ -178,7 +193,7 @@ export default function WatchlistPage() {
       </div>
 
       {/* Table */}
-      <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm overflow-hidden">
+      <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-lg overflow-hidden">
         <div className="overflow-auto max-h-[75vh]">
           <table className="w-full min-w-[1000px]">
             <thead className="sticky top-0 z-10">
@@ -204,7 +219,7 @@ export default function WatchlistPage() {
                 </tr>
               )}
 
-              {!loading && filtered.map((item) => {
+              {!loading && paginatedData.map((item) => {
                 const thumb    = item.media?.thumbnailUrl ?? item.media?.mediaUrl
                 const caption  = item.media?.caption
                 const type     = item.media?.mediaType
@@ -310,6 +325,95 @@ export default function WatchlistPage() {
             </tbody>
           </table>
         </div>
+
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between border-t border-gray-100 dark:border-gray-800 px-6 py-4">
+            <button
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              className="flex items-center gap-1.5 rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Prev
+            </button>
+
+            <div className="flex items-center gap-1.5">
+              {(() => {
+                const pageButtons = [];
+                const maxButtons = 5;
+                let startPage = Math.max(1, currentPage - Math.floor(maxButtons / 2));
+                let endPage = Math.min(totalPages, startPage + maxButtons - 1);
+
+                if (endPage - startPage + 1 < maxButtons) {
+                  startPage = Math.max(1, endPage - maxButtons + 1);
+                }
+
+                if (startPage > 1) {
+                  pageButtons.push(
+                    <button
+                      key="first"
+                      onClick={() => setCurrentPage(1)}
+                      className="rounded-lg border border-gray-200 dark:border-gray-700 px-2.5 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition"
+                    >
+                      1
+                    </button>
+                  );
+                  if (startPage > 2) {
+                    pageButtons.push(
+                      <span key="ellipsis-start" className="text-gray-400 dark:text-gray-600">
+                        …
+                      </span>
+                    );
+                  }
+                }
+
+                for (let page = startPage; page <= endPage; page++) {
+                  pageButtons.push(
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`rounded-lg px-2.5 py-1.5 text-xs font-medium transition ${
+                        page === currentPage
+                          ? "bg-[#3A3A3A] text-white shadow-lg"
+                          : "border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  );
+                }
+
+                if (endPage < totalPages) {
+                  if (endPage < totalPages - 1) {
+                    pageButtons.push(
+                      <span key="ellipsis-end" className="text-gray-400 dark:text-gray-600">
+                        …
+                      </span>
+                    );
+                  }
+                  pageButtons.push(
+                    <button
+                      key="last"
+                      onClick={() => setCurrentPage(totalPages)}
+                      className="rounded-lg border border-gray-200 dark:border-gray-700 px-2.5 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition"
+                    >
+                      {totalPages}
+                    </button>
+                  );
+                }
+
+                return pageButtons;
+              })()}
+            </div>
+
+            <button
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              className="flex items-center gap-1.5 rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Next
+            </button>
+          </div>
+        )}
       </div>
     </div>
   )

@@ -22,7 +22,7 @@ function fmt(n) {
 
 function fmtBeedScore(n) {
   if (n == null) return "—";
-  return Number(n).toFixed(10);
+  return Number(n).toFixed(2);
 }
 
 function fmtDate(iso) {
@@ -127,7 +127,7 @@ function MediaTypeBadge({ type }) {
 // ─── Stat Card ────────────────────────────────────────────────────────────────
 function StatCard({ label, value, sub, iconBg, icon: Icon }) {
   return (
-    <div className="flex flex-col gap-3 rounded-lg bg-white dark:bg-gray-900 p-4.5 shadow-sm">
+    <div className="flex flex-col gap-1 rounded-lg bg-white dark:bg-gray-900 p-4.5 shadow-sm shadow-[#0000001A] h-20">
       <div className="flex items-start justify-between">
         <p className="text-xs font-medium text-[#0000004D] dark:text-gray-500">
           {label}
@@ -146,7 +146,7 @@ function StatCard({ label, value, sub, iconBg, icon: Icon }) {
 // ─── Insight Row ──────────────────────────────────────────────────────────────
 function InsightRow({ label, value, icon }) {
   return (
-    <div className="flex gap-5 items-center p-2.5 ">
+    <div className="flex gap-5 items-center p-2.5 px-4 bg-[#F4F4F44D] rounded-2xl">
       <div className="h-6 w-6 flex justify-center">{icon && icon}</div>
       <div className="flex flex-col gap-0.5">
         <span className="text-2xl text-[#3A3A3A] font-semibold dark:text-gray-400">
@@ -160,28 +160,28 @@ function InsightRow({ label, value, icon }) {
 
 function Top100({ label, globalValue, localValue }) {
   return (
-    <div className="flex flex-col gap-5 bg-white p-2.5 px-4 rounded-2xl shadow-sm">
-      <h4 className="text-lg font-medium text-black text-center p-2.5 rounded-lg bg-[#F4F4F4] shadow-sm">
+    <div className="flex flex-col gap-3 bg-white p-2.5 px-4 rounded-2xl shadow-md shadow-[#0000001A]">
+      <h4 className="text-lg font-medium text-black text-center p-2.5 rounded-lg bg-[#F4F4F4] shadow-md shadow-[#0000000D]">
         {label}
       </h4>
       <div className="flex gap-4 ">
-        <div className="flex flex-col items-center gap-2.5 w-1/2 shadow-sm shadow-[#0000000D] rounded-lg py-2">
+        <div className="flex flex-col items-center gap-1 w-1/2 shadow-sm shadow-[#0000001A] rounded-lg py-2">
           <span
-            className={`text-sm text-[#0000004D] font-medium dark:text-gray-400`}
+            className={`text-xs text-[#0000004D] font-medium dark:text-gray-400`}
           >
             Global
           </span>
-          <span className="text-3xl text-[#000000] font-bold dark:text-gray-400">
+          <span className="text-[21px] text-[#000000] font-bold dark:text-gray-400">
             {fmt(globalValue)}
           </span>
         </div>
-        <div className="flex flex-col items-center gap-2.5 w-1/2 shadow-sm shadow-[#0000000D] rounded-lg py-2">
+        <div className="flex flex-col items-center gap-1 w-1/2 shadow-sm shadow-[#0000001A] rounded-lg py-2">
           <span
-            className={`text-sm text-[#0000004D] font-medium dark:text-gray-400`}
+            className={`text-xs text-[#0000004D] font-medium dark:text-gray-400`}
           >
             Nigeria
           </span>
-          <span className="text-3xl text-[#000000] font-bold dark:text-gray-400">
+          <span className="text-[21px] text-[#000000] font-bold dark:text-gray-400">
             {fmt(localValue)}
           </span>
         </div>
@@ -231,7 +231,7 @@ function CalendarPicker({ value, availableDates, onChange }) {
         day_button:
           "flex h-8 w-8 items-center justify-center rounded-lg text-sm font-medium transition cursor-pointer text-gray-700 dark:text-gray-200 hover:bg-orange-50 dark:hover:bg-orange-500/10 hover:text-orange-500",
         selected:
-          "[&>button]:bg-orange-500 [&>button]:text-white [&>button]:shadow-sm [&>button]:hover:bg-orange-500 [&>button]:hover:text-white",
+          "[&>button]:bg-orange-500 [&>button]:text-white [&>button]:shadow-lg [&>button]:hover:bg-orange-500 [&>button]:hover:text-white",
         disabled:
           "[&>button]:text-gray-300 dark:[&>button]:text-gray-600 [&>button]:cursor-not-allowed [&>button]:hover:bg-transparent [&>button]:hover:text-gray-300",
         today: "[&>button]:font-black",
@@ -296,7 +296,7 @@ function PostSelectorPanel({
 
     return (
       <div
-        className={`flex flex-col rounded-2xl p-5 bg-[#FFFEFC] dark:bg-gray-900 overflow-hidden shadow-sm shadow-[#0000000D]`}
+        className={`flex flex-col rounded-2xl p-5 bg-[#FFFEFC] dark:bg-gray-900 overflow-hidden shadow-lg shadow-[#0000000D]`}
       >
         {/* Card header */}
         <div className={`flex items-center justify-between px-4 py-3`}>
@@ -310,7 +310,7 @@ function PostSelectorPanel({
         </div>
 
         {/* CREATOR ROW */}
-        <div className="flex justify-between rounded-[20px] border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-sm min-h-60 mb-4">
+        <div className="flex justify-between rounded-[20px] dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-lg shadow-[#0000001A] min-h-60 mb-4">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
             <div className="relative w-full shrink-0 overflow-hidden rounded-2xl bg-gray-900 lg:w-50 aspect-square lg:aspect-auto lg:h-48">
               {thumb ? (
@@ -454,7 +454,7 @@ function PostSelectorPanel({
           <div className="flex flex-col justify-between">
             <StatCard
               label="Beed+ Score"
-              value={fmtBeedScore(selected.beedPlusScore)}
+              value={fmtBeedScore(selected.beedplusScore)}
             />
             <StatCard label="Beed+ Clicks" value={fmt(selected.clicks)} />
             <StatCard
@@ -479,11 +479,11 @@ function PostSelectorPanel({
 
         {/* Insights + Creator row */}
         <div className="grid grid-cols-1 gap-4 mt-4 ">
-          <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-sm">
+          <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-lg shadow-[#0000001A]">
             <h3 className="mb-4 text-base font-medium dark:text-gray-500">
               Instagram Insights
             </h3>
-            <div className="grid grid-cols-1 gap-0 sm:grid-cols-2 sm:gap-x-8">
+            <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 sm:gap-x-8">
               <InsightRow
                 label="Views"
                 value={selected.insights?.views}
@@ -524,7 +524,7 @@ function PostSelectorPanel({
   // ── Selector (no post chosen yet) ─────────────────────────────────────────
   return (
     <div className="flex flex-col gap-2">
-      <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm overflow-hidden py-5">
+      <div className="rounded-2xl dark:border-gray-700 bg-white dark:bg-gray-900 shadow-lg shadow-[#0000000D] overflow-hidden py-5">
         <h3
           className={`text-base font-semibold tracking-widest text-[#000000] px-6 py-2`}
         >
@@ -875,7 +875,7 @@ export default function ComparePostsPage() {
           <div className="grid grid-cols-2 gap-3">
             {/* Post A lifetime */}
             {/* {fullA && enriched.a?.__metrics && (
-              <div className="rounded-2xl border border-orange-100 dark:border-orange-500/20 bg-white dark:bg-gray-900 shadow-sm overflow-hidden">
+              <div className="rounded-2xl border border-orange-100 dark:border-orange-500/20 bg-white dark:bg-gray-900 shadow-lg overflow-hidden">
                 <div className="px-4 py-2.5 border-b border-orange-50 dark:border-orange-500/10">
                   <span className="text-[10px] font-black uppercase tracking-widest text-orange-400">
                     Archived Lifetime
@@ -911,7 +911,7 @@ export default function ComparePostsPage() {
 
             {/* Post B lifetime */}
             {/* {fullB && enriched.b?.__metrics && (
-              <div className="rounded-2xl border border-violet-100 dark:border-violet-500/20 bg-white dark:bg-gray-900 shadow-sm overflow-hidden">
+              <div className="rounded-2xl border border-violet-100 dark:border-violet-500/20 bg-white dark:bg-gray-900 shadow-lg overflow-hidden">
                 <div className="px-4 py-2.5 border-b border-violet-50 dark:border-violet-500/10">
                   <span className="text-[10px] font-black uppercase tracking-widest text-violet-400">
                     Archived Lifetime

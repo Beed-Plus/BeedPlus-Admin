@@ -82,7 +82,7 @@ export default function TopHitsPage() {
 
       {/* Featured post skeleton */}
       {loading && (
-        <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 shadow-sm">
+        <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 shadow-lg">
           <div className="flex items-center gap-5">
             <div className="h-20 w-20 shrink-0 rounded-xl bg-gray-100 dark:bg-gray-800 animate-pulse" />
             <div className="flex-1 space-y-2">

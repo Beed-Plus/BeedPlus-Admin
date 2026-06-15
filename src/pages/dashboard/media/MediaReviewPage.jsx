@@ -240,7 +240,7 @@ function PreviewModal({
             />
           </div>
 
-          <div className="lg:col-span-3 rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-sm">
+          <div className="lg:col-span-3 rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-lg">
             <h3 className="mb-4 text-base font-medium dark:text-gray-500">
               Instagram Insights
             </h3>
@@ -367,7 +367,7 @@ function PreviewModal({
 
           <button
             onClick={onClose}
-            className="text-center rounded-lg w-62 mx-auto h-12 border border-white dark:border-gray-600 py-2.5 shadow-sm shadow-[#0000001A] my-4 text-xl text-[#3A3A3A] font-bold hover:text-gray-500 transition"
+            className="text-center rounded-lg w-62 mx-auto h-12 border border-white dark:border-gray-600 py-2.5 shadow-lg shadow-[#0000001A] my-4 text-xl text-[#3A3A3A] font-bold hover:text-gray-500 transition"
           >
             Close
           </button>
@@ -415,6 +415,14 @@ export default function MediaReviewPage() {
   //     .catch(() => {});
   // }, []);
 
+  const countries = useMemo(() => {
+    const set = new Set();
+    items.forEach((p) => {
+      if (p.userData?.country) set.add(p.userData.country);
+    });
+    return [...set].sort();
+  }, [items]);
+
   async function load() {
     setLoading(true);
     try {
@@ -439,13 +447,17 @@ export default function MediaReviewPage() {
           const cats = Array.isArray(p.category)
             ? p.category
             : [p.category].filter(Boolean);
-          if (!cats.includes(filterCategory)) return false;
+          if (filterCategory && filterCategory !== "All") return false;
         }
-        if (filterSubCategory) {
+        if (filterSubCategory && filterSubCategory !== "All") {
           const sub = p.subCategory?.name ?? p.subCategory;
           if (sub !== filterSubCategory) return false;
         }
-        if (filterCountry && p.userData?.country !== filterCountry)
+        if (
+          filterCountry &&
+          p.userData?.country !== filterCountry &&
+          filterCountry !== "All"
+        )
           return false;
         if (q) {
           const username = (
@@ -504,7 +516,7 @@ export default function MediaReviewPage() {
     <div className="flex flex-col gap-6">
       {/* Header */}
 
-      <div className="rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm overflow-hidden py-2">
+      <div className="rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-lg shadow-[#0000001A] overflow-hidden py-2">
         {/* Filters */}
         <div className="flex justify-between items-center px-4 mb-2">
           <h1 className="text-2xl font-bold text-[#0F172A] dark:text-white">
@@ -512,7 +524,7 @@ export default function MediaReviewPage() {
           </h1>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-4">
-              <div className="min-w-22">
+              <div className="min-w-30">
                 <CustomDropDownInput
                   placeholder="Category"
                   value={filterCategory}
@@ -520,22 +532,45 @@ export default function MediaReviewPage() {
                     handleFilter(setCategory)(e.target.value);
                     setSubCategory("");
                   }}
-                  items={categories.map((c) => ({
-                    label: c.name,
-                    value: c.name,
-                  }))}
+                  items={[
+                    {
+                      label: "All",
+                      value: "All",
+                    },
+                    ...categories.map((c) => ({
+                      label: c.name,
+                      value: c.name,
+                    })),
+                  ]}
                 />
               </div>
-              <div className="min-w-22 z-998">
+              <div className="w-30 z-40">
                 <SelectSearch
                   placeholder="Subcategory"
                   onChange={(val) => handleFilter(setSubCategory)(val)}
                   value={filterSubCategory}
-                  items={subCategories.map((s) => s.name)}
+                  items={["All", ...subCategories.map((s) => s.name)]}
                 />
               </div>
-              <div className="min-w-22">
-                <CustomDropDownInput placeholder="Country" />
+              <div className="min-w-30">
+                <CustomDropDownInput
+                  placeholder="Country"
+                  value={filterCountry}
+                  onChange={(e) => {
+                    handleFilter(setFilterCountry)(e.target.value);
+                    setSubCategory("");
+                  }}
+                  items={[
+                    {
+                      label: "All",
+                      value: "All",
+                    },
+                    ...countries.map((c) => ({
+                      label: c,
+                      value: c,
+                    })),
+                  ]}
+                />
               </div>
               <div className="min-w-22">
                 <CustomDropDownInput placeholder="Today" />
@@ -551,12 +586,12 @@ export default function MediaReviewPage() {
               >
                 <RefreshIcon />
               </button>
-              {!loading && (
+              {
                 <span className="text-center rounded-md text-xl font-semibold text-black">
                   Post{filtered.length !== 1 ? "s" : ""}:{" "}
                   {filtered.length.toLocaleString()}
                 </span>
-              )}
+              }
             </div>
           </div>
         </div>

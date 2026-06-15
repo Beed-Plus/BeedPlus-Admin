@@ -5,7 +5,7 @@ export default function PostMetaSidebar({ category, subCategory, creator }) {
   return (
     <div className="flex flex-col gap-4">
       {/* Metadata */}
-      <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-sm">
+      <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-lg">
         <p className="mb-4 text-xs font-semibold uppercase tracking-widest text-gray-400">Metadata</p>
         <div className="flex flex-col gap-4">
           <div>
@@ -20,7 +20,7 @@ export default function PostMetaSidebar({ category, subCategory, creator }) {
       </div>
 
       {/* Creator */}
-      <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-sm">
+      <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-lg">
         <p className="mb-4 text-xs font-semibold uppercase tracking-widest text-gray-400">Creator</p>
         <div className="flex items-center gap-3">
           <UserAvatar name={creator.name} />

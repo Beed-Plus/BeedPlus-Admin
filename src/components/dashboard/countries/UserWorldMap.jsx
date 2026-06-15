@@ -92,7 +92,7 @@ export default function UserWorldMap({ countries = [] }) {
   }
 
   return (
-    <div className="relative w-full h-full overflow-hidden rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm flex flex-col">
+    <div className="relative w-full h-full overflow-hidden rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-lg flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 px-5 py-4">
         <div>

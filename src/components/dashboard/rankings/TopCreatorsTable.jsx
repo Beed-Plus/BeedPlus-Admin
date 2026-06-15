@@ -6,19 +6,19 @@ const COL =
 function RankBadge({ rank }) {
   if (rank === 1)
     return (
-      <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-amber-400 text-xs font-black text-white shadow-sm">
+      <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-amber-400 text-xs font-black text-white shadow-lg">
         1
       </span>
     );
   if (rank === 2)
     return (
-      <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-gray-300 text-xs font-black text-white shadow-sm">
+      <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-gray-300 text-xs font-black text-white shadow-lg">
         2
       </span>
     );
   if (rank === 3)
     return (
-      <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-orange-300 text-xs font-black text-white shadow-sm">
+      <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-orange-300 text-xs font-black text-white shadow-lg">
         3
       </span>
     );
@@ -56,7 +56,7 @@ export default function TopCreatorsTable({
     nested ? (
       <div className="overflow-x-auto rounded-2xl">{children}</div>
     ) : (
-      <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm overflow-x-auto">
+      <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-lg overflow-x-auto">
         {children}
       </div>
     );

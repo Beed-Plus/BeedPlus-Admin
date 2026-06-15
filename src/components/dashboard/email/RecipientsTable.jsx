@@ -57,7 +57,7 @@ export default function RecipientsTable({ users, loading, selected, onToggle, on
 
   if (loading) {
     return (
-      <div className="flex flex-col rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm overflow-hidden">
+      <div className="flex flex-col rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-lg overflow-hidden">
         <div className="flex items-center justify-between gap-3 border-b border-gray-100 dark:border-gray-800 px-5 py-4">
           <div className="space-y-1.5">
             <div className="h-4 w-20 rounded bg-gray-100 dark:bg-gray-800 animate-pulse" />
@@ -102,7 +102,7 @@ export default function RecipientsTable({ users, loading, selected, onToggle, on
   }
 
   return (
-    <div className="flex flex-col rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm overflow-hidden">
+    <div className="flex flex-col rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-lg overflow-hidden">
       {/* Header */}
       <div className="flex flex-col gap-3 border-b border-gray-100 dark:border-gray-800 px-5 py-4">
         <div className="flex items-center justify-between gap-3">

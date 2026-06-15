@@ -24,7 +24,7 @@ function RankBadge({ rank }) {
 
 function InsightCard({ label, value, sub }) {
   return (
-    <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 shadow-sm">
+    <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 shadow-lg">
       <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">{label}</p>
       <p className="mt-1.5 text-2xl font-black text-gray-900 dark:text-white">{value}</p>
       {sub && <p className="mt-0.5 text-xs text-gray-400 dark:text-gray-500">{sub}</p>}
@@ -79,7 +79,7 @@ export default function PostRankingDetailPage() {
       </button>
 
       {/* Post card */}
-      <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm p-6">
+      <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-lg p-6">
         <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
           {/* Thumbnail */}
           <div className="h-36 w-36 shrink-0 overflow-hidden rounded-xl bg-gray-100 dark:bg-gray-800">
@@ -159,7 +159,7 @@ export default function PostRankingDetailPage() {
 
       {/* Daily insights */}
       <h2 className="text-base font-bold text-gray-900 dark:text-white">Daily Insights</h2>
-      <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm overflow-hidden">
+      <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-lg overflow-hidden">
         {dailyRows.length === 0 ? (
           <div className="px-6 py-10 text-center text-sm text-gray-400">
             No daily insights available for this post.
@@ -197,7 +197,7 @@ export default function PostRankingDetailPage() {
 
       {/* Chart */}
       <h2 className="text-base font-bold text-gray-900 dark:text-white">Chart</h2>
-      <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm overflow-hidden">
+      <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-lg overflow-hidden">
         {archivedRows.length === 0 ? (
           <div className="px-6 py-10 text-center text-sm text-gray-400">
             No archived lifetime data available.

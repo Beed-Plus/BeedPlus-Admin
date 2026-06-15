@@ -66,13 +66,13 @@ function MediaTypeBadge({ type }) {
 // ─── Stat Card ────────────────────────────────────────────────────────────────
 function StatCard({ label, value, sub, iconBg, icon: Icon }) {
   return (
-    <div className="flex flex-col gap-3 rounded-lg bg-white dark:bg-gray-900 p-4.5 shadow-sm">
+    <div className="flex flex-col gap-1 rounded-lg bg-white dark:bg-gray-900 p-4.5 shadow-md shadow-[#0000000D]">
       <div className="flex items-start justify-between">
-        <p className="text-xs font-medium text-[#0000004D] dark:text-gray-500">
+        <p className="text-[17px] font-medium text-[#0000004D] dark:text-gray-500">
           {label}
         </p>
       </div>
-      <p className="text-xl font-semibold text-[#000] dark:text-white">
+      <p className="text-[28px] font-semibold text-[#000] dark:text-white">
         {value}
       </p>
       {sub && (
@@ -85,10 +85,10 @@ function StatCard({ label, value, sub, iconBg, icon: Icon }) {
 // ─── Insight Row ──────────────────────────────────────────────────────────────
 function InsightRow({ label, value, icon }) {
   return (
-    <div className="flex gap-5 items-center p-2.5 px-4 bg-[#F4F4F44D] rounded-2xl">
-      <div className="h-6 w-6 flex justify-center">{icon && icon}</div>
+    <div className="flex gap-2.5 items-center p-2.5 px-4 bg-[#F4F4F44D] rounded-2xl">
+      <div className="h-10 w-10 bg-[#FFF] rounded-lg items-center flex justify-center">{icon && icon}</div>
       <div className="flex flex-col gap-0.5">
-        <span className="text-2xl text-[#3A3A3A] font-semibold dark:text-gray-400">
+        <span className="text-[25px] text-[#3A3A3A] font-semibold dark:text-gray-400">
           {fmt(value)}
         </span>
         <span className={`text-xs font-medium text-[#BEB09B]`}>{label}</span>
@@ -99,11 +99,11 @@ function InsightRow({ label, value, icon }) {
 function Top100({ label, globalValue, localValue }) {
   return (
     <div className="flex flex-col gap-5 bg-white p-2.5 rounded-2xl">
-      <h4 className="text-lg font-medium text-black text-center p-2.5 rounded-lg bg-[#F4F4F4] shadow-sm">
+      <h4 className="text-lg font-medium text-black text-center p-2.5 rounded-lg bg-[#F4F4F4] shadow-md shadow-[#0000000D]">
         {label}
       </h4>
       <div className="flex gap-4 ">
-        <div className="flex flex-col items-center gap-2.5 w-1/2 shadow-sm shadow-[#0000000D] rounded-lg py-2">
+        <div className="flex flex-col items-center gap-2.5 w-1/2 shadow-md shadow-[#0000000D] rounded-lg py-2">
           <span
             className={`text-sm text-[#0000004D] font-medium dark:text-gray-400`}
           >
@@ -113,7 +113,7 @@ function Top100({ label, globalValue, localValue }) {
             {fmt(globalValue)}
           </span>
         </div>
-        <div className="flex flex-col items-center gap-2.5 w-1/2 shadow-sm shadow-[#0000000D] rounded-lg py-2">
+        <div className="flex flex-col items-center gap-2.5 w-1/2 shadow-md shadow-[#0000000D] rounded-lg py-2">
           <span
             className={`text-sm text-[#0000004D] font-medium dark:text-gray-400`}
           >
@@ -138,7 +138,7 @@ function PageSkeleton() {
   return (
     <div className="flex flex-col gap-6 animate-pulse">
       <div className="h-6 w-48 rounded bg-gray-100" />
-      <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-sm">
+      <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-lg">
         <div className="flex gap-6">
           <div className="h-72 w-72 shrink-0 rounded-2xl bg-gray-100 dark:bg-gray-800" />
           <div className="flex flex-1 flex-col gap-4">
@@ -213,7 +213,7 @@ export default function PostDetailPage() {
     return (
       <div className="flex gap-6">
         <BackArrowIcon />
-        <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-12 text-center shadow-sm">
+        <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-12 text-center shadow-lg">
           <p className="text-sm text-red-500">{error ?? "Post not found"}</p>
           <button
             onClick={() => navigate("/dashboard/posts")}
@@ -368,7 +368,7 @@ export default function PostDetailPage() {
       </div>
 
       {/* Main card: thumbnail + details */}
-      <div className="flex justify-between rounded-[20px] border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-sm">
+      <div className="flex justify-between rounded-[20px] border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-lg shadow-[#0000000D]">
         {/* Card top row */}
         <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
           {/* Thumbnail */}
@@ -532,8 +532,8 @@ export default function PostDetailPage() {
       {/* Insights + Creator row */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-4">
         {/* Insights */}
-        <div className="lg:col-span-3 rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-sm">
-          <h3 className="mb-4 text-base font-medium dark:text-gray-500">
+        <div className="lg:col-span-3 rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-lg shadow-[#0000000D]">
+          <h3 className="mb-4 text-[24px] font-medium dark:text-gray-500">
             Instagram Insights
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-x-8">
@@ -570,7 +570,7 @@ export default function PostDetailPage() {
           </div>
         </div>
 
-        <div className="flex flex-col gap-3 shadow-sm">
+        <div className="flex flex-col gap-3 shadow-lg">
           <div className="">
             <Top100
               label="Beed+ Top Top100"

@@ -77,6 +77,8 @@ export default function FormulaTestPage() {
 
   const [sortBy, setSortBy]       = useState('A') // 'original' | 'A' | 'B'
   const [activeTab, setActiveTab] = useState(0)   // 0 = All, 1+ = category index
+  const [currentPage, setCurrentPage] = useState(1)
+  const ITEMS_PER_PAGE = 20
 
   useEffect(() => {
     setLoading(true)
@@ -139,6 +141,17 @@ export default function FormulaTestPage() {
     if (sortBy === 'B') return byB
     return [...withScores].sort((a, b) => a.originalRank - b.originalRank)
   }, [rows, categories, activeTab, appliedA, appliedB, sortBy])
+
+  // Reset to page 1 when tab/sort changes
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [activeTab, sortBy])
+
+  // Pagination calculation
+  const totalPages = Math.ceil(tested.length / ITEMS_PER_PAGE)
+  const startIdx = (currentPage - 1) * ITEMS_PER_PAGE
+  const endIdx = startIdx + ITEMS_PER_PAGE
+  const paginatedData = tested.slice(startIdx, endIdx)
 
   function applyA() {
     const sample = { views: 1000, likes: 50, comments: 10, shares: 5, saves: 20, reach: 800, interactions: 80 }
@@ -262,7 +275,7 @@ export default function FormulaTestPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50 dark:divide-gray-700/50">
-                {tested.map((row, i) => (
+                {paginatedData.map((row, i) => (
                     <tr key={row.instagramMediaId} className="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition">
                       <td className={TD}>{row.originalRank}</td>
                       {/* Rank A */}
@@ -322,6 +335,95 @@ export default function FormulaTestPage() {
               </tbody>
             </table>
           </div>
+
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between border-t border-gray-100 dark:border-gray-800 px-6 py-4">
+              <button
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="flex items-center gap-1.5 rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Prev
+              </button>
+
+              <div className="flex items-center gap-1.5">
+                {(() => {
+                  const pageButtons = []
+                  const maxButtons = 5
+                  let startPage = Math.max(1, currentPage - Math.floor(maxButtons / 2))
+                  let endPage = Math.min(totalPages, startPage + maxButtons - 1)
+
+                  if (endPage - startPage + 1 < maxButtons) {
+                    startPage = Math.max(1, endPage - maxButtons + 1)
+                  }
+
+                  if (startPage > 1) {
+                    pageButtons.push(
+                      <button
+                        key="first"
+                        onClick={() => setCurrentPage(1)}
+                        className="rounded-lg border border-gray-200 dark:border-gray-700 px-2.5 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition"
+                      >
+                        1
+                      </button>
+                    )
+                    if (startPage > 2) {
+                      pageButtons.push(
+                        <span key="ellipsis-start" className="text-gray-400 dark:text-gray-600">
+                          …
+                        </span>
+                      )
+                    }
+                  }
+
+                  for (let page = startPage; page <= endPage; page++) {
+                    pageButtons.push(
+                      <button
+                        key={page}
+                        onClick={() => setCurrentPage(page)}
+                        className={`rounded-lg px-2.5 py-1.5 text-xs font-medium transition ${
+                          page === currentPage
+                            ? "bg-[#3A3A3A] text-white shadow-lg"
+                            : "border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    )
+                  }
+
+                  if (endPage < totalPages) {
+                    if (endPage < totalPages - 1) {
+                      pageButtons.push(
+                        <span key="ellipsis-end" className="text-gray-400 dark:text-gray-600">
+                          …
+                        </span>
+                      )
+                    }
+                    pageButtons.push(
+                      <button
+                        key="last"
+                        onClick={() => setCurrentPage(totalPages)}
+                        className="rounded-lg border border-gray-200 dark:border-gray-700 px-2.5 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition"
+                      >
+                        {totalPages}
+                      </button>
+                    )
+                  }
+
+                  return pageButtons
+                })()}
+              </div>
+
+              <button
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="flex items-center gap-1.5 rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Next
+              </button>
+            </div>
+          )}
         </>
       )}
     </div>

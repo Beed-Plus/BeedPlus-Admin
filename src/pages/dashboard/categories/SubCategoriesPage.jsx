@@ -202,6 +202,8 @@ export default function SubCategoriesPage() {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [draggingId, setDraggingId] = useState(null);
   const [dragOverId, setDragOverId] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 12;
 
   const {
     subCategories,
@@ -223,6 +225,17 @@ export default function SubCategoriesPage() {
     if (!q) return subCategories;
     return subCategories.filter((s) => s.name?.toLowerCase().includes(q));
   }, [subCategories, search]);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search]);
+
+  // Pagination calculation
+  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+  const startIdx = (currentPage - 1) * ITEMS_PER_PAGE;
+  const endIdx = startIdx + ITEMS_PER_PAGE;
+  const paginatedData = filtered.slice(startIdx, endIdx);
 
   async function handleDrop(e, targetId) {
     e.preventDefault();
@@ -247,6 +260,8 @@ export default function SubCategoriesPage() {
     }
   }
   const canDrag = !search.trim();
+
+  console.log("paginatedData", paginatedData)
 
   return (
     <div className="flex flex-col gap-6">
@@ -292,7 +307,7 @@ export default function SubCategoriesPage() {
             {isLoading ? "..." : subCategories.length}
           </p>
         </div>
-        <div className="rounded-[20px] flex flex-col gap-17  bg-[#F9F9F9] p-5 dark:bg-gray-900 shadow-sm">
+        <div className="rounded-[20px] flex flex-col gap-17  bg-[#F9F9F9] p-5 dark:bg-gray-900 shadow-lg">
           <p className="text-base font-medium tracking-widest text-[#686969] dark:text-gray-500 dark:text-gray-500">
             Total Posts
           </p>
@@ -320,7 +335,7 @@ export default function SubCategoriesPage() {
       )}
 
       {/* Table card */}
-      <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm overflow-hidden">
+      <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-lg shadow-[#0000001A] overflow-hidden">
         {/* Toolbar */}
         <div className="flex flex-col gap-3 border-b border-gray-100 dark:border-gray-800 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -384,7 +399,7 @@ export default function SubCategoriesPage() {
               )}
 
               {!isLoading &&
-                filtered.map((cat) => (
+                paginatedData.map((cat) => (
                   <tr
                     key={cat._id}
                     draggable={canDrag}
@@ -542,6 +557,95 @@ export default function SubCategoriesPage() {
             </tbody>
           </table>
         </div>
+
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between border-t border-gray-100 dark:border-gray-800 px-6 py-4">
+            <button
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              className="flex items-center gap-1.5 rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Prev
+            </button>
+
+            <div className="flex items-center gap-1.5">
+              {(() => {
+                const pageButtons = [];
+                const maxButtons = 5;
+                let startPage = Math.max(1, currentPage - Math.floor(maxButtons / 2));
+                let endPage = Math.min(totalPages, startPage + maxButtons - 1);
+
+                if (endPage - startPage + 1 < maxButtons) {
+                  startPage = Math.max(1, endPage - maxButtons + 1);
+                }
+
+                if (startPage > 1) {
+                  pageButtons.push(
+                    <button
+                      key="first"
+                      onClick={() => setCurrentPage(1)}
+                      className="rounded-lg border border-gray-200 dark:border-gray-700 px-2.5 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition"
+                    >
+                      1
+                    </button>
+                  );
+                  if (startPage > 2) {
+                    pageButtons.push(
+                      <span key="ellipsis-start" className="text-gray-400 dark:text-gray-600">
+                        …
+                      </span>
+                    );
+                  }
+                }
+
+                for (let page = startPage; page <= endPage; page++) {
+                  pageButtons.push(
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`rounded-lg px-2.5 py-1.5 text-xs font-medium transition ${
+                        page === currentPage
+                          ? "bg-[#3A3A3A] text-white shadow-lg"
+                          : "border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  );
+                }
+
+                if (endPage < totalPages) {
+                  if (endPage < totalPages - 1) {
+                    pageButtons.push(
+                      <span key="ellipsis-end" className="text-gray-400 dark:text-gray-600">
+                        …
+                      </span>
+                    );
+                  }
+                  pageButtons.push(
+                    <button
+                      key="last"
+                      onClick={() => setCurrentPage(totalPages)}
+                      className="rounded-lg border border-gray-200 dark:border-gray-700 px-2.5 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition"
+                    >
+                      {totalPages}
+                    </button>
+                  );
+                }
+
+                return pageButtons;
+              })()}
+            </div>
+
+            <button
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              className="flex items-center gap-1.5 rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Next
+            </button>
+          </div>
+        )}
       </div>
 
       {showAdd && (

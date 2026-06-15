@@ -1,6 +1,6 @@
 export default function PostStatCard({ label, value, icon: Icon, iconBg, iconColor }) {
   return (
-    <div className="flex items-center gap-4 rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 px-6 py-5 shadow-sm">
+    <div className="flex items-center gap-4 rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 px-6 py-5 shadow-lg">
       <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${iconBg}`}>
         <Icon className={`h-5 w-5 ${iconColor}`} />
       </div>

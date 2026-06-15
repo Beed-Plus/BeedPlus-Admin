@@ -137,18 +137,9 @@ export default function PostTable({
     if (!editPost || !editCategory) return;
     setSaving(true);
     try {
-      let subCategoryId = null;
-      if (editSubCategory.trim()) {
-        const cat = categories.find((c) => c.name === editCategory);
-        const found = await subCategoriesApi.findOrCreate(
-          { name: editSubCategory.trim(), categoryId: cat?._id },
-          token,
-        );
-        subCategoryId = found?._id ?? found?.subCategory?._id ?? null;
-      }
       const res = await instagramApi.updateMediaCategory(
         editPost._id,
-        { category: editCategory, subCategory: subCategoryId },
+        { category: editCategory, subCategory: editSubCategory },
         token,
       );
       setLocalPosts((prev) =>
@@ -181,6 +172,7 @@ export default function PostTable({
               <th className={COL}>Category</th>
               <th className={COL}>Subcategory</th>
               <th className={COL}>Views</th>
+              <th className={COL}>Beed+ Score</th>
               <th className={COL}>Submitted</th>
               <th className={`${COL} text-right`}>Actions</th>
             </tr>
@@ -308,6 +300,15 @@ export default function PostTable({
                     {/* Views */}
                     <td className="px-6 py-4 min-w-25 text-sm font-semibold text-[#2F3134] dark:text-gray-100 font-mono">
                       {fmt(post.insights?.views) ?? (
+                        <span className="text-gray-300 dark:text-gray-600">
+                          —
+                        </span>
+                      )}
+                    </td>
+
+                    {/* Views */}
+                    <td className="px-6 py-4 min-w-25 text-sm font-semibold text-[#2F3134] dark:text-gray-100 font-mono">
+                      {fmt(post.beedplusScore) ?? (
                         <span className="text-gray-300 dark:text-gray-600">
                           —
                         </span>

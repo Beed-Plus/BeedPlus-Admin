@@ -17,7 +17,7 @@ export default function TopHitsTable({ hits, loading }) {
 
   if (loading) {
     return (
-      <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm overflow-hidden">
+      <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-lg overflow-hidden">
         <div className="px-6 pt-6 pb-2">
           <div className="h-6 w-32 rounded bg-gray-100 dark:bg-gray-800 animate-pulse" />
         </div>
@@ -58,7 +58,7 @@ export default function TopHitsTable({ hits, loading }) {
   }
 
   return (
-    <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm overflow-hidden">
+    <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-lg overflow-hidden">
       <div className="px-6 pt-6 pb-2">
         <h2 className="text-lg font-black text-gray-900 dark:text-white">Rankings</h2>
       </div>

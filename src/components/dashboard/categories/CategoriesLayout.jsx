@@ -350,7 +350,7 @@ export default function CategoriesLayout({ title, subtitle }) {
             {isLoading ? "..." : categories.length}
           </p>
         </div>
-        <div className="rounded-[20px] flex flex-col gap-6  bg-[#F9F9F9] p-5 dark:bg-gray-900 shadow-sm">
+        <div className="rounded-[20px] flex flex-col gap-6  bg-[#F9F9F9] p-5 dark:bg-gray-900 shadow-lg">
           <p className="text-base font-medium tracking-widest text-[#686969] dark:text-gray-500 dark:text-gray-500">
             Total Posts
           </p>
@@ -362,7 +362,7 @@ export default function CategoriesLayout({ title, subtitle }) {
                   .toLocaleString()}
           </p>
         </div>
-        <div className="rounded-[20px] flex flex-col gap-6  bg-[#F9F9F9] p-5 dark:bg-gray-900 shadow-sm">
+        <div className="rounded-[20px] flex flex-col gap-6  bg-[#F9F9F9] p-5 dark:bg-gray-900 shadow-lg">
           <p className="text-base font-medium tracking-widest text-[#686969] dark:text-gray-500 dark:text-gray-5000">
             Total Users
           </p>
@@ -387,7 +387,7 @@ export default function CategoriesLayout({ title, subtitle }) {
       )}
 
       {/* Table */}
-      <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm overflow-hidden">
+      <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900  shadow-lg shadow-[#0000001A] overflow-hidden">
         {/* Toolbar */}
         <div className="flex flex-col gap-3 border-b border-gray-100 dark:border-gray-800 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
           <div>

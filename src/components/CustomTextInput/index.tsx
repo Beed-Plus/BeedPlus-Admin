@@ -20,7 +20,7 @@ export default function CustomTextInput(props: CTIInterface) {
           </span>
         )}
         <input
-          className="text-[16px] md:text-[18px] border border-[#E5E5E5] h-10 bg-white rounded-lg py-2.5 px-4 w-full placeholder-gray-500/60"
+          className="text-[16px] md:text-[18px] border border-[#E5E5E5] h-9 bg-white rounded-lg py-2.5 px-4 w-full placeholder-gray-500/60"
           placeholder={props.placeholder}
           value={props.value}
           onChange={props.onChange}

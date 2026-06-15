@@ -63,7 +63,7 @@ export default function SelectSearch({
       )}
       {/* Input row */}
       <div
-        className={`flex items-center bg-[#FFF] border border-[#D5D5D5] px-4 h-10 rounded-md transition-colors duration-200 cursor-text
+        className={`flex items-center bg-[#FFF] border border-[#D5D5D5] w-full px-4 h-9 rounded-md transition-colors duration-200 cursor-text
             ${open ? "ring-2 ring-[#D5D5D5]" : ""}`}
         onClick={() => {
           if (open) {
@@ -85,7 +85,7 @@ export default function SelectSearch({
           }}
           onClick={() => setOpen(true)}
           className={`
-              flex-1 bg-transparent py-3 text-sm outline-none placeholder-gray-500/60 text-black text-[16px]
+              flex-1 bg-transparent py-3 w-full text-base outline-none placeholder-gray-500/60 text-black text-[16px]
             `}
           disabled={disabled}
         />

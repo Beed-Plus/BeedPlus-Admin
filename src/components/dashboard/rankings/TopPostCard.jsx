@@ -6,7 +6,7 @@ export default function TopPostCard({ post }) {
   const permalink  = post.permalink ?? post.media?.permalink
 
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-orange-100 dark:border-orange-500/20 bg-white dark:bg-gray-900 shadow-sm">
+    <div className="relative overflow-hidden rounded-2xl border border-orange-100 dark:border-orange-500/20 bg-white dark:bg-gray-900 shadow-lg">
       {/* Subtle orange glow strip at top */}
       <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-orange-400 via-orange-500 to-amber-400" />
 
@@ -27,7 +27,7 @@ export default function TopPostCard({ post }) {
             </div>
           )}
           {/* Rank badge overlay */}
-          <div className="absolute top-3 left-3 flex h-8 w-8 items-center justify-center rounded-full bg-amber-400 shadow-md text-xs font-black text-white">
+          <div className="absolute top-3 left-3 flex h-8 w-8 items-center justify-center rounded-full bg-amber-400 shadow-lg text-xs font-black text-white">
             1
           </div>
         </div>
@@ -37,7 +37,7 @@ export default function TopPostCard({ post }) {
           <div className="flex flex-col gap-3">
             {/* Label + category */}
             <div className="flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-orange-500 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-white shadow-sm">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-orange-500 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-white shadow-lg">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
                   <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                 </svg>

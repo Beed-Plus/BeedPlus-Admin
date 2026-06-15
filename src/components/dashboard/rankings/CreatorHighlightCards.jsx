@@ -2,7 +2,7 @@ export default function CreatorHighlightCards({ topCreator, totalActiveCreators,
   return (
     <div className="flex flex-col gap-4 sm:flex-row">
       {/* Top Creator of the Month */}
-      {/* <div className="flex flex-1 items-center justify-between rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 px-8 py-6 shadow-sm">
+      {/* <div className="flex flex-1 items-center justify-between rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 px-8 py-6 shadow-lg">
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">
             Top Creator of the Month
@@ -17,7 +17,7 @@ export default function CreatorHighlightCards({ topCreator, totalActiveCreators,
       </div> */}
 
       {/* Total Active Creators */}
-      <div className="flex flex-1 items-center justify-between rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 px-8 py-6 shadow-sm">
+      <div className="flex flex-1 items-center justify-between rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 px-8 py-6 shadow-lg">
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">
             Total Active Creators
@@ -31,7 +31,7 @@ export default function CreatorHighlightCards({ topCreator, totalActiveCreators,
         </svg>
       </div>
       {/* Country filter */}
-      <div className="flex flex-1 flex-col rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 px-8 py-6 shadow-sm">
+      <div className="flex flex-1 flex-col rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 px-8 py-6 shadow-lg">
         <div className="flex items-center justify-between">
           <p className="text-[11px] font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">
             Filter by Country

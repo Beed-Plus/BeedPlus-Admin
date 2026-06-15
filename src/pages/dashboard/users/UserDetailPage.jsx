@@ -288,24 +288,24 @@ function displayName(user) {
 // ─── Stat card ────────────────────────────────────────────────────────────────
 function StatCard({ label, globalValue, localValue }) {
   return (
-    <div className="flex flex-col gap-6 rounded-[20px] border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 shadow-sm shadow-[#0000001A]">
-      <div className="flex items-center justify-between mb-1">
-        <p className="text-xs font-medium text-[#686969] dark:text-gray-500">
+    <div className="flex flex-col gap-4 rounded-[27px] border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 shadow-lg shadow-[#00000014]">
+      <div className="flex items-center justify-center">
+        <p className="text-[13px] font-medium text-center text-[#686969] dark:text-gray-500">
           {label}
         </p>
       </div>
       <div className="flex justify-center text-center">
-        <div className="text-center w-1/2">
-          <h4 className="text-sm font-normal text-[#A9A9A9]">Global</h4>
-          <p className="text-[28px] font-bold text-[#2F3134] dark:text-white">
+        <div className="text-center w-1/2 border-r-[0.5px] border-[#B9B9B9]">
+          <p className="text-[31px] font-bold text-[#2F3134] leading-6 dark:text-white">
             {globalValue}
           </p>
+          <h4 className="text-[15px] font-normal text-[#818080]">Global</h4>
         </div>
-        <div className="text-center  w-1/2">
-          <h4 className="text-sm font-normal text-[#A9A9A9]">Nigeria</h4>
-          <p className="text-[28px] font-bold text-[#2F3134] dark:text-white">
+        <div className="text-center w-1/2 border-l-[0.5px] border-[#B9B9B9]">
+          <p className="text-[31px] font-bold text-[#2F3134] leading-6 dark:text-white">
             {localValue}
           </p>
+          <h4 className="text-[15px] font-normal text-[#818080]">Nigeria</h4>
         </div>
       </div>
     </div>
@@ -315,7 +315,7 @@ function StatCard({ label, globalValue, localValue }) {
 // ─── Skeletons ────────────────────────────────────────────────────────────────
 function HeroSkeleton() {
   return (
-    <div className="flex items-center gap-6 rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-sm animate-pulse">
+    <div className="flex items-center gap-6 rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-lg animate-pulse">
       <div className="h-16 w-16 shrink-0 rounded-full bg-gray-100 dark:bg-gray-800" />
       <div className="flex-1 space-y-2">
         <div className="h-4 w-40 rounded bg-gray-100 dark:bg-gray-800" />
@@ -328,7 +328,7 @@ function HeroSkeleton() {
 
 function StatSkeleton() {
   return (
-    <div className="flex flex-col gap-4 rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-sm animate-pulse">
+    <div className="flex flex-col gap-4 rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-lg animate-pulse">
       <div className="flex justify-between">
         <div className="h-3 w-20 rounded bg-gray-100 dark:bg-gray-800" />
         <div className="h-9 w-9 rounded-xl bg-gray-100 dark:bg-gray-800" />
@@ -411,8 +411,15 @@ export default function UserDetailPage() {
   const navigate = useNavigate();
   const { auth } = useAuth();
   const token = auth?.token;
-  const { createSubCategory, fetchCategories, fetchSubCategories } =
-    useCategoriesProvider();
+  const {
+    createSubCategory,
+    fetchCategories,
+    fetchSubCategories,
+    categories,
+    subCategories,
+  } = useCategoriesProvider();
+
+  console.log("CATEGORIES", categories);
 
   const [user, setUser] = useState(null);
   const [posts, setPosts] = useState([]);
@@ -446,6 +453,8 @@ export default function UserDetailPage() {
   const [submitMsg, setSubmitMsg] = useState(null);
   const [search, setSearch] = useState("");
   const [retryKey, setRetryKey] = useState(0);
+  const [filterCategory, setFilterCategory] = useState("");
+  const [filterSubCategory, setFilterSubCategory] = useState("");
 
   async function handleApprove() {
     setApproving(true);
@@ -555,8 +564,8 @@ export default function UserDetailPage() {
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     const hasFilters =
-      (category && category !== "All Categories") ||
-      (subCategory && subCategory !== "All Subcategories") ||
+      (filterCategory && filterCategory !== "All") ||
+      (filterSubCategory && filterSubCategory !== "All") ||
       (q && q !== "");
     console.log("Filtering with", { category, subCategory, q, hasFilters });
     // If no filters applied, return all igMedia
@@ -570,16 +579,16 @@ export default function UserDetailPage() {
       if (!submittedPost) return false; // Not submitted, exclude
 
       // Apply filters to the submitted post
-      if (category) {
+      if (filterCategory) {
         const cats = Array.isArray(submittedPost.category)
           ? submittedPost.category
           : [submittedPost.category].filter(Boolean);
-        if (!cats.includes(category)) return false;
+        if (!cats.includes(filterCategory)) return false;
       }
-      if (subCategory) {
+      if (filterSubCategory) {
         const sub =
           submittedPost.subCategory?.name ?? submittedPost.subCategory;
-        if (sub !== subCategory) return false;
+        if (sub !== filterSubCategory) return false;
       }
       if (q) {
         const caption = m.caption?.toLowerCase() ?? "";
@@ -587,42 +596,31 @@ export default function UserDetailPage() {
       }
       return true;
     });
-  }, [igMedia, posts, search, category, subCategory]);
+  }, [igMedia, posts, search, filterCategory, filterSubCategory]);
 
-  const paginatedData = filtered.slice(startIdx, endIdx);
+  // Calculate pagination based on filtered data
+  const filteredTotalItems = filtered.length;
+  const filteredTotalPages = Math.ceil(filteredTotalItems / ITEMS_PER_PAGE);
+  const filteredStartIdx = (currentPage - 1) * ITEMS_PER_PAGE;
+  const filteredEndIdx = filteredStartIdx + ITEMS_PER_PAGE;
+  const paginatedData = filtered.slice(filteredStartIdx, filteredEndIdx);
 
-  const categories = useMemo(() => {
-    if (posts.length === 0) return [];
-    const cats = new Set();
-    posts.forEach((p) => {
-      if (p.category) {
-        cats.add(p.category);
-      }
-    });
-    return Array.from(cats);
-  }, [posts]);
-  const subCategories = useMemo(() => {
-    if (posts.length === 0) return [];
-    const subCats = new Set();
-    posts.forEach((p) => {
-      if (p.subCategory) {
-        subCats.add(p.subCategory);
-      }
-    });
-    return Array.from(subCats);
-  }, [posts]);
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, filterCategory, filterSubCategory]);
 
   // Auto-fetch more when reaching last page with remaining cursor items
   useEffect(() => {
     if (
-      currentPage === totalPages &&
-      totalPages > 0 &&
+      currentPage === filteredTotalPages &&
+      filteredTotalPages > 0 &&
       igMediaHasMore &&
       !igMediaLoading
     ) {
       loadMoreIgMedia();
     }
-  }, [currentPage, totalPages, igMediaHasMore, igMediaLoading]);
+  }, [currentPage, filteredTotalPages, igMediaHasMore, igMediaLoading]);
 
   async function handleAdminSubmit() {
     if (category.length === 0) return;
@@ -656,7 +654,7 @@ export default function UserDetailPage() {
     return (
       <div className="flex flex-col gap-6">
         <Breadcrumb crumbs={CRUMBS} />
-        <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-12 text-center shadow-sm">
+        <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-12 text-center shadow-lg">
           <p className="text-sm text-red-500">{error}</p>
           <button
             onClick={() => navigate("/dashboard/users")}
@@ -719,7 +717,7 @@ export default function UserDetailPage() {
                 <button
                   onClick={handleApprove}
                   disabled={approving}
-                  className="flex items-center gap-2 rounded-xl bg-orange-500 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-orange-600 active:scale-95 transition disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="flex items-center gap-2 rounded-xl bg-orange-500 px-4 py-2 text-sm font-semibold text-white shadow-lg hover:bg-orange-600 active:scale-95 transition disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   {approving ? (
                     <svg
@@ -774,7 +772,10 @@ export default function UserDetailPage() {
                 >
                   <InstagramIcon />
                 </Link>
-                <p className="text-base text-[#00000080] dark:text-gray-500">
+                <p className="text-base font-medium text-[#00000080] dark:text-gray-500">
+                  {fmt(user.monthlyReach)} monthly viewers
+                </p>
+                <p className="text-base font-medium text-[#00000080] dark:text-gray-500">
                   ID: {user?._id}
                 </p>
               </div>
@@ -820,7 +821,7 @@ export default function UserDetailPage() {
       </div>
 
       {/* Submitted Posts */}
-      <div className="flex flex-col rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm overflow-hidden">
+      <div className="flex flex-col rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-lg shadow-[#0000001A] overflow-hidden">
         {igMediaLoading ? (
           <div className="divide-y divide-gray-50 dark:divide-gray-800">
             {Array.from({ length: 4 }).map((_, i) => (
@@ -845,8 +846,8 @@ export default function UserDetailPage() {
             No posts found.
           </div>
         ) : (
-          <div className="pt-6">
-            <div className="flex justify-between items-center px-4 mb-6">
+          <div className="pt-2">
+            <div className="flex justify-between items-center px-4 mb-1">
               <h3 className="text-xl font-bold"></h3>
 
               <div className="flex gap-4">
@@ -861,45 +862,47 @@ export default function UserDetailPage() {
                   />
 
                   {/* Category */}
-                  <select
-                    value={category}
-                    onChange={(e) => setCategory(e.target.value)}
-                    className={SELECT}
-                  >
-                    <option value="">All Categories</option>
-                    {categories.map((c) => (
-                      <option key={c} value={c}>
-                        {c}
-                      </option>
-                    ))}
-                  </select>
-
-                  {/* Sub Category */}
-                  <select
-                    value={subCategory}
-                    onChange={(e) => setSubCategory(e.target.value)}
-                    className={SELECT}
-                  >
-                    <option value="">All Subcategories</option>
-                    {subCategories.map((c) => (
-                      <option key={c} value={c}>
-                        {c}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="min-w-40">
+                    <CustomDropDownInput
+                      placeholder="Category"
+                      value={filterCategory}
+                      onChange={(e) => {
+                        setFilterCategory(e.target.value);
+                        setFilterSubCategory("");
+                      }}
+                      items={[
+                        {
+                          label: "All",
+                          value: "All",
+                        },
+                        ...categories.map((c) => ({
+                          label: c.name,
+                          value: c.name,
+                        })),
+                      ]}
+                    />
+                  </div>
+                  <div className="w-40">
+                    <SelectSearch
+                      placeholder="Subcategory"
+                      onChange={(val) => setFilterSubCategory(val)}
+                      value={filterSubCategory}
+                      items={["All", ...subCategories.map((s) => s.name)]}
+                    />
+                  </div>
                 </div>
                 <div className="flex items-center gap-2 mt-1">
                   <button
                     onClick={() => setRetryKey((k) => k + 1)}
                     disabled={loading}
                     title="Refresh"
-                    className="flex h-8 w-8 items-center justify-center rounded-lg bg-white shadow-sm shadow-[#00000040] disabled:opacity-40"
+                    className="flex h-8 w-8 items-center justify-center rounded-lg bg-white shadow-lg shadow-[#00000040] disabled:opacity-40"
                   >
                     <RetryIcon />
                   </button>
                   {!loading && !error && (
                     <p className="px-3 py-1 text-base font-semibold">
-                      Posts: {posts?.length}
+                      Posts: {filtered?.length}
                     </p>
                   )}
                 </div>
@@ -1088,7 +1091,7 @@ export default function UserDetailPage() {
                 </tbody>
               </table>
             </div>
-            {totalPages > 1 && (
+            {filteredTotalPages > 1 && (
               <div className="relative flex items-center justify-between border-t border-gray-100 dark:border-gray-800 px-6 py-4">
                 {/* Loading spinner overlay */}
                 {loadingMore && <Loader />}
@@ -1110,7 +1113,7 @@ export default function UserDetailPage() {
                       currentPage - Math.floor(maxButtons / 2),
                     );
                     let endPage = Math.min(
-                      totalPages,
+                      filteredTotalPages,
                       startPage + maxButtons - 1,
                     );
 
@@ -1149,7 +1152,7 @@ export default function UserDetailPage() {
                           disabled={loadingMore}
                           className={`rounded-lg px-2.5 py-1.5 text-xs font-medium transition ${
                             page === currentPage
-                              ? "bg-[#3A3A3A] text-white shadow-md"
+                              ? "bg-[#3A3A3A] text-white shadow-lg"
                               : "border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50"
                           }`}
                         >
@@ -1158,8 +1161,8 @@ export default function UserDetailPage() {
                       );
                     }
 
-                    if (endPage < totalPages) {
-                      if (endPage < totalPages - 1) {
+                    if (endPage < filteredTotalPages) {
+                      if (endPage < filteredTotalPages - 1) {
                         pageButtons.push(
                           <span
                             key="ellipsis-end"
@@ -1172,11 +1175,11 @@ export default function UserDetailPage() {
                       pageButtons.push(
                         <button
                           key="last"
-                          onClick={() => setCurrentPage(totalPages)}
+                          onClick={() => setCurrentPage(filteredTotalPages)}
                           disabled={loadingMore}
                           className="rounded-lg border border-gray-200 dark:border-gray-700 px-2.5 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition disabled:opacity-50"
                         >
-                          {totalPages}
+                          {filteredTotalPages}
                         </button>,
                       );
                     }
@@ -1187,9 +1190,9 @@ export default function UserDetailPage() {
 
                 <button
                   onClick={() =>
-                    setCurrentPage((p) => Math.min(totalPages, p + 1))
+                    setCurrentPage((p) => Math.min(filteredTotalPages, p + 1))
                   }
-                  disabled={currentPage === totalPages || loadingMore}
+                  disabled={currentPage === filteredTotalPages || loadingMore}
                   className="flex items-center gap-1.5 rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Next
@@ -1201,7 +1204,7 @@ export default function UserDetailPage() {
       </div>
 
       {/* Unsubmitted Videos */}
-      {/* <div className="flex flex-col rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm overflow-hidden">
+      {/* <div className="flex flex-col rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-lg overflow-hidden">
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-800">
           <div>
             <p className="text-sm font-bold text-gray-800 dark:text-gray-100">
@@ -1364,7 +1367,7 @@ export default function UserDetailPage() {
       </div> */}
 
       {/* Daily Reach */}
-      {/* <div className="flex flex-col rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm overflow-hidden">
+      {/* <div className="flex flex-col rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-lg overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-800">
           <p className="text-sm font-bold text-gray-800 dark:text-gray-100">
             Daily Reach
@@ -1432,8 +1435,8 @@ export default function UserDetailPage() {
                 value={category}
                 placeholder="Select your main category"
                 items={categories.map((c) => ({
-                  label: c,
-                  value: c,
+                  label: c.name,
+                  value: c.name,
                 }))}
                 onChange={(e) => {
                   setCategory(e.target.value);
@@ -1445,7 +1448,9 @@ export default function UserDetailPage() {
                 value={subCategory}
                 placeholder="Select or add subcategory"
                 items={
-                  subCategories?.length > 0 ? subCategories.map((sc) => sc) : []
+                  subCategories?.length > 0
+                    ? subCategories.map((sc) => sc.name)
+                    : []
                 }
                 onChange={(val) => {
                   setSubCategory(val);

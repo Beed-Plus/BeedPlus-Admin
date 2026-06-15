@@ -50,19 +50,15 @@ export default function CustomDropDownInput(props: CDIInterface) {
   }, []);
 
   return (
-    <div className="my-4 relative" ref={containerRef}>
-      {label && (
-        <p className="font-medium text-[16px] py-1">
-          {label}
-        </p>
-      )}
+    <div className="my-4 relative w-full" ref={containerRef}>
+      {label && <p className="font-medium text-[16px] py-1">{label}</p>}
 
       {/* Trigger */}
       <div
         onClick={() => !props.disabled && setOpen((o) => !o)}
         className={`
                     flex items-center justify-between cursor-pointer
-                    text-[14px] md:text-[16px] bg-[#FFF] border border-[#D5D5D5] h-10 rounded-lg py-2 px-3 w-full
+                    text-[14px] md:text-[16px] bg-[#FFF] border border-[#D5D5D5] h-9 rounded-lg py-2 px-3 w-full
                     transition-all duration-200 select-none
                     ${open ? "ring-2 ring-[#D5D5D5]" : ""}
                     ${errormsg ? "ring-2 ring-[#F87A15]" : ""}

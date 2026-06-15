@@ -21,6 +21,8 @@ export default function PostsPage() {
 
   const [allPosts, setAllPosts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isReloading, setIsReloading] = useState(false);
+  const [isSavingScene, setIsSavingScene] = useState(false);
   const [error, setError] = useState(null);
   const [retryKey, setRetryKey] = useState(0);
 
@@ -29,38 +31,29 @@ export default function PostsPage() {
   const [filterCategory, setCategory] = useState("");
   const [filterSubCategory, setSubCategory] = useState("");
   const [filterCountry, setFilterCountry] = useState("");
+  const [filterBeedplusScore, setFilterBeedplusScore] = useState("");
   const [smallLoading, setSmallLoading] = useState(false);
   const [selectedPost, setSelectedPost] = useState(null);
 
   const {
     categories,
     subCategories,
-    createSubCategory,
-    fetchCategories,
-    fetchSubCategories,
   } = useCategoriesProvider();
 
   async function refreshData() {
     setSmallLoading(true);
     setError(null);
 
-    let lastErr = null;
-    for (let attempt = 1; attempt <= 3; attempt++) {
-      try {
-        const res = await instagramApi.getAllSubmittedMediaForAdmin(token);
-        setAllPosts(Array.isArray(res) ? res : []);
-        setSmallLoading(false);
-        return;
-      } catch (err) {
-        lastErr = err;
-        if (attempt < 3) {
-          await new Promise((r) => setTimeout(r, attempt * 1000));
-        }
-      }
+    try {
+      const res = await instagramApi.getAllSubmittedMediaForAdmin(token);
+      setAllPosts(Array.isArray(res) ? res : []);
+      setSmallLoading(false);
+      return;
+    } catch (err) {
+      setError(err?.message ?? "Failed to load posts");
+    } finally {
+      setSmallLoading(false);
     }
-
-    setError(lastErr?.message ?? "Failed to load posts");
-    setSmallLoading(false);
   }
 
   useEffect(() => {
@@ -112,17 +105,21 @@ export default function PostsPage() {
     const q = search.trim().toLowerCase();
     return allPosts
       .filter((p) => {
-        if (filterCategory) {
+        if (filterCategory && filterCategory !== "All") {
           const cats = Array.isArray(p.category)
             ? p.category
             : [p.category].filter(Boolean);
           if (!cats.includes(filterCategory)) return false;
         }
-        if (filterSubCategory) {
+        if (filterSubCategory && filterSubCategory !== "All") {
           const sub = p.subCategory?.name ?? p.subCategory;
           if (sub !== filterSubCategory) return false;
         }
-        if (filterCountry && p.userData?.country !== filterCountry)
+        if (
+          filterCountry &&
+          p.userData?.country !== filterCountry &&
+          filterCountry !== "All"
+        )
           return false;
         if (q) {
           const username = (
@@ -134,8 +131,21 @@ export default function PostsPage() {
         }
         return true;
       })
-      .sort((a, b) => new Date(b.createdAt ?? 0) - new Date(a.createdAt ?? 0));
-  }, [allPosts, search, filterCategory, filterSubCategory, filterCountry]);
+      .sort((a, b) => {
+        if (filterBeedplusScore === "Highest to Lowest") {
+          return (b.beedplusScore ?? 0) - (a.beedplusScore ?? 0);
+        } else if (filterBeedplusScore === "Lowest to Highest") {
+          return (a.beedplusScore ?? 0) - (b.beedplusScore ?? 0);
+        }
+      });
+  }, [
+    allPosts,
+    search,
+    filterCategory,
+    filterSubCategory,
+    filterCountry,
+    filterBeedplusScore,
+  ]);
 
   function handleFilter(setter) {
     return (val) => {
@@ -149,13 +159,14 @@ export default function PostsPage() {
   const bookmarkScene = async (post) => {
     setSelectedPost(post._id);
     try {
-      setSmallLoading(true);
+      setIsSavingScene(true);
       await updateScene(post._id, post.inScenes);
+      setIsSavingScene(false);
       await refreshData();
     } catch (err) {
       console.log(`Failed to update scene: ${err.message}`);
     } finally {
-      setSmallLoading(false);
+      setIsSavingScene(false);
       setSelectedPost(null);
     }
   };
@@ -163,8 +174,8 @@ export default function PostsPage() {
   return (
     <div className="flex flex-col gap-6">
       {/* Header */}
-
-      <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm overflow-hidden py-6">
+      {smallLoading && <Loader />}
+      <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-lg shadow-[#0000001A] overflow-hidden py-4">
         {/* Filters */}
         <div className="flex flex-wrap items-center justify-between gap-3 z-999 px-4">
           <h2 className="text-xl font-bold text-[#2F3134] dark:text-white">
@@ -190,18 +201,47 @@ export default function PostsPage() {
                     handleFilter(setCategory)(e.target.value);
                     setSubCategory("");
                   }}
-                  items={categories.map((c) => ({
-                    label: c.name,
-                    value: c.name,
-                  }))}
+                  items={[
+                    {
+                      label: "All",
+                      value: "All",
+                    },
+                    ...categories.map((c) => ({
+                      label: c.name,
+                      value: c.name,
+                    })),
+                  ]}
                 />
               </div>
-              <div className="min-w-22">
+              <div className="w-30">
                 <SelectSearch
                   placeholder="Subcategory"
                   onChange={(val) => handleFilter(setSubCategory)(val)}
                   value={filterSubCategory}
-                  items={subCategories?.map((s) => s.name)}
+                  items={["All", ...subCategories.map((s) => s.name)]}
+                />
+              </div>
+              <div className="min-w-22">
+                <CustomDropDownInput
+                  placeholder="Sort by BPS"
+                  value={filterBeedplusScore}
+                  onChange={(e) => {
+                    handleFilter(setFilterBeedplusScore)(e.target.value);
+                  }}
+                  items={[
+                    {
+                      label: "Default",
+                      value: "Default",
+                    },
+                    {
+                      label: "Highest to Lowest",
+                      value: "Highest to Lowest",
+                    },
+                    {
+                      label: "Lowest to Highest",
+                      value: "Lowest to Highest",
+                    },
+                  ]}
                 />
               </div>
               <div className="min-w-22">
@@ -212,16 +252,22 @@ export default function PostsPage() {
                     handleFilter(setFilterCountry)(e.target.value);
                     setSubCategory("");
                   }}
-                  items={countries.map((c) => ({
-                    label: c,
-                    value: c,
-                  }))}
+                  items={[
+                    {
+                      label: "All",
+                      value: "All",
+                    },
+                    ...countries.map((c) => ({
+                      label: c,
+                      value: c,
+                    })),
+                  ]}
                 />
               </div>
 
               <div className="flex items-center gap-2 ">
                 <button
-                  onClick={() => setRetryKey((k) => k + 1)}
+                  onClick={() => refreshData()}
                   disabled={loading}
                   title="Refresh"
                   className="flex px-2 py-2 items-center justify-center rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-400 hover:text-orange-500 hover:border-orange-300 dark:hover:border-orange-500/50 dark:hover:text-orange-400 transition disabled:opacity-40"
@@ -264,7 +310,7 @@ export default function PostsPage() {
           <div className="flex items-center justify-between gap-4 rounded-xl border border-red-100 bg-red-50 dark:bg-red-500/10 dark:border-red-500/20 px-4 py-3">
             <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
             <button
-              onClick={() => setRetryKey((k) => k + 1)}
+              onClick={() => refreshData()}
               className="shrink-0 rounded-lg bg-red-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-600 transition"
             >
               Retry
@@ -277,7 +323,7 @@ export default function PostsPage() {
           posts={filtered.filter((post) => post.status == "approved")}
           loading={loading}
           bookmarkScene={bookmarkScene}
-          smallLoading={smallLoading}
+          smallLoading={isSavingScene}
           selectedPost={selectedPost}
         />
       </div>

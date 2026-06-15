@@ -139,7 +139,7 @@ export default function RecentActivity() {
   }, [auth?.token])
 
   return (
-    <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm overflow-hidden">
+    <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-lg overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 px-4 py-4 sm:px-6 sm:py-5">
         <div>

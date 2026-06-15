@@ -154,6 +154,7 @@ export default function MediaReviewTable({ posts, loading, review, actionId }) {
               <th className={COL}>Creator</th>
               <th className={COL}>Category</th>
               <th className={COL}>Subcategory</th>
+              <th className={COL}>Country</th>
               <th className={COL}>Views</th>
               <th className={COL}>Submitted</th>
               <th className={`${COL} text-right`}>Actions</th>
@@ -221,7 +222,7 @@ export default function MediaReviewTable({ posts, loading, review, actionId }) {
                       {username ? (
                         <div>
                           <p className="text-sm font-bold text-[#3A3A3A] dark:text-gray-100">
-                            @{username}
+                            {username}
                           </p>
                           {country && (
                             <p className="text-xs text-[#3A3A3A] dark:text-gray-500">
@@ -261,6 +262,19 @@ export default function MediaReviewTable({ posts, loading, review, actionId }) {
                       {subCat ? (
                         <span className="inline-flex items-center rounded-xl dark:bg-blue-500/10 px-2.5 py-0.5 text-base font-medium text-[#4A4A4A] dark:text-gray-300">
                           {subCat}
+                        </span>
+                      ) : (
+                        <span className="text-gray-300 dark:text-gray-600">
+                          —
+                        </span>
+                      )}
+                    </td>
+
+                    {/* Country */}
+                    <td className="px-6 py-4 min-w-30">
+                      {post.userData.country ? (
+                        <span className="inline-flex items-center rounded-xl dark:bg-blue-500/10 px-2.5 py-0.5 text-base font-medium text-[#4A4A4A] dark:text-gray-300">
+                          {post.userData.country}
                         </span>
                       ) : (
                         <span className="text-gray-300 dark:text-gray-600">

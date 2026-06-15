@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { countriesApi } from "../../../utils/countriesApi";
 import UserWorldMap from "../../../components/dashboard/countries/UserWorldMap";
 import { DeleteIcon } from "../../../components/icons";
+import CustomDropDownInput from "../../../components/CustomDropDownInput";
 
 const COL = "px-6 py-3 text-left text-base font-medium text-[#3A3A3AB2]";
 
@@ -249,6 +250,8 @@ export default function CountriesPage() {
   const [editTarget, setEditTarget] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [togglingId, setTogglingId] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 10;
 
   async function loadCountries() {
     setLoading(true);
@@ -286,6 +289,17 @@ export default function CountriesPage() {
       return true;
     });
   }, [countries, search, statusFilter]);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, statusFilter]);
+
+  // Pagination calculation
+  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+  const startIdx = (currentPage - 1) * ITEMS_PER_PAGE;
+  const endIdx = startIdx + ITEMS_PER_PAGE;
+  const paginatedData = filtered.slice(startIdx, endIdx);
 
   async function handleToggle(country) {
     setTogglingId(country._id);
@@ -363,7 +377,7 @@ export default function CountriesPage() {
             label: "Total Countries",
             value: loading ? "..." : countries.length,
             color: "text-[#FDD6B6] dark:text-gray-500",
-            boxColor: "bg-[#2F3134] shadow-sm",
+            boxColor: "bg-[#2F3134] shadow-lg",
             headerColor: "text-[#DADADA]",
           },
           {
@@ -374,21 +388,21 @@ export default function CountriesPage() {
                   .reduce((s, c) => s + (c.userCount ?? 0), 0)
                   .toLocaleString(),
             color: "text-[#2F3134] dark:text-white",
-            boxColor: "bg-[#F9F9F9] shadow-sm",
+            boxColor: "bg-[#F9F9F9] shadow-lg",
             headerColor: "text-[#686969]",
           },
           {
             label: "Total views",
             value: loading ? "..." : activeCount,
             color: "text-[#2F3134] dark:text-white",
-            boxColor: "bg-[#F9F9F9] shadow-sm",
+            boxColor: "bg-[#F9F9F9] shadow-lg",
             headerColor: "text-[#686969]",
           },
           {
             label: "Active Creator",
             value: loading ? "..." : activeCount,
             color: "text-[#2F3134] dark:text-white",
-            boxColor: "bg-[#F9F9F9] shadow-sm",
+            boxColor: "bg-[#F9F9F9] shadow-lg",
             headerColor: "text-[#686969]",
           },
         ].map(({ label, value, color, boxColor, headerColor }) => (
@@ -417,7 +431,7 @@ export default function CountriesPage() {
 
       <div className="flex flex-col gap-4 lg:flex-row ">
         {/* Table — 60% */}
-        <div className="w-full rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm overflow-hidden flex flex-col">
+        <div className="w-full rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-lg overflow-hidden flex flex-col">
           <div className="flex flex-col gap-3 border-b border-gray-100 dark:border-gray-800 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="text-xl font-bold text-gray-800 dark:text-gray-100">
@@ -448,15 +462,18 @@ export default function CountriesPage() {
                   className="rounded-xl border border-gray-200 bg-gray-50 pl-9 pr-4 py-2 text-sm text-gray-700 placeholder-gray-400 outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition w-50"
                 />
               </div>
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-600 outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition cursor-pointer"
-              >
-                <option value="">All Status</option>
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-              </select>
+              <div className="w-40">
+                <CustomDropDownInput
+                  placeholder="All Status"
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  items={[
+                    { label: "All Status", value: "" },
+                    { label: "Active", value: "active" },
+                    { label: "Inactive", value: "inactive" },
+                  ]}
+                />
+              </div>
             </div>
           </div>
 
@@ -492,7 +509,7 @@ export default function CountriesPage() {
                 )}
 
                 {!loading &&
-                  filtered.map((country) => (
+                  paginatedData.map((country) => (
                     <tr
                       key={country._id}
                       className="border-b border-gray-50 dark:border-gray-800/50 last:border-0 hover:bg-gray-50/40 dark:hover:bg-gray-800/40 transition-colors"
@@ -500,7 +517,7 @@ export default function CountriesPage() {
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2.5">
                           <CountryFlag code={country.code} size={40} />
-                          <span className="text-xl font-bold text-[#3A3A3A] dark:text-gray-100">
+                          <span className="text-lg font-bold text-[#3A3A3A] dark:text-gray-100">
                             {country.name}
                           </span>
                         </div>
@@ -615,6 +632,95 @@ export default function CountriesPage() {
               </tbody>
             </table>
           </div>
+
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between border-t border-gray-100 dark:border-gray-800 px-6 py-4">
+              <button
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="flex items-center gap-1.5 rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Prev
+              </button>
+
+              <div className="flex items-center gap-1.5">
+                {(() => {
+                  const pageButtons = [];
+                  const maxButtons = 5;
+                  let startPage = Math.max(1, currentPage - Math.floor(maxButtons / 2));
+                  let endPage = Math.min(totalPages, startPage + maxButtons - 1);
+
+                  if (endPage - startPage + 1 < maxButtons) {
+                    startPage = Math.max(1, endPage - maxButtons + 1);
+                  }
+
+                  if (startPage > 1) {
+                    pageButtons.push(
+                      <button
+                        key="first"
+                        onClick={() => setCurrentPage(1)}
+                        className="rounded-lg border border-gray-200 dark:border-gray-700 px-2.5 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition"
+                      >
+                        1
+                      </button>
+                    );
+                    if (startPage > 2) {
+                      pageButtons.push(
+                        <span key="ellipsis-start" className="text-gray-400 dark:text-gray-600">
+                          …
+                        </span>
+                      );
+                    }
+                  }
+
+                  for (let page = startPage; page <= endPage; page++) {
+                    pageButtons.push(
+                      <button
+                        key={page}
+                        onClick={() => setCurrentPage(page)}
+                        className={`rounded-lg px-2.5 py-1.5 text-xs font-medium transition ${
+                          page === currentPage
+                            ? "bg-[#3A3A3A] text-white shadow-lg"
+                            : "border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    );
+                  }
+
+                  if (endPage < totalPages) {
+                    if (endPage < totalPages - 1) {
+                      pageButtons.push(
+                        <span key="ellipsis-end" className="text-gray-400 dark:text-gray-600">
+                          …
+                        </span>
+                      );
+                    }
+                    pageButtons.push(
+                      <button
+                        key="last"
+                        onClick={() => setCurrentPage(totalPages)}
+                        className="rounded-lg border border-gray-200 dark:border-gray-700 px-2.5 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition"
+                      >
+                        {totalPages}
+                      </button>
+                    );
+                  }
+
+                  return pageButtons;
+                })()}
+              </div>
+
+              <button
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="flex items-center gap-1.5 rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Next
+              </button>
+            </div>
+          )}
         </div>
         {/* end table card */}
       </div>

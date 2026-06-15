@@ -8,6 +8,7 @@ import CustomTextInput from "../../../components/CustomTextInput";
 import CustomDropDownInput from "../../../components/CustomDropDownInput";
 import SelectSearch from "../../../components/SelectSearch";
 import { useCategoriesProvider } from "../../../hooks/useCategoriesProvider";
+import Loader from "../../../components/Loader";
 
 const SELECT =
   "rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-600 dark:text-gray-300 outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition cursor-pointer";
@@ -125,16 +126,16 @@ export default function ScenesPage() {
   const [removing, setRemoving] = useState(null);
   const [selectedPost, setSelectedPost] = useState(null);
   const [smallLoading, setSmallLoading] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [retryKey, setRetryKey] = useState(0);
   // Unique categories & countries derived from watchlist scenes
-    const {
-      categories,
-      subCategories,
-      createSubCategory,
-      fetchCategories,
-      fetchSubCategories,
-    } = useCategoriesProvider();
-
+  const {
+    categories,
+    subCategories,
+    createSubCategory,
+    fetchCategories,
+    fetchSubCategories,
+  } = useCategoriesProvider();
 
   const countries = useMemo(() => {
     const set = new Set();
@@ -143,7 +144,6 @@ export default function ScenesPage() {
     });
     return [...set].sort();
   }, [scenes]);
-
 
   const filtered = useMemo(() => {
     return scenes.filter((item) => {
@@ -169,6 +169,16 @@ export default function ScenesPage() {
     }
   }
 
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await getScenes();
+    } catch (e) {
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
   function handleFilter(setter) {
     return (val) => {
       setter(val);
@@ -193,79 +203,72 @@ export default function ScenesPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Header */}
-      <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-black text-gray-900 dark:text-white">
+      {isRefreshing && <Loader />}
+      <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900  shadow-lg shadow-[#0000001A] overflow-hidden py-6">
+        {/* Filters */}
+        <div className="flex flex-wrap items-center justify-between gap-3 z-999 px-4">
+          <h2 className="text-xl font-bold text-[#2F3134] dark:text-white">
             Scenes
-          </h1>
-          <p className="mt-1 text-xs font-medium text-gray-400 dark:text-gray-500">
-            Monitor and manage all submitted posts.
-          </p>
-        </div>
-        <div className="flex items-center gap-2 self-start">
-          {!loading && (
-            <span className=" min-w-42.5 text-center bg-[#F87A15] p-2 rounded-md text-xl font-semibold text-white">
-              Total Post{filtered.length !== 1 ? "s" : ""}:{" "}
-              {filtered.length.toLocaleString()}
-            </span>
-          )}
-          <button
-            onClick={async () => await getScenes()}
-            disabled={loading}
-            title="Refresh"
-            className="flex px-2 py-2 items-center justify-center rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-400 hover:text-orange-500 hover:border-orange-300 dark:hover:border-orange-500/50 dark:hover:text-orange-400 transition disabled:opacity-40"
-          >
-            <RefreshIcon />
-          </button>
-        </div>
-      </div>
+          </h2>
 
-      <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm overflow-hidden py-6">
-      {/* Filters */}
-      <div className="flex flex-wrap items-center justify-between gap-3 z-999 px-4">
-        <h2 className="text-xl font-bold text-[#2F3134] dark:text-white">
-          Scenes
-        </h2>
-
-        <div className="flex items-center gap-10">
-          <div className="w-[294px]">
-            <CustomTextInput
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-              }}
-            />
-          </div>
-          <div className="flex items-center gap-6">
-            <div className="min-w-22">
-              <CustomDropDownInput
-                placeholder="Category"
-                value={filterCategory}
+          <div className="flex items-center gap-10">
+            <div className="w-[294px]">
+              <CustomTextInput
+                value={search}
                 onChange={(e) => {
-                  handleFilter(setCategory)(e.target.value);
-                  setSubCategory("");
+                  setSearch(e.target.value);
                 }}
-                items={categories.map((c) => ({ label: c.name, value: c.name }))}
               />
             </div>
-            <div className="min-w-22 z-998">
-              <SelectSearch
-                placeholder="Subcategory"
-                onChange={(val) => handleFilter(setSubCategory)(val)}
-                value={filterSubCategory}
-                items={subCategories.map((s) => s.name)}
-              />
-            </div>
-            <div className="min-w-22">
-              <CustomDropDownInput placeholder="Today" />
+            <div className="flex items-center gap-6">
+              <div className="min-w-30">
+                <CustomDropDownInput
+                  placeholder="Category"
+                  value={filterCategory}
+                  onChange={(e) => {
+                    handleFilter(setCategory)(e.target.value);
+                    setSubCategory("");
+                  }}
+                  items={categories.map((c) => ({
+                    label: c.name,
+                    value: c.name,
+                  }))}
+                />
+              </div>
+              <div className="w-30 z-998">
+                <SelectSearch
+                  placeholder="Subcategory"
+                  onChange={(val) => handleFilter(setSubCategory)(val)}
+                  value={filterSubCategory}
+                  items={subCategories.map((s) => s.name)}
+                />
+              </div>
+              <div className="min-w-22">
+                <CustomDropDownInput placeholder="Today" />
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={async () => handleRefresh()}
+                  disabled={isRefreshing}
+                  title="Refresh"
+                  className="flex px-2 py-2 items-center justify-center rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-400 hover:text-orange-500 hover:border-orange-300 dark:hover:border-orange-500/50 dark:hover:text-orange-400 transition disabled:opacity-40"
+                >
+                  <RefreshIcon />
+                </button>
+                {
+                  <span className="text-center p-2 rounded-md text-xl font-semibold text-black">
+                    Post{filtered.length !== 1 ? "s" : ""}:{" "}
+                    {filtered.length.toLocaleString()}
+                  </span>
+                }
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Category */}
+          {/* Category */}
 
-        {/* Sub-Category
+          {/* Sub-Category
         <input
           type="text"
           list="subcategory-list"
@@ -280,16 +283,15 @@ export default function ScenesPage() {
             <option key={s} value={s} />
           ))}
         </datalist> */}
-      </div>
+        </div>
 
-
-      <ScenesTable
-        posts={filtered}
-        loading={loading}
-        bookmarkScene={bookmarkScene}
-        smallLoading={smallLoading}
-        selectedPost={selectedPost}
-      />
+        <ScenesTable
+          posts={filtered}
+          loading={loading}
+          bookmarkScene={bookmarkScene}
+          smallLoading={smallLoading}
+          selectedPost={selectedPost}
+        />
       </div>
     </div>
   );

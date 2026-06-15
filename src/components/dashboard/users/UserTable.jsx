@@ -9,6 +9,7 @@ import StatusBadge from "../../ui/StatusBadge";
 import UserAvatar from "./UserAvatar";
 import UserActions from "./UserActions";
 import { CloseIcon, DeleteIcon, SuspendIcon } from "../../icons";
+import { fmt } from "../../../utils/helper";
 
 const COL = "px-6 py-3 text-[11px] font-bold tracking-widest text-[#3A3A3AB2]";
 
@@ -211,7 +212,7 @@ export default function UserTable({
               <th className={`${COL} min-w-[172px] text-center`}>Category</th>
               <th className={`${COL} min-w-[172px] text-center`}>Country</th>
               <th className={`${COL} min-w-[172px] text-center`}>Post</th>
-              <th className={`${COL} min-w-[172px] text-center`}>Views</th>
+              <th className={`${COL} min-w-[172px] text-center`}>Viewers</th>
               <th className={`${COL} min-w-[172px] text-center`}>Status</th>
               <th className={`${COL} min-w-[172px] text-center`}>Joined</th>
               <th className={`${COL} text-center`}>Actions</th>
@@ -318,8 +319,8 @@ export default function UserTable({
                       className="px-6 py-4 text-[#3A3A3A] font-medium text-sm min-w-[172px] text-center"
                       onClick={(e) => e.stopPropagation()}
                     >
-                      {instagram?.insights.views ? (
-                        instagram?.insights.views
+                      {user.monthlyReach ? (
+                       fmt(user.monthlyReach)
                       ) : (
                         <span className="text-[#3A3A3A] dark:text-gray-600">
                           —

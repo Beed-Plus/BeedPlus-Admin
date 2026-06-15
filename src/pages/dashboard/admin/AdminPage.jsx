@@ -31,7 +31,7 @@ function Toggle({ checked, onChange }) {
 
 function SectionCard({ title, subtitle, children }) {
   return (
-    <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm overflow-hidden">
+    <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-lg overflow-hidden">
       <div className="border-b border-gray-100 dark:border-gray-800 px-6 py-4">
         <p className="text-sm font-bold text-gray-800 dark:text-gray-100">{title}</p>
         {subtitle && <p className="mt-0.5 text-xs text-gray-400 dark:text-gray-500">{subtitle}</p>}
@@ -114,7 +114,7 @@ export default function AdminPage() {
       </div>
 
       {/* Profile hero card */}
-      <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5 rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-sm">
+      <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5 rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-lg">
         <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-orange-400 text-2xl font-black text-white">
           {ADMIN.initials}
         </div>

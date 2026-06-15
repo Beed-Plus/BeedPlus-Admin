@@ -66,7 +66,7 @@ function MediaTypeBadge({ type }) {
 // ─── Stat Card ────────────────────────────────────────────────────────────────
 function StatCard({ label, value, sub, iconBg, icon: Icon }) {
   return (
-    <div className="flex flex-col gap-3 rounded-lg bg-white dark:bg-gray-900 p-4.5 shadow-sm">
+    <div className="flex flex-col gap-3 rounded-lg bg-white dark:bg-gray-900 p-4.5 shadow-lg">
       <div className="flex items-start justify-between">
         <p className="text-xs font-medium text-[#0000004D] dark:text-gray-500">
           {label}
@@ -100,11 +100,11 @@ function InsightRow({ label, value, icon }) {
 function Top100({ label, globalValue, localValue }) {
   return (
     <div className="flex flex-col gap-5 bg-white p-2.5 rounded-2xl">
-      <h4 className="text-lg font-medium text-black text-center p-2.5 rounded-lg bg-[#F4F4F4] shadow-sm">
+      <h4 className="text-lg font-medium text-black text-center p-2.5 rounded-lg bg-[#F4F4F4] shadow-lg">
         {label}
       </h4>
       <div className="flex gap-4 ">
-        <div className="flex flex-col items-center gap-2.5 w-1/2 shadow-sm shadow-[#0000000D] rounded-lg py-2">
+        <div className="flex flex-col items-center gap-2.5 w-1/2 shadow-lg shadow-[#0000000D] rounded-lg py-2">
           <span
             className={`text-sm text-[#0000004D] font-medium dark:text-gray-400`}
           >
@@ -114,7 +114,7 @@ function Top100({ label, globalValue, localValue }) {
             {fmt(globalValue)}
           </span>
         </div>
-        <div className="flex flex-col items-center gap-2.5 w-1/2 shadow-sm shadow-[#0000000D] rounded-lg py-2">
+        <div className="flex flex-col items-center gap-2.5 w-1/2 shadow-lg shadow-[#0000000D] rounded-lg py-2">
           <span
             className={`text-sm text-[#0000004D] font-medium dark:text-gray-400`}
           >
@@ -134,7 +134,7 @@ function PageSkeleton() {
   return (
     <div className="flex flex-col gap-6 animate-pulse">
       <div className="h-6 w-48 rounded bg-gray-100" />
-      <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-sm">
+      <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-lg">
         <div className="flex gap-6">
           <div className="h-72 w-72 shrink-0 rounded-2xl bg-gray-100 dark:bg-gray-800" />
           <div className="flex flex-1 flex-col gap-4">
@@ -207,7 +207,7 @@ export default function PostDetailPage() {
     return (
       <div className="flex gap-6">
         <BackArrowIcon />
-        <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-12 text-center shadow-sm">
+        <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-12 text-center shadow-lg">
           <p className="text-sm text-red-500">{error ?? "Post not found"}</p>
           <button
             onClick={() => navigate("/dashboard/posts")}
@@ -328,7 +328,7 @@ export default function PostDetailPage() {
               navigate("/dashboard/posts/compare", { state: { postA: post } })
             }
             type="button "
-            class=" rounded-lg p-2.5 min-w-[157px] bg-white border border-white shadow-sm shadow-[#0000001A] font-medium"
+            class=" rounded-lg p-2.5 min-w-[157px] bg-white border border-white shadow-lg shadow-[#0000001A] font-medium"
           >
             Compare Post
           </button>
@@ -340,7 +340,7 @@ export default function PostDetailPage() {
       </div>
 
       {/* Main card: thumbnail + details */}
-      <div className="flex justify-between rounded-[20px] border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-sm">
+      <div className="flex justify-between rounded-[20px] border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-lg">
         {/* Card top row */}
         <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
           {/* Thumbnail */}
@@ -492,7 +492,7 @@ export default function PostDetailPage() {
       {/* Insights + Creator row */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-4">
         {/* Insights */}
-        <div className="lg:col-span-3 rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-sm">
+        <div className="lg:col-span-3 rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-lg">
           <h3 className="mb-4 text-base font-medium dark:text-gray-500">
             Instagram Insights
           </h3>

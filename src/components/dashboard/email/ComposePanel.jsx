@@ -32,7 +32,7 @@ export default function ComposePanel({
     !(recipientMode === 'category' && !categoryFilter)
 
   return (
-    <div className="flex flex-col gap-5 rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-sm">
+    <div className="flex flex-col gap-5 rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-lg">
       {/* Panel header */}
       <div className="flex items-center gap-3">
         <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-orange-50 dark:bg-orange-500/10">

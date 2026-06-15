@@ -36,6 +36,8 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [rankings, setRankings] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 10;
 
   const {
     categories,
@@ -112,25 +114,25 @@ console.log("pendingRes results:", { pendingRes });
   const STAT_CARDS = [
     {
       label: "Total Users",
-      value: fmt(stats.users),
+      value: fmt(stats.users) ?? "--",
       icon: UsersIcon,
       href: "/dashboard/users",
     },
     {
       label: "Total Media",
-      value: fmt(stats.posts),
+      value: fmt(stats.posts) ?? "--",
       icon: PostsIcon,
       href: "/dashboard/posts",
     },
     {
       label: "Total Scenes",
-      value: fmt(scenes.length),
+      value: fmt(scenes.length) ?? "--",
       icon: CategoriesIcon,
       href: "/dashboard/categories/posts",
     },
     {
       label: "Total Pending",
-      value: fmt(stats.pending),
+      value: fmt(stats.pending) ?? "--",
       icon: SubCategoriesIcon,
       href: "/dashboard/sub-categories",
     },
@@ -177,7 +179,7 @@ console.log("pendingRes results:", { pendingRes });
 
       {/* Recent Activity */}
       <div className="flex justify-between items-start h-75">
-        <div className="shadow-sm shadow-[#0000000D] p-4 rounded-2xl overflow-x-auto">
+        <div className="shadow-lg shadow-[#0000000D] p-4 rounded-2xl overflow-x-auto flex-1">
           <table className="w-full">
             <thead>
               <tr className="border-b border-gray-100 dark:border-gray-800">
@@ -196,59 +198,162 @@ console.log("pendingRes results:", { pendingRes });
               </tr>
             </thead>
             <tbody>
-              {rankings.map((creator, index) => (
-                <tr
-                  key={creator.instagramUsername}
-                  className="border-b border-gray-50 dark:border-gray-800/50 last:border-0 hover:bg-gray-50/40 dark:hover:bg-gray-800/40 transition-colors"
-                >
-                  {/* Rank */}
-                  <td className="py-3 px-4 w-16">
-                    <span className="text-xs font-medium text-gray-400">
-                      {index + 1}
-                    </span>
-                  </td>
+              {(() => {
+                const totalPages = Math.ceil(rankings.length / ITEMS_PER_PAGE);
+                const startIdx = (currentPage - 1) * ITEMS_PER_PAGE;
+                const endIdx = startIdx + ITEMS_PER_PAGE;
+                const paginatedData = rankings.slice(startIdx, endIdx);
 
-                  {/* Name */}
-                  <td className="py-3 px-4">
-                    <span className="text-sm font-semibold text-black dark:text-white">
-                      {creator.instagramUsername}
-                    </span>
-                  </td>
+                return (
+                  <>
+                    {paginatedData.map((creator, index) => (
+                      <tr
+                        key={creator.instagramUsername}
+                        className="border-b border-gray-50 dark:border-gray-800/50 last:border-0 hover:bg-gray-50/40 dark:hover:bg-gray-800/40 transition-colors"
+                      >
+                        {/* Rank */}
+                        <td className="py-3 px-4 w-16">
+                          <span className="text-xs font-medium text-gray-400">
+                            {startIdx + index + 1}
+                          </span>
+                        </td>
 
-                  {/* Category */}
-                  <td className="py-3 px-4">
-                    {creator.category ? (
-                      <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
-                        {creator.category}
-                      </span>
-                    ) : (
-                      <span className="text-xs text-gray-300 dark:text-gray-600">
-                        —
-                      </span>
+                        {/* Name */}
+                        <td className="py-3 px-4">
+                          <span className="text-sm font-semibold text-black dark:text-white">
+                            {creator.instagramUsername}
+                          </span>
+                        </td>
+
+                        {/* Category */}
+                        <td className="py-3 px-4">
+                          {creator.category ? (
+                            <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
+                              {creator.category}
+                            </span>
+                          ) : (
+                            <span className="text-xs text-gray-300 dark:text-gray-600">
+                              —
+                            </span>
+                          )}
+                        </td>
+
+                        {/* Views */}
+                        <td className="py-3 px-4">
+                          <span className="text-xs text-gray-500 dark:text-gray-400">
+                            {creator.postCount || "—"}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+
+                    {rankings.length === 0 && (
+                      <tr>
+                        <td
+                          colSpan={4}
+                          className="px-4 py-12 text-center text-sm text-gray-400 dark:text-gray-500"
+                        >
+                          No creators found.
+                        </td>
+                      </tr>
                     )}
-                  </td>
-
-                  {/* Views */}
-                  <td className="py-3 px-4">
-                    <span className="text-xs text-gray-500 dark:text-gray-400">
-                      {creator.postCount || "—"}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-
-              {rankings.length === 0 && (
-                <tr>
-                  <td
-                    colSpan={4}
-                    className="px-4 py-12 text-center text-sm text-gray-400 dark:text-gray-500"
-                  >
-                    No creators found.
-                  </td>
-                </tr>
-              )}
+                  </>
+                );
+              })()}
             </tbody>
           </table>
+
+          {(() => {
+            const totalPages = Math.ceil(rankings.length / ITEMS_PER_PAGE);
+            return totalPages > 1 ? (
+              <div className="flex items-center justify-between border-t border-gray-100 dark:border-gray-800 px-4 py-3 mt-2">
+                <button
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="flex items-center gap-1.5 rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Prev
+                </button>
+
+                <div className="flex items-center gap-1.5">
+                  {(() => {
+                    const pageButtons = [];
+                    const maxButtons = 5;
+                    let startPage = Math.max(1, currentPage - Math.floor(maxButtons / 2));
+                    let endPage = Math.min(totalPages, startPage + maxButtons - 1);
+
+                    if (endPage - startPage + 1 < maxButtons) {
+                      startPage = Math.max(1, endPage - maxButtons + 1);
+                    }
+
+                    if (startPage > 1) {
+                      pageButtons.push(
+                        <button
+                          key="first"
+                          onClick={() => setCurrentPage(1)}
+                          className="rounded-lg border border-gray-200 dark:border-gray-700 px-2.5 py-1 text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition"
+                        >
+                          1
+                        </button>
+                      );
+                      if (startPage > 2) {
+                        pageButtons.push(
+                          <span key="ellipsis-start" className="text-gray-400 dark:text-gray-600">
+                            …
+                          </span>
+                        );
+                      }
+                    }
+
+                    for (let page = startPage; page <= endPage; page++) {
+                      pageButtons.push(
+                        <button
+                          key={page}
+                          onClick={() => setCurrentPage(page)}
+                          className={`rounded-lg px-2.5 py-1 text-xs font-medium transition ${
+                            page === currentPage
+                              ? "bg-[#3A3A3A] text-white shadow-lg"
+                              : "border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
+                          }`}
+                        >
+                          {page}
+                        </button>
+                      );
+                    }
+
+                    if (endPage < totalPages) {
+                      if (endPage < totalPages - 1) {
+                        pageButtons.push(
+                          <span key="ellipsis-end" className="text-gray-400 dark:text-gray-600">
+                            …
+                          </span>
+                        );
+                      }
+                      pageButtons.push(
+                        <button
+                          key="last"
+                          onClick={() => setCurrentPage(totalPages)}
+                          className="rounded-lg border border-gray-200 dark:border-gray-700 px-2.5 py-1 text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition"
+                        >
+                          {totalPages}
+                        </button>
+                      );
+                    }
+
+                    return pageButtons;
+                  })()}
+                </div>
+
+                <button
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  className="flex items-center gap-1.5 rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Next
+                </button>
+              </div>
+            ) : null;
+          })()}
         </div>
         <RecentActivity />
       </div>

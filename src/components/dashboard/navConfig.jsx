@@ -16,6 +16,7 @@ import {
   WatchlistIcon,
   WatchIcon,
   ReviewIcon,
+  ScenesIcon,
 } from "../ui/icons";
 
 const navConfig = [
@@ -75,7 +76,7 @@ const navConfig = [
         path: "/dashboard/rankings/posts",
         icon: RankingsIcon,
       },
-      { label: "Scenes", path: "/dashboard/scenes", icon: BookmarkIcon },
+      { label: "Scenes", path: "/dashboard/scenes", icon: ScenesIcon },
     ],
   },
   {

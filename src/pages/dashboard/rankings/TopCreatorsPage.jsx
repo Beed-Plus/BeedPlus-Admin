@@ -3,6 +3,7 @@ import { instagramApi } from "../../../utils/instagramApi";
 import CreatorHighlightCards from "../../../components/dashboard/rankings/CreatorHighlightCards";
 import TopCreatorsTable from "../../../components/dashboard/rankings/TopCreatorsTable";
 import { useCategoriesProvider } from "../../../hooks/useCategoriesProvider";
+import CustomDropDownInput from "../../../components/CustomDropDownInput";
 
 const SELECT =
   "w-36 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-600 dark:text-gray-300 outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition cursor-pointer scrollbar-thin";
@@ -79,7 +80,6 @@ export default function TopCreatorsPage() {
   // }, [rankings, activeTab, categories, filterCountry]);
 
   const filtered = useMemo(() => {
-    
     return rankings
       .filter((r) => {
         if (category) {
@@ -108,39 +108,50 @@ export default function TopCreatorsPage() {
       )}
 
       {/* Category tabs + Table */}
-      <div className="rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm overflow-hidden">
-        <div className="flex justify-between items-center px-4 pt-4 mb-6">
+      <div className="rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900  shadow-lg shadow-[#0000001A] overflow-hidden">
+        <div className="flex justify-between items-center px-4 pt-4 mb-1">
           <h3 className="text-xl font-bold">Top Creator Ranking</h3>
 
           <div className="flex gap-4">
             <div className="flex flex-wrap items-center gap-3">
-              {/* Category */}
-              <select
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                className={SELECT}
-              >
-                <option value="">All Categories</option>
-                {categories.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
-              </select>
-
-              {/* Country */}
-              <select
-                value={filterCountry}
-                onChange={(e) => setFilterCountry(e.target.value)}
-                className={SELECT}
-              >
-                <option value="">All Countries</option>
-                {availableCountries.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
-              </select>
+              <div className="min-w-50">
+                <CustomDropDownInput
+                  placeholder="Category"
+                  value={category}
+                  onChange={(e) => {
+                    setCategory(e.target.value);
+                  }}
+                  items={[
+                    {
+                      label: "All",
+                      value: "All",
+                    },
+                    ...categories.map((c) => ({
+                      label: c,
+                      value: c,
+                    })),
+                  ]}
+                />
+              </div>
+              <div className="min-w-50">
+                <CustomDropDownInput
+                  placeholder="Country"
+                  value={filterCountry}
+                  onChange={(e) => {
+                    setFilterCountry(e.target.value);
+                  }}
+                  items={[
+                    {
+                      label: "All",
+                      value: "All",
+                    },
+                    ...availableCountries.map((c) => ({
+                      label: c,
+                      value: c,
+                    })),
+                  ]}
+                />
+              </div>
             </div>
           </div>
         </div>

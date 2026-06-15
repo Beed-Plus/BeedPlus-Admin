@@ -84,19 +84,19 @@ function SkeletonRow() {
 function RankBadge({ rank }) {
   if (rank === 1)
     return (
-      <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-amber-400 text-xs font-black text-white shadow-sm">
+      <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-amber-400 text-xs font-black text-white shadow-lg">
         1
       </span>
     );
   if (rank === 2)
     return (
-      <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-gray-300 text-xs font-black text-white shadow-sm">
+      <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-gray-300 text-xs font-black text-white shadow-lg">
         2
       </span>
     );
   if (rank === 3)
     return (
-      <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-orange-300 text-xs font-black text-white shadow-sm">
+      <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-orange-300 text-xs font-black text-white shadow-lg">
         3
       </span>
     );
@@ -277,7 +277,7 @@ function CalendarPicker({ value, availableDates, onChange }) {
         day_button:
           "flex h-8 w-8 items-center justify-center rounded-lg text-sm font-medium transition cursor-pointer text-gray-700 dark:text-gray-200 hover:bg-orange-50 dark:hover:bg-orange-500/10 hover:text-orange-500",
         selected:
-          "[&>button]:bg-orange-500 [&>button]:text-white [&>button]:shadow-sm [&>button]:hover:bg-orange-500 [&>button]:hover:text-white",
+          "[&>button]:bg-orange-500 [&>button]:text-white [&>button]:shadow-lg [&>button]:hover:bg-orange-500 [&>button]:hover:text-white",
         disabled:
           "[&>button]:text-gray-300 dark:[&>button]:text-gray-600 [&>button]:cursor-not-allowed [&>button]:hover:bg-transparent [&>button]:hover:text-gray-300",
         today: "[&>button]:font-black",
@@ -320,6 +320,8 @@ export default function PostRankingsPage() {
   const [selectedItem, setSelectedItem] = useState(null);
   const [filterCategory, setCategory] = useState("");
   const [filterSubCategory, setSubCategory] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 20;
 
   // const { categories, subCategories } = useCategoriesProvider();
 
@@ -442,22 +444,31 @@ export default function PostRankingsPage() {
   }
 
   const filtered = useMemo(() => {
-    return rankings
-      .filter((p) => {
-        if (filterCategory) {
-          const cats = Array.isArray(p.category)
-            ? p.category
-            : [p.category].filter(Boolean);
-          if (!cats.includes(filterCategory)) return false;
-        }
-        if (filterSubCategory) {
-          const sub = p.subCategory?.name ?? p.subCategory;
-          if (sub !== filterSubCategory) return false;
-        }
-        return true;
-      })
-  
+    return rankings.filter((p) => {
+      if (filterCategory) {
+        const cats = Array.isArray(p.category)
+          ? p.category
+          : [p.category].filter(Boolean);
+        if (!cats.includes(filterCategory)) return false;
+      }
+      if (filterSubCategory) {
+        const sub = p.subCategory?.name ?? p.subCategory;
+        if (sub !== filterSubCategory) return false;
+      }
+      return true;
+    });
   }, [rankings, filterCategory, filterSubCategory]);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filterCategory, filterSubCategory]);
+
+  // Pagination calculation
+  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+  const startIdx = (currentPage - 1) * ITEMS_PER_PAGE;
+  const endIdx = startIdx + ITEMS_PER_PAGE;
+  const paginatedData = filtered.slice(startIdx, endIdx);
 
   function handleFilter(setter) {
     return (val) => {
@@ -468,12 +479,12 @@ export default function PostRankingsPage() {
   // return null;
 
   return (
-    <div className="flex flex-col gap-6 rounded-2xl border border-gray-100">
+    <div className="flex flex-col gap-6 rounded-2xl  shadow-lg shadow-[#0000001A] bg-white">
       {/* Header */}
 
       {/* Stat strip */}
       {/* <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-        <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 shadow-sm">
+        <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 shadow-lg">
           <div className="flex items-center justify-between mb-3">
             <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">
               Total Posts
@@ -524,30 +535,35 @@ export default function PostRankingsPage() {
           <div className="flex gap-4">
             <div className="flex flex-wrap items-center gap-3">
               {/* Category */}
-              <select
-                value={filterCategory}
-                onChange={(e) => setCategory(e.target.value)}
-                className={SELECT}
-              >
-                <option value="">All Categories</option>
-                {categories.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
-              </select>
-              <select
-                value={filterSubCategory}
-                onChange={(e) => setSubCategory(e.target.value)}
-                className={SELECT}
-              >
-                <option value="">All Subcategories</option>
-                {subCategories.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
-              </select>
+
+              <div className="min-w-50">
+                <CustomDropDownInput
+                  placeholder="Category"
+                  value={filterCategory}
+                  onChange={(e) => {
+                    setCategory(e.target.value);
+                    setSubCategory("");
+                  }}
+                  items={[
+                    {
+                      label: "All",
+                      value: "All",
+                    },
+                    ...categories.map((c) => ({
+                      label: c,
+                      value: c,
+                    })),
+                  ]}
+                />
+              </div>
+              <div className="w-50">
+                <SelectSearch
+                  placeholder="Subcategory"
+                  onChange={(val) => setSubCategory(val)}
+                  value={filterSubCategory}
+                  items={["All", ...subCategories.map((s) => s)]}
+                />
+              </div>
 
               {/* Country */}
               {/* <select
@@ -587,7 +603,7 @@ export default function PostRankingsPage() {
 
       {/* Main card */}
       {!error && (
-        <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm overflow-hidden">
+        <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-lg overflow-hidden">
           {/* Table */}
           <div className="overflow-auto max-h-[75vh]">
             <table className="w-full min-w-[860px]">
@@ -612,7 +628,7 @@ export default function PostRankingsPage() {
                   ))}
 
                 {!loading &&
-                  filtered.map((item, idx) => {
+                  paginatedData.map((item, idx) => {
                     console.log("Rendering item:", item);
                     const rank = idx + 1;
                     const overallRank = null;
@@ -789,9 +805,123 @@ export default function PostRankingsPage() {
                       </tr>
                     );
                   })}
+
+                {!loading && paginatedData.length === 0 && (
+                  <tr>
+                    <td
+                      colSpan={9}
+                      className="px-6 py-16 text-center text-sm text-gray-400 dark:text-gray-500"
+                    >
+                      No posts found
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
+
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between border-t border-gray-100 dark:border-gray-800 px-6 py-4">
+              <button
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="flex items-center gap-1.5 rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Prev
+              </button>
+
+              <div className="flex items-center gap-1.5">
+                {(() => {
+                  const pageButtons = [];
+                  const maxButtons = 5;
+                  let startPage = Math.max(
+                    1,
+                    currentPage - Math.floor(maxButtons / 2),
+                  );
+                  let endPage = Math.min(
+                    totalPages,
+                    startPage + maxButtons - 1,
+                  );
+
+                  if (endPage - startPage + 1 < maxButtons) {
+                    startPage = Math.max(1, endPage - maxButtons + 1);
+                  }
+
+                  if (startPage > 1) {
+                    pageButtons.push(
+                      <button
+                        key="first"
+                        onClick={() => setCurrentPage(1)}
+                        className="rounded-lg border border-gray-200 dark:border-gray-700 px-2.5 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition"
+                      >
+                        1
+                      </button>,
+                    );
+                    if (startPage > 2) {
+                      pageButtons.push(
+                        <span
+                          key="ellipsis-start"
+                          className="text-gray-400 dark:text-gray-600"
+                        >
+                          …
+                        </span>,
+                      );
+                    }
+                  }
+
+                  for (let page = startPage; page <= endPage; page++) {
+                    pageButtons.push(
+                      <button
+                        key={page}
+                        onClick={() => setCurrentPage(page)}
+                        className={`rounded-lg px-2.5 py-1.5 text-xs font-medium transition ${
+                          page === currentPage
+                            ? "bg-[#3A3A3A] text-white shadow-lg"
+                            : "border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
+                        }`}
+                      >
+                        {page}
+                      </button>,
+                    );
+                  }
+
+                  if (endPage < totalPages) {
+                    if (endPage < totalPages - 1) {
+                      pageButtons.push(
+                        <span
+                          key="ellipsis-end"
+                          className="text-gray-400 dark:text-gray-600"
+                        >
+                          …
+                        </span>,
+                      );
+                    }
+                    pageButtons.push(
+                      <button
+                        key="last"
+                        onClick={() => setCurrentPage(totalPages)}
+                        className="rounded-lg border border-gray-200 dark:border-gray-700 px-2.5 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition"
+                      >
+                        {totalPages}
+                      </button>,
+                    );
+                  }
+
+                  return pageButtons;
+                })()}
+              </div>
+
+              <button
+                onClick={() =>
+                  setCurrentPage((p) => Math.min(totalPages, p + 1))
+                }
+                disabled={currentPage === totalPages}
+                className="flex items-center gap-1.5 rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Next
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>

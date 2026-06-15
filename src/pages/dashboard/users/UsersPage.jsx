@@ -7,6 +7,7 @@ import UserFilters from "../../../components/dashboard/users/UserFilters";
 import UserTable from "../../../components/dashboard/users/UserTable";
 import { useCategoriesProvider } from "../../../hooks/useCategoriesProvider";
 import { RetryIcon } from "../../../components/icons";
+import Loader from "../../../components/Loader";
 
 function applyFilters(users, { search, followerSort }) {
   let result = users;
@@ -39,6 +40,7 @@ export default function UsersPage() {
   const [users, setUsers] = useState([]);
   const [pagination, setPagination] = useState({ total: 0, page: 1, pages: 1 });
   const [loading, setLoading] = useState(true);
+  const [isReloading, setIsReloading] = useState(false);
   const [error, setError] = useState(null);
   const [retryKey, setRetryKey] = useState(0);
 
@@ -126,6 +128,31 @@ export default function UsersPage() {
     };
   }
 
+  async function refreshData() {
+    setIsReloading(true);
+    setError(null);
+
+    try {
+      const res = await usersApi.getUsers(
+        {
+          ...(category ? { category } : {}),
+          ...(gender ? { gender } : {}),
+          ...(country ? { country } : {}),
+          ...(approvalStatus ? { approvalStatus } : {}),
+        },
+        token,
+      );
+      setUsers(res?.users ?? []);
+      setPagination(res?.pagination ?? { total: 0, page: 1, pages: 1 });
+      setIsReloading(false);
+      return; // success
+    } catch (err) {
+      setError(err?.message ?? "Failed to refresh users");
+    } finally {
+      setIsReloading(false);
+    }
+  }
+
   const visibleUsers = useMemo(
     () => applyFilters(users, { search, followerSort }),
     [users, search, followerSort],
@@ -141,28 +168,28 @@ export default function UsersPage() {
             label: "Total Users",
             value: loading ? "..." : users.length,
             color: "text-[#FDD6B6] dark:text-gray-500",
-            boxColor: "bg-[#2F3134] shadow-sm",
+            boxColor: "bg-[#2F3134] shadow-lg",
             headerColor: "text-[#DADADA]",
           },
           {
             label: "Active Creator",
             value: loading ? "..." : 0,
             color: "text-[#2F3134] dark:text-white",
-            boxColor: "bg-[#F9F9F9] shadow-sm",
+            boxColor: "bg-[#F9F9F9] shadow-lg",
             headerColor: "text-[#686969]",
           },
           {
             label: "Suspended Account",
             value: loading ? "..." : 0,
             color: "text-[#2F3134] dark:text-white",
-            boxColor: "bg-[#F9F9F9] shadow-sm",
+            boxColor: "bg-[#F9F9F9] shadow-lg",
             headerColor: "text-[#686969]",
           },
           {
             label: "New Users Today",
             value: loading ? "..." : 0,
             color: "text-[#2F3134] dark:text-white",
-            boxColor: "bg-[#F9F9F9] shadow-sm",
+            boxColor: "bg-[#F9F9F9] shadow-lg",
             headerColor: "text-[#686969]",
           },
         ].map(({ label, value, color, boxColor, headerColor }) => (
@@ -179,7 +206,7 @@ export default function UsersPage() {
           </div>
         ))}
       </div> */}
-
+      {isReloading && <Loader />}
       {/* Filters */}
 
       {/* Error */}
@@ -187,15 +214,15 @@ export default function UsersPage() {
         <div className="flex items-center justify-between gap-4 rounded-xl border border-red-100 bg-red-50 dark:bg-red-500/10 dark:border-red-500/20 px-4 py-3">
           <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
           <button
-            onClick={() => setRetryKey((k) => k + 1)}
+            onClick={() => refreshData()}
             className="shrink-0 rounded-lg bg-red-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-600 transition"
           >
             Retry
           </button>
         </div>
       )}
-      <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm overflow-hidden py-6">
-        <div className="flex justify-between items-center px-4 mb-6">
+      <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900  shadow-lg shadow-[#0000001A] overflow-hidden py-2">
+        <div className="flex justify-between items-center px-4 mb-2">
           <h3 className="text-xl font-bold">User List</h3>
 
           <div className="flex gap-4">
@@ -220,18 +247,18 @@ export default function UsersPage() {
             />
             <div className="flex items-center gap-2 mt-1">
               <button
-                onClick={() => setRetryKey((k) => k + 1)}
-                disabled={loading}
+                onClick={() => refreshData()}
+                disabled={isReloading}
                 title="Refresh"
                 className="flex h-8 w-8 items-center justify-center rounded-lg bg-white shadow-sm shadow-[#00000040] disabled:opacity-40"
               >
                 <RetryIcon />
               </button>
-              {!loading && !error && (
+              {
                 <p className="px-3 py-1 text-base font-semibold">
-                  Users: {pagination.total.toLocaleString()}
+                  Users: {pagination.total.toLocaleString() ?? 0}
                 </p>
-              )}
+              }
             </div>
           </div>
         </div>
