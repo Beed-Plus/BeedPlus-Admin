@@ -528,45 +528,43 @@ export default function PostRankingsPage() {
         </div>
       </div> */}
 
-      <div className="">
-        <div className="flex justify-between items-center px-4 pt-4 ">
-          <h3 className="text-xl font-bold">Charts</h3>
+      <div className="flex justify-between items-center px-4 pt-2 ">
+        <h3 className="text-xl font-bold">Charts</h3>
 
-          <div className="flex gap-4">
-            <div className="flex flex-wrap items-center gap-3">
-              {/* Category */}
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Category */}
 
-              <div className="min-w-50">
-                <CustomDropDownInput
-                  placeholder="Category"
-                  value={filterCategory}
-                  onChange={(e) => {
-                    setCategory(e.target.value);
-                    setSubCategory("");
-                  }}
-                  items={[
-                    {
-                      label: "All",
-                      value: "All",
-                    },
-                    ...categories.map((c) => ({
-                      label: c,
-                      value: c,
-                    })),
-                  ]}
-                />
-              </div>
-              <div className="w-50">
-                <SelectSearch
-                  placeholder="Subcategory"
-                  onChange={(val) => setSubCategory(val)}
-                  value={filterSubCategory}
-                  items={["All", ...subCategories.map((s) => s)]}
-                />
-              </div>
+          <div className="min-w-50">
+            <CustomDropDownInput
+              placeholder="Category"
+              value={filterCategory}
+              onChange={(e) => {
+                setCategory(e.target.value);
+                setSubCategory("");
+              }}
+              items={[
+                {
+                  label: "All",
+                  value: "All",
+                },
+                ...categories.map((c) => ({
+                  label: c,
+                  value: c,
+                })),
+              ]}
+            />
+          </div>
+          <div className="w-50">
+            <SelectSearch
+              placeholder="Subcategory"
+              onChange={(val) => setSubCategory(val)}
+              value={filterSubCategory}
+              items={["All", ...subCategories.map((s) => s)]}
+            />
+          </div>
 
-              {/* Country */}
-              {/* <select
+          {/* Country */}
+          {/* <select
                 value={filterCountry}
                 onChange={(e) => setFilterCountry(e.target.value)}
                 className={SELECT}
@@ -578,8 +576,6 @@ export default function PostRankingsPage() {
                   </option>
                 ))}
               </select> */}
-            </div>
-          </div>
         </div>
       </div>
 
@@ -602,7 +598,7 @@ export default function PostRankingsPage() {
       )}
 
       {/* Main card */}
-      {!error && (
+      {
         <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-lg overflow-hidden">
           {/* Table */}
           <div className="overflow-auto max-h-[75vh]">
@@ -923,7 +919,7 @@ export default function PostRankingsPage() {
             </div>
           )}
         </div>
-      )}
+      }
     </div>
   );
 }
