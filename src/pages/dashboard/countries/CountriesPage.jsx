@@ -251,7 +251,7 @@ export default function CountriesPage() {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [togglingId, setTogglingId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const ITEMS_PER_PAGE = 10;
+  const ITEMS_PER_PAGE = 20;
 
   async function loadCountries() {
     setLoading(true);

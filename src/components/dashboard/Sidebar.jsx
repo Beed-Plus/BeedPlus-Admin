@@ -229,7 +229,7 @@ export default function Sidebar({
         </div>
 
         {/* Nav */}
-        <nav className="flex flex-1 flex-col gap-3 overflow-y-auto scrollbar-thin">
+        <nav className="flex flex-1 flex-col gap-3 overflow-y-auto hide-scrollbar">
           {navConfig.map((group, i) => (
             <div key={i} className="flex flex-col gap-1">
               {/* Section label — hidden when collapsed on desktop */}

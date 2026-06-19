@@ -320,8 +320,7 @@ export default function PostRankingsPage() {
   const [selectedItem, setSelectedItem] = useState(null);
   const [filterCategory, setCategory] = useState("");
   const [filterSubCategory, setSubCategory] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const ITEMS_PER_PAGE = 20;
+
 
   // const { categories, subCategories } = useCategoriesProvider();
 
@@ -459,16 +458,7 @@ export default function PostRankingsPage() {
     });
   }, [rankings, filterCategory, filterSubCategory]);
 
-  // Reset to page 1 when filters change
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [filterCategory, filterSubCategory]);
 
-  // Pagination calculation
-  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
-  const startIdx = (currentPage - 1) * ITEMS_PER_PAGE;
-  const endIdx = startIdx + ITEMS_PER_PAGE;
-  const paginatedData = filtered.slice(startIdx, endIdx);
 
   function handleFilter(setter) {
     return (val) => {
@@ -624,7 +614,7 @@ export default function PostRankingsPage() {
                   ))}
 
                 {!loading &&
-                  paginatedData.map((item, idx) => {
+                  filtered.map((item, idx) => {
                     console.log("Rendering item:", item);
                     const rank = idx + 1;
                     const overallRank = null;
@@ -802,7 +792,7 @@ export default function PostRankingsPage() {
                     );
                   })}
 
-                {!loading && paginatedData.length === 0 && (
+                {!loading && filtered.length === 0 && (
                   <tr>
                     <td
                       colSpan={9}
@@ -816,108 +806,6 @@ export default function PostRankingsPage() {
             </table>
           </div>
 
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between border-t border-gray-100 dark:border-gray-800 px-6 py-4">
-              <button
-                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
-                className="flex items-center gap-1.5 rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Prev
-              </button>
-
-              <div className="flex items-center gap-1.5">
-                {(() => {
-                  const pageButtons = [];
-                  const maxButtons = 5;
-                  let startPage = Math.max(
-                    1,
-                    currentPage - Math.floor(maxButtons / 2),
-                  );
-                  let endPage = Math.min(
-                    totalPages,
-                    startPage + maxButtons - 1,
-                  );
-
-                  if (endPage - startPage + 1 < maxButtons) {
-                    startPage = Math.max(1, endPage - maxButtons + 1);
-                  }
-
-                  if (startPage > 1) {
-                    pageButtons.push(
-                      <button
-                        key="first"
-                        onClick={() => setCurrentPage(1)}
-                        className="rounded-lg border border-gray-200 dark:border-gray-700 px-2.5 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition"
-                      >
-                        1
-                      </button>,
-                    );
-                    if (startPage > 2) {
-                      pageButtons.push(
-                        <span
-                          key="ellipsis-start"
-                          className="text-gray-400 dark:text-gray-600"
-                        >
-                          …
-                        </span>,
-                      );
-                    }
-                  }
-
-                  for (let page = startPage; page <= endPage; page++) {
-                    pageButtons.push(
-                      <button
-                        key={page}
-                        onClick={() => setCurrentPage(page)}
-                        className={`rounded-lg px-2.5 py-1.5 text-xs font-medium transition ${
-                          page === currentPage
-                            ? "bg-[#3A3A3A] text-white shadow-lg"
-                            : "border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
-                        }`}
-                      >
-                        {page}
-                      </button>,
-                    );
-                  }
-
-                  if (endPage < totalPages) {
-                    if (endPage < totalPages - 1) {
-                      pageButtons.push(
-                        <span
-                          key="ellipsis-end"
-                          className="text-gray-400 dark:text-gray-600"
-                        >
-                          …
-                        </span>,
-                      );
-                    }
-                    pageButtons.push(
-                      <button
-                        key="last"
-                        onClick={() => setCurrentPage(totalPages)}
-                        className="rounded-lg border border-gray-200 dark:border-gray-700 px-2.5 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition"
-                      >
-                        {totalPages}
-                      </button>,
-                    );
-                  }
-
-                  return pageButtons;
-                })()}
-              </div>
-
-              <button
-                onClick={() =>
-                  setCurrentPage((p) => Math.min(totalPages, p + 1))
-                }
-                disabled={currentPage === totalPages}
-                className="flex items-center gap-1.5 rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Next
-              </button>
-            </div>
-          )}
         </div>
       }
     </div>

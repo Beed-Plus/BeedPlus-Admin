@@ -105,10 +105,10 @@ function CategoryModal({ category, onClose, action }) {
               required
             />
           </div>
-          {/* 
+          
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+              <label className="text-xs font-semibold uppercase tracking-wider text-[#00000080]">
                 Primary Color
               </label>
               <div className="flex items-center gap-2">
@@ -127,7 +127,7 @@ function CategoryModal({ category, onClose, action }) {
               </div>
             </div>
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+              <label className="text-xs font-semibold uppercase tracking-wider text-[#00000080]">
                 Secondary Color
               </label>
               <div className="flex items-center gap-2">
@@ -145,7 +145,7 @@ function CategoryModal({ category, onClose, action }) {
                 />
               </div>
             </div>
-          </div> */}
+          </div>
 
           {error && <p className="text-xs text-red-500">{error}</p>}
 

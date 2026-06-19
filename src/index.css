@@ -162,3 +162,12 @@ select::-webkit-scrollbar-thumb {
 .dark .rdp-range_middle .rdp-day_button {
   color: #f97316;
 }
+
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
