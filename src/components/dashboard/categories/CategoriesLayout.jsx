@@ -91,7 +91,7 @@ function CategoryModal({ category, onClose, action }) {
             onClick={onClose}
             className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition"
           >
-           <CloseIcon />
+            <CloseIcon />
           </button>
         </div>
 
@@ -105,7 +105,7 @@ function CategoryModal({ category, onClose, action }) {
               required
             />
           </div>
-          
+
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-semibold uppercase tracking-wider text-[#00000080]">
@@ -315,9 +315,7 @@ export default function CategoriesLayout({ title, subtitle }) {
     <div className="flex flex-col gap-6">
       {/* Header */}
       <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-
-        </div>
+        <div></div>
         <button
           onClick={() => setShowAdd(true)}
           className="flex items-center gap-2 self-start rounded-lg bg-[#2F3134] px-3.5 py-2.5 text-sm font-semibold text-white hover:bg-[#2F3134] transition sm:self-auto"
@@ -509,6 +507,12 @@ export default function CategoriesLayout({ title, subtitle }) {
                     {/* Category name + color swatch */}
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
+                        <div
+                          className="h-9 w-9 shrink-0 rounded-xl shadow-sm"
+                          style={{
+                            background: `linear-gradient(135deg, ${cat.primaryColor}, ${cat.secondaryColor})`,
+                          }}
+                        />
                         <span className="text-base font-bold text-[#000000CC] dark:text-gray-100">
                           {cat.name}
                         </span>
