@@ -440,7 +440,7 @@ export default function UserDetailPage() {
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const [loadingMore, setLoadingMore] = useState(false);
-  const ITEMS_PER_PAGE = 20;
+  const ITEMS_PER_PAGE = 100;
 
   // Admin direct-submit modal state
   const [submitModal, setSubmitModal] = useState(null);
@@ -455,6 +455,7 @@ export default function UserDetailPage() {
   const [retryKey, setRetryKey] = useState(0);
   const [filterCategory, setFilterCategory] = useState("");
   const [filterSubCategory, setFilterSubCategory] = useState("");
+  const [sortby, setSortBy] = useState("all");
 
   async function handleApprove() {
     setApproving(true);
@@ -561,42 +562,44 @@ export default function UserDetailPage() {
   const startIdx = (currentPage - 1) * ITEMS_PER_PAGE;
   const endIdx = startIdx + ITEMS_PER_PAGE;
 
-  const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    const hasFilters =
-      (filterCategory && filterCategory !== "All") ||
-      (filterSubCategory && filterSubCategory !== "All") ||
-      (q && q !== "");
-    console.log("Filtering with", { category, subCategory, q, hasFilters });
-    // If no filters applied, return all igMedia
-    if (!hasFilters) {
-      return igMedia;
+const filtered = useMemo(() => {
+  const q = search.trim().toLowerCase();
+  const hasFilters =
+    (filterCategory && filterCategory !== "All") ||
+    (filterSubCategory && filterSubCategory !== "All") ||
+    (q && q !== "") ||
+    (sortby && sortby !== "all");
+
+  if (!hasFilters) {
+    return igMedia;
+  }
+
+  return igMedia.filter((m) => {
+    const submittedPosts = posts.filter((p) => p.instagramMediaId === m.id);
+
+    if (sortby === "submitted" && submittedPosts.length === 0) return false;
+    if (sortby === "unsubmitted" && submittedPosts.length > 0) return false;
+
+    if (filterCategory && filterCategory !== "All") {
+      const hasCategory = submittedPosts.some((p) => p.category === filterCategory);
+      if (!hasCategory) return false;
     }
 
-    // If filters applied, filter igMedia based on submitted posts
-    return igMedia.filter((m) => {
-      const submittedPost = posts.find((p) => p.instagramMediaId === m.id);
-      if (!submittedPost) return false; // Not submitted, exclude
+    if (filterSubCategory && filterSubCategory !== "All") {
+      const hasSub = submittedPosts.some(
+        (p) => (p.subCategory?.name ?? p.subCategory) === filterSubCategory
+      );
+      if (!hasSub) return false;
+    }
 
-      // Apply filters to the submitted post
-      if (filterCategory) {
-        const cats = Array.isArray(submittedPost.category)
-          ? submittedPost.category
-          : [submittedPost.category].filter(Boolean);
-        if (!cats.includes(filterCategory)) return false;
-      }
-      if (filterSubCategory) {
-        const sub =
-          submittedPost.subCategory?.name ?? submittedPost.subCategory;
-        if (sub !== filterSubCategory) return false;
-      }
-      if (q) {
-        const caption = m.caption?.toLowerCase() ?? "";
-        if (!caption.includes(q)) return false;
-      }
-      return true;
-    });
-  }, [igMedia, posts, search, filterCategory, filterSubCategory]);
+    if (q) {
+      const caption = m.caption?.toLowerCase() ?? "";
+      if (!caption.includes(q)) return false;
+    }
+
+    return true;
+  });
+}, [igMedia, posts, search, filterCategory, filterSubCategory, sortby]);
 
   // Calculate pagination based on filtered data
   const filteredTotalItems = filtered.length;
@@ -822,6 +825,96 @@ export default function UserDetailPage() {
 
       {/* Submitted Posts */}
       <div className="flex flex-col rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-lg shadow-[#0000001A] overflow-hidden">
+        <div className="flex justify-between items-center px-4 mb-1">
+          <h3 className="text-xl font-bold"></h3>
+
+          <div className="flex gap-4">
+            <div className="flex flex-wrap items-center gap-3">
+              {" "}
+              <div className="min-w-30 ">
+                <CustomDropDownInput
+                  value={sortby}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  items={[
+                    {
+                      label: "All",
+                      value: "all",
+                    },
+                    {
+                      label: "Submitted",
+                      value: "submitted",
+                    },
+                    {
+                      label: "Unsubmitted",
+                      value: "unsubmitted",
+                    },
+                  ]}
+                  // showShadow={true}
+                  // style={{
+                  //   height: "28px",
+                  //   fontSize: "12px",
+                  //   paddingHorizontal: "8px",
+                  //   borderRadius: "8px",
+                  //   backgroundColor: "#FFF",
+                  // }}
+                  // showOuterBoxMargin={false}
+                />
+              </div>
+              {/* Search */}
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search username…"
+                className="w-62 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-600 dark:text-gray-300 placeholder-gray-400 dark:placeholder-gray-500 outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition"
+              />
+              {/* Category */}
+              <div className="min-w-40">
+                <CustomDropDownInput
+                  placeholder="Category"
+                  value={filterCategory}
+                  onChange={(e) => {
+                    setFilterCategory(e.target.value);
+                    setFilterSubCategory("");
+                  }}
+                  items={[
+                    {
+                      label: "All",
+                      value: "All",
+                    },
+                    ...categories.map((c) => ({
+                      label: c.name,
+                      value: c.name,
+                    })),
+                  ]}
+                />
+              </div>
+              <div className="w-40">
+                <SelectSearch
+                  placeholder="Subcategory"
+                  onChange={(val) => setFilterSubCategory(val)}
+                  value={filterSubCategory}
+                  items={["All", ...subCategories.map((s) => s.name)]}
+                />
+              </div>
+            </div>
+            <div className="flex items-center gap-2 mt-1">
+              <button
+                onClick={() => setRetryKey((k) => k + 1)}
+                disabled={loading}
+                title="Refresh"
+                className="flex h-8 w-8 items-center justify-center rounded-lg bg-white shadow-lg shadow-[#00000040] disabled:opacity-40"
+              >
+                <RetryIcon />
+              </button>
+              {!loading && !error && (
+                <p className="px-3 py-1 text-base font-semibold">
+                  Posts: {filtered?.length}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
         {igMediaLoading ? (
           <div className="divide-y divide-gray-50 dark:divide-gray-800">
             {Array.from({ length: 4 }).map((_, i) => (
@@ -847,67 +940,6 @@ export default function UserDetailPage() {
           </div>
         ) : (
           <div className="pt-2">
-            <div className="flex justify-between items-center px-4 mb-1">
-              <h3 className="text-xl font-bold"></h3>
-
-              <div className="flex gap-4">
-                <div className="flex flex-wrap items-center gap-3">
-                  {/* Search */}
-                  <input
-                    type="text"
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    placeholder="Search username…"
-                    className="w-62 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-600 dark:text-gray-300 placeholder-gray-400 dark:placeholder-gray-500 outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition"
-                  />
-
-                  {/* Category */}
-                  <div className="min-w-40">
-                    <CustomDropDownInput
-                      placeholder="Category"
-                      value={filterCategory}
-                      onChange={(e) => {
-                        setFilterCategory(e.target.value);
-                        setFilterSubCategory("");
-                      }}
-                      items={[
-                        {
-                          label: "All",
-                          value: "All",
-                        },
-                        ...categories.map((c) => ({
-                          label: c.name,
-                          value: c.name,
-                        })),
-                      ]}
-                    />
-                  </div>
-                  <div className="w-40">
-                    <SelectSearch
-                      placeholder="Subcategory"
-                      onChange={(val) => setFilterSubCategory(val)}
-                      value={filterSubCategory}
-                      items={["All", ...subCategories.map((s) => s.name)]}
-                    />
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 mt-1">
-                  <button
-                    onClick={() => setRetryKey((k) => k + 1)}
-                    disabled={loading}
-                    title="Refresh"
-                    className="flex h-8 w-8 items-center justify-center rounded-lg bg-white shadow-lg shadow-[#00000040] disabled:opacity-40"
-                  >
-                    <RetryIcon />
-                  </button>
-                  {!loading && !error && (
-                    <p className="px-3 py-1 text-base font-semibold">
-                      Posts: {filtered?.length}
-                    </p>
-                  )}
-                </div>
-              </div>
-            </div>
             <div className="overflow-x-auto rounded-xl">
               <table className="w-full min-w-160 rounded-xl">
                 <thead>
