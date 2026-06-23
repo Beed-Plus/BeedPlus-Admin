@@ -35,10 +35,7 @@ export default function PostsPage() {
   const [smallLoading, setSmallLoading] = useState(false);
   const [selectedPost, setSelectedPost] = useState(null);
 
-  const {
-    categories,
-    subCategories,
-  } = useCategoriesProvider();
+  const { categories, subCategories } = useCategoriesProvider();
 
   async function refreshData() {
     setSmallLoading(true);
@@ -170,6 +167,18 @@ export default function PostsPage() {
       setSelectedPost(null);
     }
   };
+
+  async function handleReject(item) {
+    setSmallLoading(true);
+    try {
+      await instagramApi.rejectPendingMedia(item._id, {}, token);
+      await refreshData();
+    } catch (err) {
+      alert(err.message ?? "Failed to delete");
+    } finally {
+      setSmallLoading(false);
+    }
+  }
 
   return (
     <div className="flex flex-col gap-6">
@@ -325,6 +334,7 @@ export default function PostsPage() {
           bookmarkScene={bookmarkScene}
           smallLoading={isSavingScene}
           selectedPost={selectedPost}
+          handleReject={handleReject}
         />
       </div>
     </div>

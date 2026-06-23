@@ -6,7 +6,7 @@ import { categoriesApi } from "../../../utils/categoriesApi";
 import { subCategoriesApi } from "../../../utils/subCategoriesApi";
 import PostThumbnail from "../PostThumbnail";
 import { fmt } from "../../../utils/helper";
-import { BookmarkIcon } from "../../icons";
+import { BookmarkIcon, DeleteIcon } from "../../icons";
 import SelectSearch from "../../SelectSearch";
 import { useCategoriesProvider } from "../../../hooks/useCategoriesProvider";
 
@@ -102,6 +102,7 @@ export default function PostTable({
   bookmarkScene,
   smallLoading,
   selectedPost,
+  handleReject
 }) {
   const navigate = useNavigate();
   const { auth } = useAuth();
@@ -356,6 +357,16 @@ export default function PostTable({
                           className="rounded-xl bg-[#FFEFD0] dark:bg-orange-500/10 px-3 py-1.5 text-sm font-medium text-[#9B5A0A] hover:bg-orange-100 dark:hover:bg-orange-500/20 transition"
                         >
                           View
+                        </button>
+
+                        <button
+                          onClick={()=> handleReject(post)}
+                          disabled={smallLoading || loading}
+                          title={
+                           "Delete post"
+                          }
+                        >
+                          <DeleteIcon />
                         </button>
                       </div>
                     </td>
