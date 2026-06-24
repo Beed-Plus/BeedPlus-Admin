@@ -27,6 +27,7 @@ import ProtectedRoute from "../components/router/ProtectedRoute";
 import GuestRoute from "../components/router/GuestRoute";
 import ScenesPage from "../pages/dashboard/scenes/ScenesPage";
 import ScenesDetailPage from "../pages/dashboard/scenes/ScenesDetailPage";
+import MediaStatusPage from "../pages/dashboard/media/MediaStatusPage";
 
 const router = createBrowserRouter([
   {
@@ -61,6 +62,10 @@ const router = createBrowserRouter([
         path: "users/rejected",
         element: <UsersStatusPage status="rejected" />,
       },
+      {
+        path: "users/deferred",
+        element: <UsersStatusPage status="deferred" />,
+      },
       { path: "users/:id", element: <UserDetailPage /> },
       { path: "posts", element: <PostsPage /> },
       { path: "posts/compare", element: <ComparePostsPage /> },
@@ -78,6 +83,10 @@ const router = createBrowserRouter([
       { path: "scenes/:id", element: <ScenesDetailPage /> },
       { path: "watch", element: <WatchPage /> },
       { path: "media-review", element: <MediaReviewPage /> },
+      {
+        path: "media-review/deferred",
+        element: <MediaStatusPage status="deferred" />,
+      },
       { path: "email", element: <EmailPage /> },
       { path: "admin", element: <AdminPage /> },
       { path: "countries", element: <CountriesPage /> },

@@ -7,6 +7,7 @@ export const usersApi = {
    *  Query params: page, limit, category, country, isVerified, approvalStatus
    */
   getUsers: ({ page = 1, limit = 20, category, country, gender, isVerified, approvalStatus, search } = {}, token) => {
+  
     const params = new URLSearchParams({ page, limit })
     if (category)       params.set('category', category)
     if (country)        params.set('country', country)
@@ -14,6 +15,7 @@ export const usersApi = {
     if (isVerified !== undefined) params.set('isVerified', isVerified)
     if (approvalStatus) params.set('approvalStatus', approvalStatus)
     if (search)         params.set('search', search)
+        console.log("USER PAGE params", params)
     return apiFetch(`${USERS}?${params}`, { token })
   },
 

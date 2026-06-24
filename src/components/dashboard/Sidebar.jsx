@@ -9,6 +9,7 @@ const STATUS_COLORS = {
   approved: "bg-emerald-400",
   pending: "bg-amber-400",
   rejected: "bg-red-400",
+  deferred: "bg-blue-400",
 };
 
 function NavItem({ label, path, icon: Icon, collapsed, children }) {

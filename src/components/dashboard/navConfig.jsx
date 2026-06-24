@@ -31,9 +31,37 @@ const navConfig = [
         label: "Users",
         path: "/dashboard/users",
         icon: UsersIcon,
+        children: [
+          {
+            label: "Approved",
+            path: "/dashboard/users/approved",
+            icon: UsersIcon,
+          },
+          {
+            label: "Deferred",
+            path: "/dashboard/users/deferred",
+            icon: UsersIcon,
+          },
+          {
+            label: "Pending",
+            path: "/dashboard/users/pending",
+            icon: UsersIcon,
+          },
+        ],
       },
       { label: "Media", path: "/dashboard/posts", icon: PostsIcon },
-      { label: "Review", path: "/dashboard/media-review", icon: ReviewIcon },
+      {
+        label: "Review",
+        path: "/dashboard/media-review",
+        icon: ReviewIcon,
+        children: [
+          {
+            label: "Deferred",
+            path: "/dashboard/media-review/deferred",
+            icon: UsersIcon,
+          },
+        ],
+      },
       {
         label: "Compare",
         path: "/dashboard/posts/compare",
