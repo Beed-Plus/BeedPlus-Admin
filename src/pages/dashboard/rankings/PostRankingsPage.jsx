@@ -776,7 +776,7 @@ export default function PostRankingsPage() {
                             </button>
                             <button
                               onClick={() =>
-                                navigate(`/dashboard/posts/${item._id}`, {
+                                navigate(`/dashboard/posts/${item.instagramMediaId}`, {
                                   state: {
                                     post: item,
                                   },

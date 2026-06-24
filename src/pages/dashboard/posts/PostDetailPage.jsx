@@ -1,5 +1,11 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate, useLocation, Link } from "react-router-dom";
+import {
+  useParams,
+  useNavigate,
+  useLocation,
+  Link,
+  useSearchParams,
+} from "react-router-dom";
 import { useAuth } from "../../../hooks/useAuth";
 import { instagramApi } from "../../../utils/instagramApi";
 import { useScenes } from "../../../hooks/useScenes";
@@ -86,7 +92,9 @@ function StatCard({ label, value, sub, iconBg, icon: Icon }) {
 function InsightRow({ label, value, icon }) {
   return (
     <div className="flex gap-2.5 items-center p-2.5 px-4 bg-[#F4F4F44D] rounded-2xl">
-      <div className="h-10 w-10 bg-[#FFF] rounded-lg items-center flex justify-center">{icon && icon}</div>
+      <div className="h-10 w-10 bg-[#FFF] rounded-lg items-center flex justify-center">
+        {icon && icon}
+      </div>
       <div className="flex flex-col gap-0.5">
         <span className="text-[25px] text-[#3A3A3A] font-semibold dark:text-gray-400">
           {fmt(value)}
@@ -161,10 +169,12 @@ function PageSkeleton() {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export default function PostDetailPage() {
   const { id } = useParams();
+  const [searchParams] = useSearchParams();
+  const instagramMediaId = searchParams.get("instagramMediaId");
 
   const navigate = useNavigate();
   const location = useLocation();
-  
+
   const [expandCaption, setExpandCaption] = useState(false);
 
   const { auth } = useAuth();
@@ -174,16 +184,11 @@ export default function PostDetailPage() {
 
   const [post, setPost] = useState(location.state.post);
 
-  useEffect(() => {
-    console.log(
-      "PostDetailPage received post via location state:",
-      JSON.stringify(post, null, 2),
-    );
-  }, [post]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [watchlistBusy, setWatchlistBusy] = useState(false);
   const [smallLoading, setSmallLoading] = useState(false);
+  const [mediaStats, setMediaStats] = useState(null);
 
   // Always fetch full data so dailyInsights (excluded from list endpoint) are included
   // useEffect(() => {
@@ -207,6 +212,26 @@ export default function PostDetailPage() {
   //   };
   // }, [id, token]);
 
+  async function getMediaStats() {
+    setLoading(true);
+    try {
+      let result = await instagramApi.getMediaStats(id, token);
+      console.log("MEDIA STATS", result);
+      setLoading(false);
+      setMediaStats(result);
+    } catch (e) {
+      console.log("error fetching media stats", e);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    if (id && token) {
+      Promise.all([load(), getMediaStats()]);
+    }
+  }, [id]);
+
   if (loading) return <PageSkeleton />;
 
   if (error || !post) {
@@ -225,7 +250,6 @@ export default function PostDetailPage() {
       </div>
     );
   }
-
 
   // Get full and truncated captions
   const fullCaption = post.media?.caption;
@@ -246,55 +270,35 @@ export default function PostDetailPage() {
     ? post.category
     : [post.category].filter(Boolean);
 
-  const DAILY_LABELS = {
-    daily_views: "Daily Views",
-    daily_reach: "Daily Reach",
-    daily_totalInteractions: "Daily Interactions",
-    daily_shares: "Daily Shares",
-    daily_saved: "Daily Saved",
-    daily_likes: "Daily Likes",
-    daily_comments: "Daily Comments",
-    daily_impressions: "Daily Impressions",
-  };
-
-  const dailyEntries = Object.entries(post.insights ?? {})
-    .filter(([k, v]) => k.startsWith("daily_") && v !== undefined && v !== null)
-    .map(([k, v]) => ({
-      key: k,
-      label:
-        DAILY_LABELS[k] ??
-        k.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
-      value: v,
-    }));
-
-  const archivedRows = [...(post.insights?.archivedLifetimes ?? [])]
-    .reverse()
-    .slice(0, 2);
-  const dailyRows = [...(post.insights?.dailyInsights ?? [])]
-    .reverse()
-    .slice(0, 2);
-
   async function refreshData() {
     setSmallLoading(true);
     setError(null);
 
-    let lastErr = null;
-    for (let attempt = 1; attempt <= 3; attempt++) {
-      try {
-        const res = await instagramApi.getMediaByIdForAdmin(id, token);
-        if (res?.media?._id) setPost(res.media);
-        setSmallLoading(false);
-        return;
-      } catch (err) {
-        lastErr = err;
-        if (attempt < 3) {
-          await new Promise((r) => setTimeout(r, attempt * 1000));
-        }
-      }
-    }
+    try {
+      const res = await instagramApi.getMediaByIdForAdmin(id, token);
 
-    setError(lastErr?.message ?? "Failed to load posts");
-    setSmallLoading(false);
+      if (res?.media?._id) setPost(res.media);
+      setSmallLoading(false);
+    } catch (err) {
+      setError(err?.message ?? "Failed to load posts");
+    } finally {
+      setSmallLoading(false);
+    }
+  }
+  async function load() {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const res = await instagramApi.getMediaByIdForAdmin(id, token);
+
+      if (res?.media?._id) setPost(res.media);
+      setLoading(false);
+    } catch (err) {
+      setError(err?.message ?? "Failed to load posts");
+    } finally {
+      setLoading(false);
+    }
   }
 
   const bookmarkScene = async (post) => {
@@ -320,7 +324,7 @@ export default function PostDetailPage() {
       </button>
     );
   }
-
+  console.log("POST", post);
   return (
     <div className="flex flex-col gap-6">
       <div className="flex justify-between items-center">
@@ -523,18 +527,57 @@ export default function PostDetailPage() {
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
         <StatCard
           label="Beed+ Score"
-          value={fmtBeedScore(post.beedPlusScore)}
+          value={post?.beedplusScore?.toLocaleString() ?? "--"}
         />
         <StatCard label="Beed+ Clicks" value={fmt(post.clicks)} />
-        <StatCard label="Beed+ Views" value={fmt(post.insights?.views)} />
+        <StatCard label="Beed+ Views" value={fmt(post.beedplusViews)} />
       </div>
 
       {/* Insights + Creator row */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-4">
         {/* Insights */}
+
         <div className="lg:col-span-3 rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-lg shadow-[#0000000D]">
           <h3 className="mb-4 text-[24px] font-medium dark:text-gray-500">
-            Instagram Insights
+            Instagram Daily Insights
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-x-8">
+            <InsightRow
+              label="Views"
+              value={mediaStats?.dailyInsights?.views?.toLocaleString()}
+              icon={<EyeIcon />}
+            />
+            <InsightRow
+              label="Reach"
+              value={mediaStats?.dailyInsights?.reach?.toLocaleString()}
+              icon={<ReachIcon />}
+            />
+            <InsightRow
+              label="Saved"
+              value={mediaStats?.dailyInsights?.saved?.toLocaleString()}
+              icon={<BookmarkIcon />}
+            />
+            <InsightRow
+              label="Likes"
+              value={mediaStats?.dailyInsights?.likes?.toLocaleString()}
+              icon={<LikeIcon />}
+            />
+            <InsightRow
+              label="Comments"
+              value={mediaStats?.dailyInsights?.comments?.toLocaleString()}
+              icon={<CommentIcon />}
+            />
+            <InsightRow
+              label="Shares"
+              value={mediaStats?.dailyInsights?.shares?.toLocaleString()}
+              icon={<ShareIcon />}
+            />
+          </div>
+        </div>
+
+        <div className="lg:col-span-3 rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-lg shadow-[#0000000D]">
+          <h3 className="mb-4 text-[24px] font-medium dark:text-gray-500">
+            Instagram Lifetime Insights
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-x-8">
             <InsightRow
@@ -559,7 +602,7 @@ export default function PostDetailPage() {
             />
             <InsightRow
               label="Comments"
-              value={post.insights?.commentsCount}
+              value={post.insights?.comments}
               icon={<CommentIcon />}
             />
             <InsightRow
@@ -570,19 +613,19 @@ export default function PostDetailPage() {
           </div>
         </div>
 
-        <div className="flex flex-col gap-3 shadow-lg">
+        <div className="flex flex-col gap-3 row-1 col-4 shadow-lg">
           <div className="">
             <Top100
               label="Beed+ Top Top100"
-              globalValue={post?.globalRank}
-              localValue={post?.categoryRank}
+              globalValue={mediaStats?.globalRank ?? "--"}
+              localValue={mediaStats?.countryRank ?? "--"}
             />
           </div>
           <div className="">
             <Top100
               label={`${post?.category} Top 100 Nigeria`}
-              globalValue={post.globalRank}
-              localValue={post?.categoryRank}
+              globalValue={mediaStats?.categoryRank ?? "--"}
+              localValue={mediaStats?.countryCategoryRank ?? "--"}
             />
           </div>
         </div>

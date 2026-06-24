@@ -194,7 +194,7 @@ export default function MediaReviewTable({ posts, loading, review, actionId }) {
                     key={post._id}
                     className="border-b border-[#3A3A3A1A] dark:border-gray-800/50 last:border-0 hover:bg-gray-50/40 dark:hover:bg-gray-800/40 transition-colors cursor-pointer"
                     onClick={() =>
-                      navigate(`/dashboard/posts/${post._id}`, {
+                      navigate(`/dashboard/posts/${post.instagramMediaId}`, {
                         state: { post },
                       })
                     }

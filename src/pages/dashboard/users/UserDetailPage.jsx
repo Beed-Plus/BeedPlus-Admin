@@ -456,6 +456,7 @@ export default function UserDetailPage() {
   const [filterCategory, setFilterCategory] = useState("");
   const [filterSubCategory, setFilterSubCategory] = useState("");
   const [sortby, setSortBy] = useState("all");
+  const [userStats, setUserStats] = useState("");
 
   async function handleApprove() {
     setApproving(true);
@@ -488,8 +489,15 @@ export default function UserDetailPage() {
       setLoading(true);
       setError(null);
       try {
-        const res = await usersApi.getUserById(id, token);
-        if (!cancelled) setUser(res?.user ?? null);
+        const [res, resStats] = await Promise.all([
+          usersApi.getUserById(id, token),
+          usersApi.getUserStats(id, token),
+        ]);
+        if (!cancelled) {
+          setUser(res?.user ?? null);
+          console.log("RES STATS", resStats)
+          setUserStats(resStats);
+        }
       } catch (err) {
         if (!cancelled) setError(err.message ?? "Failed to load user");
       } finally {
@@ -798,26 +806,26 @@ export default function UserDetailPage() {
             <StatCard
               label="Beed+ Top Creators"
               globalValue={
-                user?.beedPlusCreatorScore
-                  ? `${user.beedPlusCreatorScore}`
+                userStats?.globalRank
+                  ? `${userStats.globalRank}`
                   : "—"
               }
               localValue={
-                user?.beedPlusCreatorScore
-                  ? `${user.beedPlusCreatorScore}`
+                userStats?.countryRank
+                  ? `${userStats.countryRank}`
                   : "—"
               }
             />
             <StatCard
               label={`${user.category} Top Creators`}
               globalValue={
-                user?.categoryMonthlyCreatorRank
-                  ? `${user.categoryMonthlyCreatorRank}`
+                userStats?.categoryRank
+                  ? `${userStats.categoryRank}`
                   : "—"
               }
               localValue={
-                user?.categoryMonthlyCreatorRank
-                  ? user?.categoryMonthlyCreatorRank
+                userStats?.categoryCountryRank
+                  ? userStats?.categoryCountryRank
                   : "—"
               }
             />
@@ -1094,7 +1102,7 @@ export default function UserDetailPage() {
                             <button
                               onClick={() =>
                                 navigate(
-                                  `/dashboard/posts/${submittedMedia._id}`,
+                                  `/dashboard/posts/${submittedMedia.instagramMediaId}`,
                                   {
                                     state: { post: submittedMedia },
                                   },

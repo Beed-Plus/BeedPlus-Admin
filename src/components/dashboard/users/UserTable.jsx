@@ -140,6 +140,32 @@ export default function UserTable({
       } finally {
         setApprovingId(null);
       }
+    } else if (action === "Defer User") {
+      setApprovingId(user._id);
+      try {
+        const res = await usersApi.approveUser(user._id, token);
+        console.log("DEFERRED RES", res);
+        setApprovingId(null);
+        setLocalUsers((prev) =>
+          (prev ?? initialUsers).map((u) =>
+            u._id === user._id
+              ? {
+                  ...u,
+                  instagramApproval: {
+                    ...(u.instagramApproval ?? {}),
+                    status: "deferred",
+                  },
+                }
+              : u,
+          ),
+        );
+      } catch (err) {
+        console.log("ERROR FROM APPROVAL", err);
+        setApprovingId(null);
+        alert(`Approve failed: ${err.message}`);
+      } finally {
+        setApprovingId(null);
+      }
     } else if (action === "Edit User") {
       setEditUser(user);
       setEditCategory(
@@ -214,6 +240,9 @@ export default function UserTable({
               <th className={`${COL} min-w-[172px] text-center`}>Post</th>
               <th className={`${COL} min-w-[172px] text-center`}>Viewers</th>
               <th className={`${COL} min-w-[172px] text-center`}>Status</th>
+              <th className={`${COL} min-w-[172px] text-center`}>
+                Instagram Status
+              </th>
               <th className={`${COL} min-w-[172px] text-center`}>Joined</th>
               <th className={`${COL} text-center`}>Actions</th>
             </tr>
@@ -254,6 +283,10 @@ export default function UserTable({
                   rejected: {
                     label: "Rejected",
                     style: "bg-red-50 text-red-500",
+                  },
+                  connected: {
+                    label: "Connected",
+                    style: "bg-green-50 text-green-600",
                   },
                 };
                 return (
@@ -342,6 +375,17 @@ export default function UserTable({
                           custom={`${statusColor[status]?.style ?? ""}`}
                         />
                       )}
+                    </td>
+                    {/* Instagram status */}
+                    <td className="px-6 py-4 font-medium min-w-[172px] text-center">
+                      <Badge
+                        label={
+                          statusColor[
+                            user.instagram.connected ? "connected" : "pending"
+                          ]?.label ?? status
+                        }
+                        custom={`${statusColor[user.instagram.connected ? "connected" : "pending"]?.style ?? ""}`}
+                      />
                     </td>
 
                     {/* Connected */}

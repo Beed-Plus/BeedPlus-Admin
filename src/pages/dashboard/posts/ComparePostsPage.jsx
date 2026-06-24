@@ -251,9 +251,9 @@ function PostSelectorPanel({
   onSelect,
   // whether the *other* post is also selected (enables win badges)
   canCompare,
+  mediaStat,
 }) {
   const [query, setQuery] = useState("");
-  console.log(selected);
   const filtered = useMemo(() => {
     if (!query.trim()) return posts.slice(0, 20);
     const q = query.toLowerCase();
@@ -293,7 +293,7 @@ function PostSelectorPanel({
     const isVideo =
       mediaType?.toUpperCase() === "VIDEO" ||
       mediaType?.toUpperCase() === "REELS";
-
+console.log("selected", selected)
     return (
       <div
         className={`flex flex-col rounded-2xl p-5 bg-[#FFFEFC] dark:bg-gray-900 overflow-hidden shadow-lg shadow-[#0000000D]`}
@@ -459,20 +459,20 @@ function PostSelectorPanel({
             <StatCard label="Beed+ Clicks" value={fmt(selected.clicks)} />
             <StatCard
               label="Beed+ Views"
-              value={fmt(selected.insights?.views)}
+              value={fmt(selected.beedplusViews)}
             />
           </div>
 
           <div className="flex flex-col gap-3">
             <Top100
               label="Beed+ Top Top100"
-              globalValue={selected?.globalRank}
-              localValue={selected?.categoryRank}
+              globalValue={mediaStat?.globalRank}
+              localValue={mediaStat?.categoryRank}
             />
             <Top100
               label={`${selected?.category} Top 100 Nigeria`}
-              globalValue={selected.globalRank}
-              localValue={selected?.categoryRank}
+              globalValue={mediaStat?.categoryRank}
+              localValue={mediaStat?.countryCategoryRank}
             />
           </div>
         </div>
@@ -481,7 +481,44 @@ function PostSelectorPanel({
         <div className="grid grid-cols-1 gap-4 mt-4 ">
           <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-lg shadow-[#0000001A]">
             <h3 className="mb-4 text-base font-medium dark:text-gray-500">
-              Instagram Insights
+              Instagram Daily Insights
+            </h3>
+            <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 sm:gap-x-8">
+              <InsightRow
+                label="Views"
+                value={mediaStat?.dailyInsights?.views}
+                icon={<EyeIcon />}
+              />
+              <InsightRow
+                label="Reach"
+                value={mediaStat?.dailyInsights?.reach}
+                icon={<ReachIcon />}
+              />
+              <InsightRow
+                label="Saved"
+                value={mediaStat?.dailyInsights?.saved}
+                icon={<BookmarkIcon />}
+              />
+              <InsightRow
+                label="Likes"
+                value={mediaStat?.dailyInsights?.likes}
+                icon={<LikeIcon />}
+              />
+              <InsightRow
+                label="Comments"
+                value={mediaStat?.dailyInsights?.comments}
+                icon={<CommentIcon />}
+              />
+              <InsightRow
+                label="Shares"
+                value={mediaStat?.dailyInsights?.shares}
+                icon={<ShareIcon />}
+              />
+            </div>
+          </div>
+          <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-lg shadow-[#0000001A]">
+            <h3 className="mb-4 text-base font-medium dark:text-gray-500">
+              Instagram Lifetime Insights
             </h3>
             <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 sm:gap-x-8">
               <InsightRow
@@ -506,7 +543,7 @@ function PostSelectorPanel({
               />
               <InsightRow
                 label="Comments"
-                value={selected.insights?.commentsCount}
+                value={selected.insights?.comments}
                 icon={<CommentIcon />}
               />
               <InsightRow
@@ -632,6 +669,8 @@ export default function ComparePostsPage() {
   const [selectedDate, setSelectedDate] = useState(null);
   const [calendarOpen, setCalendarOpen] = useState(false);
   const calendarRef = useRef(null);
+  const [postAMediaStat, setPostAMediaStat] = useState(null);
+  const [postBMediaStat, setPostBMediaStat] = useState(null);
 
   useEffect(() => {
     if (!calendarOpen) return;
@@ -666,14 +705,32 @@ export default function ComparePostsPage() {
       return;
     }
     let cancelled = false;
-    instagramApi
-      .getMediaByIdForAdmin(postA._id, token)
-      .then((res) => {
-        if (!cancelled) setFullA(res.media ?? res);
-      })
-      .catch(() => {
+
+    const fetchMedia = async () => {
+      try {
+        const result = await instagramApi.getMediaByIdForAdmin(
+          postA._id,
+          token,
+        );
+        const data = result.media ?? result;
+        if (!cancelled) setFullA(data);
+        return data;
+      } catch (error) {
         if (!cancelled) setFullA(postA);
-      });
+        return postA;
+      }
+    };
+
+    const fetchPostA = async () => {
+      const [res, mediaStat] = await Promise.all([
+        fetchMedia(),
+        getMediaStats(postA.instagramMediaId),
+      ]);
+      console.log("POST A MEDIA STAT", mediaStat);
+      setPostAMediaStat(mediaStat);
+    };
+
+    fetchPostA();
     return () => {
       cancelled = true;
     };
@@ -685,18 +742,50 @@ export default function ComparePostsPage() {
       return;
     }
     let cancelled = false;
-    instagramApi
-      .getMediaByIdForAdmin(postB._id, token)
-      .then((res) => {
-        if (!cancelled) setFullB(res.media ?? res);
-      })
-      .catch(() => {
+
+    const fetchMedia = async () => {
+      try {
+        const result = await instagramApi.getMediaByIdForAdmin(
+          postB._id,
+          token,
+        );
+        const data = result.media ?? result;
+        if (!cancelled) setFullB(data);
+        return data;
+      } catch (error) {
         if (!cancelled) setFullB(postB);
-      });
+        return postB;
+      }
+    };
+    const fetchPostB = async () => {
+      const [res, mediaStat] = await Promise.all([
+        fetchMedia(),
+        getMediaStats(postB.instagramMediaId),
+      ]);
+      console.log("POST B MEDIA STAT", mediaStat);
+      setPostBMediaStat(mediaStat);
+    };
+
+    fetchPostB();
     return () => {
       cancelled = true;
     };
   }, [postB?._id, token]);
+
+  async function getMediaStats(id) {
+    setLoading(true);
+    try {
+      let result = await instagramApi.getMediaStats(id, token);
+      console.log("MEDIA STATS", result);
+      setLoading(false);
+      return result;
+    } catch (e) {
+      console.log("ERROR loading stats", e);
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  }
 
   const postsForA = useMemo(
     () => allPosts.filter((p) => p._id !== postB?._id),
@@ -853,6 +942,7 @@ export default function ComparePostsPage() {
           selected={enriched.a}
           onSelect={setPostA}
           canCompare={bothReady}
+          mediaStat={postAMediaStat}
         />
 
         <PostSelectorPanel
@@ -863,6 +953,7 @@ export default function ComparePostsPage() {
           selected={enriched.b}
           onSelect={setPostB}
           canCompare={bothReady}
+          mediaStat={postBMediaStat}
         />
       </div>
 

@@ -102,7 +102,7 @@ export default function PostTable({
   bookmarkScene,
   smallLoading,
   selectedPost,
-  handleReject
+  handleReject,
 }) {
   const navigate = useNavigate();
   const { auth } = useAuth();
@@ -217,9 +217,12 @@ export default function PostTable({
                     <td
                       className="px-6 py-4 min-w-75"
                       onClick={() =>
-                        navigate(`/dashboard/posts/${post._id}`, {
-                          state: { post },
-                        })
+                        navigate(
+                          `/dashboard/posts/${post.instagramMediaId}`,
+                          {
+                            state: { post },
+                          },
+                        )
                       }
                     >
                       <div className="flex items-center gap-3">
@@ -350,9 +353,12 @@ export default function PostTable({
                         </button>
                         <button
                           onClick={() =>
-                            navigate(`/dashboard/posts/${post._id}`, {
-                              state: { post },
-                            })
+                            navigate(
+                              `/dashboard/posts/${post.instagramMediaId}`,
+                              {
+                                state: { post },
+                              },
+                            )
                           }
                           className="rounded-xl bg-[#FFEFD0] dark:bg-orange-500/10 px-3 py-1.5 text-sm font-medium text-[#9B5A0A] hover:bg-orange-100 dark:hover:bg-orange-500/20 transition"
                         >
@@ -360,11 +366,9 @@ export default function PostTable({
                         </button>
 
                         <button
-                          onClick={()=> handleReject(post)}
+                          onClick={() => handleReject(post)}
                           disabled={smallLoading || loading}
-                          title={
-                           "Delete post"
-                          }
+                          title={"Delete post"}
                         >
                           <DeleteIcon />
                         </button>

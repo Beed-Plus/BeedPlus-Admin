@@ -426,8 +426,13 @@ export default function MediaReviewPage() {
   async function load() {
     setLoading(true);
     try {
-      const res = await instagramApi.getPendingMediaForAdmin(token, "pending");
-      setItems(res.pending ?? []);
+      const [res1, res2] = await Promise.all([
+        instagramApi.getPendingMediaForAdmin(token, "pending"),
+        instagramApi.getPendingMediaForAdmin(token, "deferred"),
+      ]);
+      console.log("res1", res1)
+      console.log("res2", res2)
+      setItems(res1.pending ?? []);
     } catch {
       setItems([]);
     } finally {
