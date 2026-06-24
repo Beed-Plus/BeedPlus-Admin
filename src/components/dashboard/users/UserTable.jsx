@@ -143,7 +143,7 @@ export default function UserTable({
     } else if (action === "Defer User") {
       setApprovingId(user._id);
       try {
-        const res = await usersApi.approveUser(user._id, token);
+        const res = await usersApi.deferUser(user._id, token);
         console.log("DEFERRED RES", res);
         setApprovingId(null);
         setLocalUsers((prev) =>

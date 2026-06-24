@@ -142,7 +142,6 @@ export default function MediaReviewTable({ posts, loading, review, actionId }) {
       setSaving(false);
     }
   }
-  
 
   return (
     <div className="rounded-2xl bg-white dark:bg-gray-900 overflow-hidden">
@@ -156,6 +155,7 @@ export default function MediaReviewTable({ posts, loading, review, actionId }) {
               <th className={COL}>Subcategory</th>
               <th className={COL}>Country</th>
               <th className={COL}>Views</th>
+              <th className={COL}>Status</th>
               <th className={COL}>Submitted</th>
               <th className={`${COL} text-right`}>Actions</th>
             </tr>
@@ -188,7 +188,26 @@ export default function MediaReviewTable({ posts, loading, review, actionId }) {
                   : [post.category].filter(Boolean);
                 const subCat =
                   post.subCategory?.name ?? post.subCategory ?? null;
-              const busy = actionId === post._id;
+                const busy = actionId === post._id;
+
+                const statusColor = {
+                  approved: {
+                    label: "Approved",
+                    style: "bg-green-50 text-green-600",
+                  },
+                  pending: {
+                    label: "Pending",
+                    style: "bg-amber-50 text-amber-600",
+                  },
+                  rejected: {
+                    label: "Rejected",
+                    style: "bg-red-50 text-red-500",
+                  },
+                  deferred: {
+                    label: "Deferred",
+                    style: "bg-blue-50 text-blue-600",
+                  },
+                };
                 return (
                   <tr
                     key={post._id}
@@ -285,11 +304,28 @@ export default function MediaReviewTable({ posts, loading, review, actionId }) {
 
                     {/* Views */}
                     <td className="px-6 py-4 min-w-25 text-sm font-semibold text-[#2F3134] dark:text-gray-100 font-mono">
-                      {fmt(post.insights?.views) ?? (
+                      {fmt(post.beedplusViews) ?? (
                         <span className="text-gray-300 dark:text-gray-600">
                           —
                         </span>
                       )}
+                    </td>
+
+                    <td className="px-6 py-4 min-w-25 text-sm font-semibold text-[#2F3134] dark:text-gray-100 font-mono">
+                      {
+                        <span
+                          className={`${
+                            statusColor[post.status as keyof typeof statusColor]
+                              .style
+                          }text-gray-300 dark:text-gray-600 px-3 py-2 rounded-xl`}
+                        >
+                          {post?.status
+                            ? statusColor[
+                                post.status as keyof typeof statusColor
+                              ].label
+                            : ""}
+                        </span>
+                      }
                     </td>
 
                     {/* Submitted */}

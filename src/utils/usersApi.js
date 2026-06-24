@@ -68,6 +68,12 @@ export const usersApi = {
       token,
     }),
 
+  deferUser: (id, token) =>
+    apiFetch(`/api/auth/defer-instagram-connect/${id}`, {
+      method: "PUT",
+      token,
+    }),
+
   /** PATCH /api/users/:id/category  (admin) — accepts category and/or country */
   updateUserCategory: (id, { category, country }, token) =>
     apiFetch(`${USERS}/${id}/category`, {

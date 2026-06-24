@@ -72,8 +72,10 @@ function PreviewModal({
   onClose,
   onApprove,
   onReject,
+  onDefer,
   isApproving,
   isRejecting,
+  isDeferring,
 }) {
   const overlayRef = useRef(null);
   const [cat, setCat] = useState(item.category ?? "");
@@ -365,12 +367,26 @@ function PreviewModal({
             </button>
           </div>
 
-          <button
-            onClick={onClose}
-            className="text-center rounded-lg w-62 mx-auto h-12 border border-white dark:border-gray-600 py-2.5 shadow-lg shadow-[#0000001A] my-4 text-xl text-[#3A3A3A] font-bold hover:text-gray-500 transition"
-          >
-            Close
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() =>
+                onDefer(item, {
+                  category: cat ? cat : undefined,
+                  subCategory: subCat || undefined,
+                })
+              }
+              disabled={isApproving || isRejecting || !cat}
+              className="flex-1 rounded-lg bg-[#045097] h-12 py-2.5 text-xl font-bold text-white hover:bg-green-600 transition disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {isDeferring ? "Deferring..." : "Defer"}
+            </button>
+            <button
+              onClick={onClose}
+              className="text-center flex-1 rounded-lg h-12 border border-gray-300 dark:border-gray-600 py-2.5 shadow-lg shadow-[#0000001A] text-xl text-[#3A3A3A] font-bold hover:text-gray-500 transition"
+            >
+              Close
+            </button>
+          </div>
         </div>
       </div>
     </div>,
@@ -396,6 +412,7 @@ export default function MediaReviewPage() {
   const { categories, subCategories } = useCategoriesProvider();
   const [expandCaption, setExpandCaption] = useState(false);
   const [isApproving, setIsApproving] = useState(false);
+  const [isDeferring, setisDeferring] = useState(false);
   const [isRejecting, setIsRejecting] = useState(false);
 
   // Get full and truncated captions
@@ -430,9 +447,9 @@ export default function MediaReviewPage() {
         instagramApi.getPendingMediaForAdmin(token, "pending"),
         instagramApi.getPendingMediaForAdmin(token, "deferred"),
       ]);
-      console.log("res1", res1)
-      console.log("res2", res2)
-      setItems(res1.pending ?? []);
+      console.log("res1", res1);
+      console.log("res2", res2);
+      setItems([...(res1.pending ?? []), ...(res2.pending ?? [])]);
     } catch {
       setItems([]);
     } finally {
@@ -490,6 +507,24 @@ export default function MediaReviewPage() {
       setViewModal(null);
     } catch (err) {
       alert(err.message ?? "Failed to approve");
+    } finally {
+      setActionId(null);
+      setIsApproving(false);
+    }
+  }
+  async function handleDefer(item, { category, subCategory } = {}) {
+    setActionId(item._id);
+    setIsApproving(true);
+    try {
+      await instagramApi.deferPendingMedia(
+        item._id,
+        { category, subCategory },
+        token,
+      );
+      setItems((prev) => prev.filter((i) => i._id !== item._id));
+      setViewModal(null);
+    } catch (err) {
+      alert(err.message ?? "Failed to defer");
     } finally {
       setActionId(null);
       setIsApproving(false);
@@ -618,6 +653,8 @@ export default function MediaReviewPage() {
             onReject={handleReject}
             isApproving={isApproving}
             isRejecting={isRejecting}
+            onDefer={handleDefer}
+            isDeferring={isDeferring}
           />
         )}
       </div>

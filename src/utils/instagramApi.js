@@ -109,6 +109,12 @@ export const instagramApi = {
       token,
     }),
 
+  deferPendingMedia: (id, { category, subCategory } = {}, token) =>
+    apiFetch(`${IG}/admin/pending-media/${id}/defer`, {
+      body: { category, subCategory },
+      token,
+    }),
+
   /** POST /api/instagram/admin/pending-media/:id/reject  (admin) */
   rejectPendingMedia: (id, { reason } = {}, token) =>
     apiFetch(`${IG}/admin/pending-media/${id}/reject`, {

@@ -321,7 +321,6 @@ export default function PostRankingsPage() {
   const [filterCategory, setCategory] = useState("");
   const [filterSubCategory, setSubCategory] = useState("");
 
-
   // const { categories, subCategories } = useCategoriesProvider();
 
   useEffect(() => {
@@ -332,7 +331,7 @@ export default function PostRankingsPage() {
     async function load() {
       try {
         // Fetch latest chart (critical) + available dates (non-critical) in parallel
-        const [res] = await Promise.all([instagramApi.getMediaChart()]);
+        const res = await instagramApi.getMediaChart();
         if (cancelled) return;
         console.log("API response", res.rankings);
         const rawRankings = res?.rankings ?? [];
@@ -342,13 +341,19 @@ export default function PostRankingsPage() {
         setActiveTab(0);
       } catch (err) {
         if (cancelled) return;
+        console.log(JSON.stringify(err, null, 2));
         // Auto-retry once after 3s (handles Render.com cold-start wake-up)
         if (retryCount === 0) {
           setTimeout(() => {
             if (!cancelled) setRetryCount(1);
           }, 3000);
         } else {
-          setError(err.message ?? "Failed to load rankings");
+          if (err.message == "No Rankings founds") {
+            setRankings([]);
+            return;
+          } else {
+            setError(err.message ?? "Failed to load rankings");
+          }
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -457,8 +462,6 @@ export default function PostRankingsPage() {
       return true;
     });
   }, [rankings, filterCategory, filterSubCategory]);
-
-
 
   function handleFilter(setter) {
     return (val) => {
@@ -570,7 +573,7 @@ export default function PostRankingsPage() {
       </div>
 
       {/* Error */}
-      {error && (
+      {/* {error && (
         <div className="rounded-2xl border border-red-100 bg-red-50 px-5 py-4 text-sm text-red-500 flex items-center justify-between gap-4">
           <span>{error}</span>
           <button
@@ -580,7 +583,7 @@ export default function PostRankingsPage() {
             Retry
           </button>
         </div>
-      )}
+      )} */}
 
       {/* Media modal */}
       {selectedItem && (
@@ -776,11 +779,14 @@ export default function PostRankingsPage() {
                             </button>
                             <button
                               onClick={() =>
-                                navigate(`/dashboard/posts/${item.instagramMediaId}`, {
-                                  state: {
-                                    post: item,
+                                navigate(
+                                  `/dashboard/posts/${item.instagramMediaId}`,
+                                  {
+                                    state: {
+                                      post: item,
+                                    },
                                   },
-                                })
+                                )
                               }
                               className="rounded-xl bg-[#FFEFD0] px-3 py-1.5 text-base font-semibold text-[#9B5A0A] transition"
                             >
@@ -798,14 +804,13 @@ export default function PostRankingsPage() {
                       colSpan={9}
                       className="px-6 py-16 text-center text-sm text-gray-400 dark:text-gray-500"
                     >
-                      No posts found
+                      {error}
                     </td>
                   </tr>
                 )}
               </tbody>
             </table>
           </div>
-
         </div>
       }
     </div>

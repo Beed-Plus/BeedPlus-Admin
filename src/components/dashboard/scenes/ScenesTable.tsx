@@ -292,7 +292,7 @@ export default function ScenesTable({
 
                     {/* Views */}
                     <td className="px-6 py-4 min-w-25 text-sm font-semibold text-[#2F3134] dark:text-gray-100 font-mono">
-                      {fmt(post.insights?.views) ?? (
+                      {fmt(post.beedplusViews) ?? (
                         <span className="text-gray-300 dark:text-gray-600">
                           —
                         </span>

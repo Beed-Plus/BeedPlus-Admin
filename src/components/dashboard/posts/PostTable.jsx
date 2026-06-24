@@ -110,6 +110,7 @@ export default function PostTable({
 
   const [localPosts, setLocalPosts] = useState(null);
   const [editPost, setEditPost] = useState(null);
+  const [deletePost, setDeletePost] = useState(null);
   const [editCategory, setEditCategory] = useState("");
   const [editSubCategory, setEditSubCategory] = useState("");
   const [saving, setSaving] = useState(false);
@@ -132,6 +133,10 @@ export default function PostTable({
     setEditPost(post);
     setEditCategory(post.category);
     setEditSubCategory(post.subCategory);
+  }
+
+  function openDelete(post) {
+    setDeletePost(post);
   }
 
   async function saveEdit() {
@@ -217,12 +222,9 @@ export default function PostTable({
                     <td
                       className="px-6 py-4 min-w-75"
                       onClick={() =>
-                        navigate(
-                          `/dashboard/posts/${post.instagramMediaId}`,
-                          {
-                            state: { post },
-                          },
-                        )
+                        navigate(`/dashboard/posts/${post.instagramMediaId}`, {
+                          state: { post },
+                        })
                       }
                     >
                       <div className="flex items-center gap-3">
@@ -303,7 +305,7 @@ export default function PostTable({
 
                     {/* Views */}
                     <td className="px-6 py-4 min-w-25 text-sm font-semibold text-[#2F3134] dark:text-gray-100 font-mono">
-                      {fmt(post.insights?.views) ?? (
+                      {fmt(post.beedplusViews) ?? (
                         <span className="text-gray-300 dark:text-gray-600">
                           —
                         </span>
@@ -366,8 +368,7 @@ export default function PostTable({
                         </button>
 
                         <button
-                          onClick={() => handleReject(post)}
-                          disabled={smallLoading || loading}
+                          onClick={() => openDelete(post)}
                           title={"Delete post"}
                         >
                           <DeleteIcon />
@@ -446,6 +447,45 @@ export default function PostTable({
                 className="flex-1 rounded-xl bg-[#2F3134] py-2.5 text-sm font-semibold text-white hover:bg-[#2F3134] transition disabled:opacity-60"
               >
                 {saving ? "Saving…" : "Save"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {deletePost && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+            onClick={() => setDeletePost(null)}
+          />
+          <div className="relative w-full max-w-sm rounded-2xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 shadow-2xl p-6 flex flex-col gap-5">
+            <div className="flex items-center gap-3">
+              <div className="min-w-0">
+                <h3 className="text-base font-bold text-gray-900 dark:text-gray-100">
+                  Delete Post
+                </h3>
+                <p className="text-xs text-gray-400 dark:text-gray-500 truncate">
+                  {truncate(deletePost?.media?.caption, 40)}
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-5 flex items-center justify-end gap-3">
+              <button
+                onClick={() => setDeletePost(null)}
+                className="rounded-xl border border-gray-200 dark:border-gray-700 px-4 py-2.5 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={async () => {
+                  await handleReject(deletePost);
+                  setDeletePost(null);
+                }}
+                disabled={smallLoading || loading}
+                className="rounded-xl bg-red-500 px-5 py-2.5 text-sm font-semibold text-white hover:bg-red-600 transition disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {smallLoading || loading ? "Deleting..." : "Delete"}
               </button>
             </div>
           </div>
