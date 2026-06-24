@@ -145,7 +145,6 @@ export default function UsersPage() {
       setUsers(res?.users ?? []);
       setPagination(res?.pagination ?? { total: 0, page: 1, pages: 1 });
       setIsReloading(false);
-      return; // success
     } catch (err) {
       setError(err?.message ?? "Failed to refresh users");
     } finally {

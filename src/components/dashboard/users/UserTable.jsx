@@ -84,7 +84,7 @@ export default function UserTable({
   const token = auth?.token;
 
   const [localUsers, setLocalUsers] = useState(null);
-  const [approvingIds, setApprovingIds] = useState(new Set());
+  const [approvingId, setApprovingId] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(null);
   const [suspendUser, setSuspendUser] = useState(null);
   const [deleting, setDeleting] = useState(false);
@@ -115,9 +115,11 @@ export default function UserTable({
     if (action === "View Profile") {
       navigate(`/dashboard/users/${user._id}`);
     } else if (action === "Approve User") {
-      setApprovingIds((prev) => new Set(prev).add(user._id));
+      setApprovingId(user._id);
       try {
-        await usersApi.approveUser(user._id, token);
+        const res = await usersApi.approveUser(user._id, token);
+        console.log("APPROVED RES", res);
+        setApprovingId(null);
         setLocalUsers((prev) =>
           (prev ?? initialUsers).map((u) =>
             u._id === user._id
@@ -132,13 +134,11 @@ export default function UserTable({
           ),
         );
       } catch (err) {
+        console.log("ERROR FROM APPROVAL", err);
+        setApprovingId(null);
         alert(`Approve failed: ${err.message}`);
       } finally {
-        setApprovingIds((prev) => {
-          const next = new Set(prev);
-          next.delete(user._id);
-          return next;
-        });
+        setApprovingId(null);
       }
     } else if (action === "Edit User") {
       setEditUser(user);
@@ -320,7 +320,7 @@ export default function UserTable({
                       onClick={(e) => e.stopPropagation()}
                     >
                       {user.monthlyReach ? (
-                       fmt(user.monthlyReach)
+                        fmt(user.monthlyReach)
                       ) : (
                         <span className="text-[#3A3A3A] dark:text-gray-600">
                           —
@@ -330,23 +330,12 @@ export default function UserTable({
 
                     {/* Approval status */}
                     <td className="px-6 py-4 font-medium min-w-[172px] text-center">
-                      {approvingIds.has(user._id) ? (
-                        <div className="flex items-center justify-center">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="h-4 w-4 animate-spin text-gray-400 dark:text-gray-500"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                            />
-                          </svg>
-                        </div>
+                      {approvingId === user._id ? (
+                        <div
+                          class="inline-block h-5 w-5 animate-spin rounded-full border-5 border-gray-200 border-t-[#3A3A3A]"
+                          role="status"
+                          aria-label="Loading"
+                        ></div>
                       ) : (
                         <Badge
                           label={statusColor[status]?.label ?? status}

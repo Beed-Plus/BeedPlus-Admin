@@ -45,7 +45,6 @@ export default function PostsPage() {
       const res = await instagramApi.getAllSubmittedMediaForAdmin(token);
       setAllPosts(Array.isArray(res) ? res : []);
       setSmallLoading(false);
-      return;
     } catch (err) {
       setError(err?.message ?? "Failed to load posts");
     } finally {
@@ -60,33 +59,20 @@ export default function PostsPage() {
       setLoading(true);
       setError(null);
 
-      let lastErr = null;
-      for (let attempt = 1; attempt <= 3; attempt++) {
-        try {
-          const res = await instagramApi.getAllSubmittedMediaForAdmin(token);
-          if (cancelled) return;
-          setAllPosts(Array.isArray(res) ? res : []);
-          setLoading(false);
-          return;
-        } catch (err) {
-          if (cancelled) return;
-          lastErr = err;
-          if (attempt < 3) {
-            await new Promise((r) => setTimeout(r, attempt * 1000));
-            if (cancelled) return;
-          }
-        }
+      try {
+        const res = await instagramApi.getAllSubmittedMediaForAdmin(token);
+        if (cancelled) return;
+        setAllPosts(Array.isArray(res) ? res : []);
+        setLoading(false);
+      } catch (err) {
+        setError(err?.message ?? "Failed to load posts");
+      } finally {
+        setLoading(false);
       }
-
-      setError(lastErr?.message ?? "Failed to load posts");
-      setLoading(false);
     }
 
     load();
-    return () => {
-      cancelled = true;
-    };
-  }, [token, retryKey]);
+  }, [token]);
 
   // Unique countries from all posts
   const countries = useMemo(() => {

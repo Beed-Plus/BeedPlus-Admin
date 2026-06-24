@@ -562,44 +562,46 @@ export default function UserDetailPage() {
   const startIdx = (currentPage - 1) * ITEMS_PER_PAGE;
   const endIdx = startIdx + ITEMS_PER_PAGE;
 
-const filtered = useMemo(() => {
-  const q = search.trim().toLowerCase();
-  const hasFilters =
-    (filterCategory && filterCategory !== "All") ||
-    (filterSubCategory && filterSubCategory !== "All") ||
-    (q && q !== "") ||
-    (sortby && sortby !== "all");
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    const hasFilters =
+      (filterCategory && filterCategory !== "All") ||
+      (filterSubCategory && filterSubCategory !== "All") ||
+      (q && q !== "") ||
+      (sortby && sortby !== "all");
 
-  if (!hasFilters) {
-    return igMedia;
-  }
-
-  return igMedia.filter((m) => {
-    const submittedPosts = posts.filter((p) => p.instagramMediaId === m.id);
-
-    if (sortby === "submitted" && submittedPosts.length === 0) return false;
-    if (sortby === "unsubmitted" && submittedPosts.length > 0) return false;
-
-    if (filterCategory && filterCategory !== "All") {
-      const hasCategory = submittedPosts.some((p) => p.category === filterCategory);
-      if (!hasCategory) return false;
+    if (!hasFilters) {
+      return igMedia;
     }
 
-    if (filterSubCategory && filterSubCategory !== "All") {
-      const hasSub = submittedPosts.some(
-        (p) => (p.subCategory?.name ?? p.subCategory) === filterSubCategory
-      );
-      if (!hasSub) return false;
-    }
+    return igMedia.filter((m) => {
+      const submittedPosts = posts.filter((p) => p.instagramMediaId === m.id);
 
-    if (q) {
-      const caption = m.caption?.toLowerCase() ?? "";
-      if (!caption.includes(q)) return false;
-    }
+      if (sortby === "submitted" && submittedPosts.length === 0) return false;
+      if (sortby === "unsubmitted" && submittedPosts.length > 0) return false;
 
-    return true;
-  });
-}, [igMedia, posts, search, filterCategory, filterSubCategory, sortby]);
+      if (filterCategory && filterCategory !== "All") {
+        const hasCategory = submittedPosts.some(
+          (p) => p.category === filterCategory,
+        );
+        if (!hasCategory) return false;
+      }
+
+      if (filterSubCategory && filterSubCategory !== "All") {
+        const hasSub = submittedPosts.some(
+          (p) => (p.subCategory?.name ?? p.subCategory) === filterSubCategory,
+        );
+        if (!hasSub) return false;
+      }
+
+      if (q) {
+        const caption = m.caption?.toLowerCase() ?? "";
+        if (!caption.includes(q)) return false;
+      }
+
+      return true;
+    });
+  }, [igMedia, posts, search, filterCategory, filterSubCategory, sortby]);
 
   // Calculate pagination based on filtered data
   const filteredTotalItems = filtered.length;
@@ -809,13 +811,13 @@ const filtered = useMemo(() => {
             <StatCard
               label={`${user.category} Top Creators`}
               globalValue={
-                fmt(user?.categoryMonthlyCreatorRank)
+                user?.categoryMonthlyCreatorRank
                   ? `${user.categoryMonthlyCreatorRank}`
                   : "—"
               }
               localValue={
-                fmt(user?.categoryMonthlyCreatorRank)
-                  ? `${user.categoryMonthlyCreatorRank}`
+                user?.categoryMonthlyCreatorRank
+                  ? user?.categoryMonthlyCreatorRank
                   : "—"
               }
             />
