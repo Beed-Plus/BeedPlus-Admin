@@ -87,6 +87,10 @@ const router = createBrowserRouter([
         path: "media-review/deferred",
         element: <MediaStatusPage status="deferred" />,
       },
+      {
+        path: "media-review/pending",
+        element: <MediaStatusPage status="pending" />,
+      },
       { path: "email", element: <EmailPage /> },
       { path: "admin", element: <AdminPage /> },
       { path: "countries", element: <CountriesPage /> },

@@ -60,6 +60,11 @@ const navConfig = [
             path: "/dashboard/media-review/deferred",
             icon: UsersIcon,
           },
+          {
+            label: "Pending",
+            path: "/dashboard/media-review/pending",
+            icon: UsersIcon,
+          },
         ],
       },
       {

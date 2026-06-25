@@ -353,14 +353,14 @@ function PreviewModal({
                   subCategory: subCat || undefined,
                 })
               }
-              disabled={isApproving || isRejecting || !cat}
+              disabled={isApproving || isRejecting || !cat || isDeferring}
               className="flex-1 rounded-lg bg-[#1A9704] h-12 py-2.5 text-xl font-bold text-white hover:bg-green-600 transition disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {isApproving ? "Approving…" : "Approve"}
             </button>
             <button
               onClick={() => onReject(item)}
-              disabled={isApproving || isRejecting}
+              disabled={isApproving || isRejecting || isDeferring}
               className="flex-1 rounded-lg bg-[#FF0000] h-12 py-2.5 text-xl font-bold text-white hover:bg-red-600 transition disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {isRejecting ? "Rejecting…" : "Reject"}
@@ -375,7 +375,7 @@ function PreviewModal({
                   subCategory: subCat || undefined,
                 })
               }
-              disabled={isApproving || isRejecting || !cat}
+              disabled={isApproving || isRejecting || !cat || isDeferring}
               className="flex-1 rounded-lg bg-[#045097] h-12 py-2.5 text-xl font-bold text-white hover:bg-green-600 transition disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {isDeferring ? "Deferring..." : "Defer"}
@@ -514,7 +514,7 @@ export default function MediaReviewPage() {
   }
   async function handleDefer(item, { category, subCategory } = {}) {
     setActionId(item._id);
-    setIsApproving(true);
+    setisDeferring(true);
     try {
       await instagramApi.deferPendingMedia(
         item._id,
@@ -527,7 +527,7 @@ export default function MediaReviewPage() {
       alert(err.message ?? "Failed to defer");
     } finally {
       setActionId(null);
-      setIsApproving(false);
+      setisDeferring(false);
     }
   }
 

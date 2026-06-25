@@ -448,7 +448,7 @@ export default function MediaStatusPage({ status }) {
 
   useEffect(() => {
     load();
-  }, [token]);
+  }, [token, status]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();

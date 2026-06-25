@@ -10,7 +10,7 @@ export default function UserActions({ onAction, approvalStatus }) {
     ...(!isApproved ? ["Approve User"] : []),
     ...(isApproved ? ["Suspend User"] : []),
     "Delete User",
-    "Defer User",
+    ...(isApproved ? [] : ["Defer User"]),
   ];
 
   const [open, setOpen] = useState(false);

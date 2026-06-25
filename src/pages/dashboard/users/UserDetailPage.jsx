@@ -455,7 +455,8 @@ export default function UserDetailPage() {
   const [retryKey, setRetryKey] = useState(0);
   const [filterCategory, setFilterCategory] = useState("");
   const [filterSubCategory, setFilterSubCategory] = useState("");
-  const [sortby, setSortBy] = useState("all");
+  const [sortby, setSortBy] = useState("");
+  const [sortbyStatus, setSortByStatus] = useState("");
   const [userStats, setUserStats] = useState("");
 
   async function handleApprove() {
@@ -495,7 +496,7 @@ export default function UserDetailPage() {
         ]);
         if (!cancelled) {
           setUser(res?.user ?? null);
-          console.log("RES STATS", resStats)
+          console.log("RES STATS", resStats);
           setUserStats(resStats);
         }
       } catch (err) {
@@ -570,46 +571,45 @@ export default function UserDetailPage() {
   const startIdx = (currentPage - 1) * ITEMS_PER_PAGE;
   const endIdx = startIdx + ITEMS_PER_PAGE;
 
-  const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    const hasFilters =
-      (filterCategory && filterCategory !== "All") ||
-      (filterSubCategory && filterSubCategory !== "All") ||
-      (q && q !== "") ||
-      (sortby && sortby !== "all");
+const filtered = useMemo(() => {
+  const q = search.trim().toLowerCase();
 
-    if (!hasFilters) {
-      return igMedia;
+  return igMedia.filter((m) => {
+    const submittedPosts = posts.filter((p) => p.instagramMediaId === m.id);
+
+    // Submission filter
+    if (sortby === "submitted" && submittedPosts.length === 0) return false;
+    if (sortby === "unsubmitted" && submittedPosts.length > 0) return false;
+
+    // Status filter — BUG FIX: was missing `return false`
+    if (sortbyStatus && sortbyStatus !== "all") {
+      const hasStatus = submittedPosts.some((p) => p.status === sortbyStatus);
+      if (!hasStatus) return false;
     }
 
-    return igMedia.filter((m) => {
-      const submittedPosts = posts.filter((p) => p.instagramMediaId === m.id);
+    // Category filter
+    if (filterCategory && filterCategory !== "All") {
+      const hasCategory = submittedPosts.some((p) => p.category === filterCategory);
+      if (!hasCategory) return false;
+    }
 
-      if (sortby === "submitted" && submittedPosts.length === 0) return false;
-      if (sortby === "unsubmitted" && submittedPosts.length > 0) return false;
+    // Sub-category filter
+    if (filterSubCategory && filterSubCategory !== "all") {
+      const hasSub = submittedPosts.some(
+        (p) => (p.subCategory?.name ?? p.subCategory) === filterSubCategory,
+      );
+      if (!hasSub) return false;
+    }
 
-      if (filterCategory && filterCategory !== "All") {
-        const hasCategory = submittedPosts.some(
-          (p) => p.category === filterCategory,
-        );
-        if (!hasCategory) return false;
-      }
+    // Caption search
+    if (q) {
+      const caption = m.caption?.toLowerCase() ?? "";
+      if (!caption.includes(q)) return false;
+    }
 
-      if (filterSubCategory && filterSubCategory !== "All") {
-        const hasSub = submittedPosts.some(
-          (p) => (p.subCategory?.name ?? p.subCategory) === filterSubCategory,
-        );
-        if (!hasSub) return false;
-      }
-
-      if (q) {
-        const caption = m.caption?.toLowerCase() ?? "";
-        if (!caption.includes(q)) return false;
-      }
-
-      return true;
-    });
-  }, [igMedia, posts, search, filterCategory, filterSubCategory, sortby]);
+    return true;
+  });
+}, [igMedia, posts, search, filterCategory, filterSubCategory, sortby, sortbyStatus]);
 
   // Calculate pagination based on filtered data
   const filteredTotalItems = filtered.length;
@@ -806,22 +806,16 @@ export default function UserDetailPage() {
             <StatCard
               label="Beed+ Top Creators"
               globalValue={
-                userStats?.globalRank
-                  ? `${userStats.globalRank}`
-                  : "—"
+                userStats?.globalRank ? `${userStats.globalRank}` : "—"
               }
               localValue={
-                userStats?.countryRank
-                  ? `${userStats.countryRank}`
-                  : "—"
+                userStats?.countryRank ? `${userStats.countryRank}` : "—"
               }
             />
             <StatCard
               label={`${user.category} Top Creators`}
               globalValue={
-                userStats?.categoryRank
-                  ? `${userStats.categoryRank}`
-                  : "—"
+                userStats?.categoryRank ? `${userStats.categoryRank}` : "—"
               }
               localValue={
                 userStats?.categoryCountryRank
@@ -841,6 +835,36 @@ export default function UserDetailPage() {
           <div className="flex gap-4">
             <div className="flex flex-wrap items-center gap-3">
               {" "}
+              <div className="min-w-30 ">
+                <CustomDropDownInput
+                  value={sortbyStatus}
+                  onChange={(e) => setSortByStatus(e.target.value)}
+                  items={[
+                    {
+                      label: "All",
+                      value: "all",
+                    },
+                    {
+                      label: "Approved",
+                      value: "approved",
+                    },
+                    {
+                      label: "Pending",
+                      value: "pending",
+                    },
+                  ]}
+                  // showShadow={true}
+                  // style={{
+                  //   height: "28px",
+                  //   fontSize: "12px",
+                  //   paddingHorizontal: "8px",
+                  //   borderRadius: "8px",
+                  //   backgroundColor: "#FFF",
+                  // }}
+                  // showOuterBoxMargin={false}
+                  placeholder="Select a status"
+                />
+              </div>
               <div className="min-w-30 ">
                 <CustomDropDownInput
                   value={sortby}
@@ -868,6 +892,7 @@ export default function UserDetailPage() {
                   //   backgroundColor: "#FFF",
                   // }}
                   // showOuterBoxMargin={false}
+                  placeholder="Submitted"
                 />
               </div>
               {/* Search */}
