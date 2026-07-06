@@ -8,14 +8,14 @@ const CloseIcon = (props) => (
     {...props}
   >
     <path
-      fill="#000"
+      fill={props.color || "#000"}
       d="m.75 18.75 9-9-9 9Zm18-18-9 9 9-9Zm-9 9-9-9 9 9Zm0 0 9 9-9-9Z"
     />
     <path
-      stroke="#000"
+      stroke={props.color || "#000"}
       strokeLinecap="round"
       strokeLinejoin="round"
-      strokeWidth={1.5}
+      strokeWidth={props.strokeWidth || 1.5}
       d="m.75 18.75 9-9m0 0 9-9m-9 9-9-9m9 9 9 9"
     />
   </svg>

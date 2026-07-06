@@ -340,7 +340,7 @@ export default function PostTable({
                           ></div>
                         ) : (
                           <BookmarkButton
-                            active={post.inScenes}
+                            active={post.inScenes.value}
                             onClick={() => {
                               bookmarkScene(post);
                             }}

@@ -28,6 +28,7 @@ import GuestRoute from "../components/router/GuestRoute";
 import ScenesPage from "../pages/dashboard/scenes/ScenesPage";
 import ScenesDetailPage from "../pages/dashboard/scenes/ScenesDetailPage";
 import MediaStatusPage from "../pages/dashboard/media/MediaStatusPage";
+import Support from "../pages/dashboard/support";
 
 const router = createBrowserRouter([
   {
@@ -94,6 +95,7 @@ const router = createBrowserRouter([
       { path: "email", element: <EmailPage /> },
       { path: "admin", element: <AdminPage /> },
       { path: "countries", element: <CountriesPage /> },
+      { path: "support", element: <Support /> },
     ],
   },
 ]);

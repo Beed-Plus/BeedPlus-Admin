@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   useParams,
   useNavigate,
@@ -19,8 +19,10 @@ import {
   ShareIcon,
   ReachIcon,
   LikeIcon,
+  CloseIcon,
 } from "../../../components/icons";
 import CustomDropDownInput from "../../../components/CustomDropDownInput";
+import Modal from "../../../components/Modal";
 
 const CRUMBS = [
   { label: "Posts", to: "/dashboard/posts" },
@@ -189,6 +191,8 @@ export default function PostDetailPage() {
   const [watchlistBusy, setWatchlistBusy] = useState(false);
   const [smallLoading, setSmallLoading] = useState(false);
   const [mediaStats, setMediaStats] = useState(null);
+  const [previewVideo, setPreviewVideo] = useState("");
+  const previewVideoRef = useRef(null);
 
   // Always fetch full data so dailyInsights (excluded from list endpoint) are included
   // useEffect(() => {
@@ -231,6 +235,14 @@ export default function PostDetailPage() {
       Promise.all([load(), getMediaStats()]);
     }
   }, [id]);
+
+  useEffect(() => {
+    if (previewVideo) {
+      previewVideoRef.current?.play();
+    } else {
+      previewVideoRef.current?.pause();
+    }
+  }, [previewVideo]);
 
   if (loading) return <PageSkeleton />;
 
@@ -324,6 +336,7 @@ export default function PostDetailPage() {
       </button>
     );
   }
+
   console.log("POST", post);
   return (
     <div className="flex flex-col gap-6">
@@ -376,13 +389,38 @@ export default function PostDetailPage() {
         {/* Card top row */}
         <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
           {/* Thumbnail */}
-          <div className="relative w-full shrink-0 overflow-hidden rounded-2xl bg-gray-900 lg:w-72 aspect-square lg:aspect-auto lg:h-72">
+          <div
+            onClick={() => {
+              setPreviewVideo(post.media.mediaUrl);
+              console.log("Preview video set to:", post);
+            }}
+            className="relative w-full shrink-0 overflow-hidden rounded-2xl bg-gray-900 lg:w-72 aspect-square lg:aspect-auto lg:h-72"
+          >
             {thumbnailUrl ? (
-              <img
-                src={thumbnailUrl}
-                alt="Post thumbnail"
-                className="h-full w-full object-cover"
-              />
+              <div className="w-full h-full">
+                <img
+                  src={thumbnailUrl}
+                  alt=""
+                  className="w-full object-cover h-full rounded-2xl"
+                />
+
+                <div className="absolute inset-0 flex items-center justify-center ">
+                  <div className="flex h-8 w-8  items-center justify-center rounded-full ">
+                    <svg
+                      width="44"
+                      height="47"
+                      viewBox="0 0 44 47"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M4.01028e-08 3.52098C4.01028e-08 0.845978 2.86562 -0.847772 5.20937 0.439728L41.2719 20.2741C41.8238 20.5773 42.2842 21.0233 42.6049 21.5653C42.9255 22.1074 43.0947 22.7256 43.0947 23.3554C43.0947 23.9851 42.9255 24.6034 42.6049 25.1454C42.2842 25.6874 41.8238 26.1334 41.2719 26.4366L5.20937 46.271C4.67402 46.5653 4.0712 46.7151 3.46034 46.7054C2.84949 46.6958 2.25168 46.5272 1.72584 46.2162C1.2 45.9052 0.764293 45.4625 0.461657 44.9318C0.159022 44.4011 -9.22244e-05 43.8007 4.01028e-08 43.1897V3.52098Z"
+                        fill="white"
+                      />
+                    </svg>
+                  </div>
+                </div>
+              </div>
             ) : (
               <div className="flex h-full min-h-[200px] items-center justify-center">
                 <svg
@@ -630,6 +668,31 @@ export default function PostDetailPage() {
           </div>
         </div>
       </div>
+
+      <Modal
+        isVisible={previewVideo !== ""}
+        onCloseModal={() => {
+          setPreviewVideo("");
+        }}
+      >
+        <div className="w-[90vw] lg:w-150 flex justify-center items-center relative">
+          <button
+            type="button"
+            onClick={() => setPreviewVideo("")}
+            className="absolute top-5 right-5 z-50"
+          >
+            <CloseIcon color={"#fff"} strokeWidth={2.5} />
+          </button>
+          {previewVideo && (
+            <video
+              ref={previewVideoRef}
+              src={previewVideo}
+              controls
+              className="object-cover w-full h-[90vh] lg:w-full rounded-[8px] relative m-auto"
+            />
+          )}
+        </div>
+      </Modal>
     </div>
   );
 }

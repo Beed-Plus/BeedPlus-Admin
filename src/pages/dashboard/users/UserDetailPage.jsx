@@ -16,6 +16,7 @@ import SelectSearch from "../../../components/SelectSearch";
 import CustomButton from "../../../components/CustomButton";
 import { CloseIcon, InstagramIcon, RetryIcon } from "../../../components/icons";
 import Loader from "../../../components/Loader";
+import Modal from "../../../components/Modal";
 
 const CRUMBS = [
   { label: "Users", to: "/dashboard/users" },
@@ -571,45 +572,55 @@ export default function UserDetailPage() {
   const startIdx = (currentPage - 1) * ITEMS_PER_PAGE;
   const endIdx = startIdx + ITEMS_PER_PAGE;
 
-const filtered = useMemo(() => {
-  const q = search.trim().toLowerCase();
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
 
-  return igMedia.filter((m) => {
-    const submittedPosts = posts.filter((p) => p.instagramMediaId === m.id);
+    return igMedia.filter((m) => {
+      const submittedPosts = posts.filter((p) => p.instagramMediaId === m.id);
 
-    // Submission filter
-    if (sortby === "submitted" && submittedPosts.length === 0) return false;
-    if (sortby === "unsubmitted" && submittedPosts.length > 0) return false;
+      // Submission filter
+      if (sortby === "submitted" && submittedPosts.length === 0) return false;
+      if (sortby === "unsubmitted" && submittedPosts.length > 0) return false;
 
-    // Status filter — BUG FIX: was missing `return false`
-    if (sortbyStatus && sortbyStatus !== "all") {
-      const hasStatus = submittedPosts.some((p) => p.status === sortbyStatus);
-      if (!hasStatus) return false;
-    }
+      // Status filter — BUG FIX: was missing `return false`
+      if (sortbyStatus && sortbyStatus !== "all") {
+        const hasStatus = submittedPosts.some((p) => p.status === sortbyStatus);
+        if (!hasStatus) return false;
+      }
 
-    // Category filter
-    if (filterCategory && filterCategory !== "All") {
-      const hasCategory = submittedPosts.some((p) => p.category === filterCategory);
-      if (!hasCategory) return false;
-    }
+      // Category filter
+      if (filterCategory && filterCategory !== "All") {
+        const hasCategory = submittedPosts.some(
+          (p) => p.category === filterCategory,
+        );
+        if (!hasCategory) return false;
+      }
 
-    // Sub-category filter
-    if (filterSubCategory && filterSubCategory !== "all") {
-      const hasSub = submittedPosts.some(
-        (p) => (p.subCategory?.name ?? p.subCategory) === filterSubCategory,
-      );
-      if (!hasSub) return false;
-    }
+      // Sub-category filter
+      if (filterSubCategory && filterSubCategory !== "all") {
+        const hasSub = submittedPosts.some(
+          (p) => (p.subCategory?.name ?? p.subCategory) === filterSubCategory,
+        );
+        if (!hasSub) return false;
+      }
 
-    // Caption search
-    if (q) {
-      const caption = m.caption?.toLowerCase() ?? "";
-      if (!caption.includes(q)) return false;
-    }
+      // Caption search
+      if (q) {
+        const caption = m.caption?.toLowerCase() ?? "";
+        if (!caption.includes(q)) return false;
+      }
 
-    return true;
-  });
-}, [igMedia, posts, search, filterCategory, filterSubCategory, sortby, sortbyStatus]);
+      return true;
+    });
+  }, [
+    igMedia,
+    posts,
+    search,
+    filterCategory,
+    filterSubCategory,
+    sortby,
+    sortbyStatus,
+  ]);
 
   // Calculate pagination based on filtered data
   const filteredTotalItems = filtered.length;
@@ -617,7 +628,8 @@ const filtered = useMemo(() => {
   const filteredStartIdx = (currentPage - 1) * ITEMS_PER_PAGE;
   const filteredEndIdx = filteredStartIdx + ITEMS_PER_PAGE;
   const paginatedData = filtered.slice(filteredStartIdx, filteredEndIdx);
-
+  const [previewVideo, setPreviewVideo] = useState("");
+  const previewVideoRef = useRef(null);
   // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
@@ -662,6 +674,14 @@ const filtered = useMemo(() => {
       setSubmitting(false);
     }
   }
+
+  useEffect(() => {
+    if (previewVideo) {
+      previewVideoRef.current?.play();
+    } else {
+      previewVideoRef.current?.pause();
+    }
+  }, [previewVideo]);
 
   if (error) {
     return (
@@ -1020,11 +1040,36 @@ const filtered = useMemo(() => {
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-3">
                             {post.thumbnail_url ? (
-                              <img
-                                src={post.thumbnail_url}
-                                alt=""
-                                className="h-10 w-10 shrink-0 rounded-lg object-cover"
-                              />
+                              <div
+                                className="w-10 h-10 lg:min-w-22 lg:min-h-22 relative"
+                                onClick={() => {
+                                  setPreviewVideo(post.media_url);
+                                  console.log("Preview video set to:", post);
+                                }}
+                              >
+                                <img
+                                  src={post.thumbnail_url}
+                                  alt=""
+                                  className="w-full object-cover h-full rounded-2xl"
+                                />
+
+                                <div className="absolute inset-0 flex items-center justify-center ">
+                                  <div className="flex h-8 w-8  items-center justify-center rounded-full ">
+                                    <svg
+                                      width="44"
+                                      height="47"
+                                      viewBox="0 0 44 47"
+                                      fill="none"
+                                      xmlns="http://www.w3.org/2000/svg"
+                                    >
+                                      <path
+                                        d="M4.01028e-08 3.52098C4.01028e-08 0.845978 2.86562 -0.847772 5.20937 0.439728L41.2719 20.2741C41.8238 20.5773 42.2842 21.0233 42.6049 21.5653C42.9255 22.1074 43.0947 22.7256 43.0947 23.3554C43.0947 23.9851 42.9255 24.6034 42.6049 25.1454C42.2842 25.6874 41.8238 26.1334 41.2719 26.4366L5.20937 46.271C4.67402 46.5653 4.0712 46.7151 3.46034 46.7054C2.84949 46.6958 2.25168 46.5272 1.72584 46.2162C1.2 45.9052 0.764293 45.4625 0.461657 44.9318C0.159022 44.4011 -9.22244e-05 43.8007 4.01028e-08 43.1897V3.52098Z"
+                                        fill="white"
+                                      />
+                                    </svg>
+                                  </div>
+                                </div>
+                              </div>
                             ) : (
                               <div className="h-10 w-10 shrink-0 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
                                 <svg
@@ -1486,6 +1531,52 @@ const filtered = useMemo(() => {
       )}
 
       {/* Admin direct-submit modal */}
+      {/* {previewVideo &&
+        createPortal(
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 ">
+            <div className="p-6 lg:w-[600px] rounded-[8px] ">
+              <button
+                type="button"
+                onClick={() => setPreviewVideo("")}
+                className="absolute top-10 right-10"
+              >
+                <CloseIcon color={"#fff"} />
+              </button>
+              <video
+                ref={previewVideoRef}
+                src={previewVideo}
+                controls
+                className="object-cover w-full h-[90vh] lg:w-full rounded-[8px] relative m-auto"
+              />
+            </div>
+          </div>,
+          document.body,
+        )} */}
+
+      <Modal
+        isVisible={previewVideo !== ""}
+        onCloseModal={() => {
+          setPreviewVideo("");
+        }}
+      >
+        <div className="w-[90vw] lg:w-150 flex justify-center items-center relative">
+          <button
+            type="button"
+            onClick={() => setPreviewVideo("")}
+            className="absolute top-5 right-5 z-50"
+          >
+            <CloseIcon color={"#fff"} strokeWidth={2.5} />
+          </button>
+          {previewVideo && (
+            <video
+              ref={previewVideoRef}
+              src={previewVideo}
+              controls
+              className="object-cover w-full h-[90vh] lg:w-full rounded-[8px] relative m-auto"
+            />
+          )}
+        </div>
+      </Modal>
       {submitModal &&
         createPortal(
           <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">

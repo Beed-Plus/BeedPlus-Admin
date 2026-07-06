@@ -119,6 +119,8 @@ export default function PostsPage() {
           return (b.beedplusScore ?? 0) - (a.beedplusScore ?? 0);
         } else if (filterBeedplusScore === "Lowest to Highest") {
           return (a.beedplusScore ?? 0) - (b.beedplusScore ?? 0);
+        } else {
+          return a.createdAt - b.createdAt
         }
       });
   }, [
@@ -143,7 +145,7 @@ export default function PostsPage() {
     setSelectedPost(post._id);
     try {
       setIsSavingScene(true);
-      await updateScene(post._id, post.inScenes);
+      await updateScene(post._id, post.inScenes.value);
       setIsSavingScene(false);
       await refreshData();
     } catch (err) {
