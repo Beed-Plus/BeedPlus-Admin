@@ -95,7 +95,7 @@ const router = createBrowserRouter([
       { path: "email", element: <EmailPage /> },
       { path: "admin", element: <AdminPage /> },
       { path: "countries", element: <CountriesPage /> },
-      { path: "support", element: <Support /> },
+      // { path: "support", element: <Support /> },
     ],
   },
 ]);

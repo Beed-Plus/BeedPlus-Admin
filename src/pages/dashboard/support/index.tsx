@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useChatProvider } from "../../../context/ChatContext";
+// import { useChatProvider } from "../../../context/ChatContext";
 
 const formatTime = (date) =>
   new Date(date).toLocaleTimeString("en-US", {

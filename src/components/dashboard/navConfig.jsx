@@ -121,6 +121,7 @@ const navConfig = [
         icon: CategoriesPostsIcon,
       },
       { label: "Emailing", path: "/dashboard/email", icon: EmailIcon },
+      // { label: "Support", path: "/dashboard/support", icon: EmailIcon },
     ],
   },
 ];
