@@ -10,7 +10,7 @@ export default function Modal(props: ModalInterface) {
   return (
     <div
       onClick={props.onCloseModal}
-      className={`${props.isVisible ? "flex" : "hidden"} w-full h-[100vh] justify-center items-center fixed top-0 left-0 right-0 bottom-0 bg-black/50`}
+      className={`${props.isVisible ? "flex" : "hidden"} w-full h-[100vh] justify-center items-center fixed top-0 left-0 right-0 bottom-0 bg-black/50 z-999`}
     >
       <div
         onClick={(e) => {

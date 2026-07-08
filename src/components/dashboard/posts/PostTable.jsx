@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../../hooks/useAuth";
 import { instagramApi } from "../../../utils/instagramApi";
@@ -6,9 +6,10 @@ import { categoriesApi } from "../../../utils/categoriesApi";
 import { subCategoriesApi } from "../../../utils/subCategoriesApi";
 import PostThumbnail from "../PostThumbnail";
 import { fmt } from "../../../utils/helper";
-import { BookmarkIcon, DeleteIcon } from "../../icons";
+import { BookmarkIcon, CloseIcon, DeleteIcon } from "../../icons";
 import SelectSearch from "../../SelectSearch";
 import { useCategoriesProvider } from "../../../hooks/useCategoriesProvider";
+import Modal from "../../Modal";
 
 const COL =
   "px-6 py-3 text-[11px] text-left font-bold tracking-widest text-[#3A3A3AB2]";
@@ -115,6 +116,8 @@ export default function PostTable({
   const [editSubCategory, setEditSubCategory] = useState("");
   const [saving, setSaving] = useState(false);
   const displayPosts = localPosts ?? posts;
+  const [previewVideo, setPreviewVideo] = useState("");
+  const previewVideoRef = useRef(null);
   const {
     categories,
     subCategories,
@@ -166,6 +169,19 @@ export default function PostTable({
       setSaving(false);
     }
   }
+
+  useEffect(() => {
+    if (previewVideo) {
+      previewVideoRef.current
+        ?.play()
+        .then()
+        .catch((err) => {
+          console.log("Failed to play preview video:", err);
+        });
+    } else {
+      previewVideoRef.current?.pause();
+    }
+  }, [previewVideo]);
 
   return (
     <div className="rounded-2xl bg-white dark:bg-gray-900 border-t border-[#DDDDDD] overflow-hidden">
@@ -219,23 +235,33 @@ export default function PostTable({
                     className="border-b border-[#3A3A3A1A] dark:border-gray-800/50 last:border-0 hover:bg-gray-50/40 dark:hover:bg-gray-800/40 transition-colors cursor-pointer"
                   >
                     {/* Post */}
-                    <td
-                      className="px-6 py-4 min-w-75"
-                      onClick={() =>
-                        navigate(`/dashboard/posts/${post.instagramMediaId}`, {
-                          state: { post },
-                        })
-                      }
-                    >
+                    <td className="px-6 py-4 min-w-75">
                       <div className="flex items-center gap-3">
-                        <div className="shrink-0">
+                        <div
+                          className="shrink-0"
+                          onClick={() => {
+                            setPreviewVideo(post.media.mediaUrl);
+                            console.log("Preview video set to:", post);
+                          }}
+                        >
                           <PostThumbnail
                             src={thumb}
                             color="#e5e7eb"
                             alt={caption}
+                            showPlayIcon={true}
                           />
                         </div>
-                        <div className="min-w-0">
+                        <div
+                          className="min-w-0"
+                          onClick={() =>
+                            navigate(
+                              `/dashboard/posts/${post.instagramMediaId}`,
+                              {
+                                state: { post },
+                              },
+                            )
+                          }
+                        >
                           <p className="text-sm font-semibold text-gray-800 dark:text-gray-100 leading-snug">
                             {truncate(caption)}
                           </p>
@@ -491,6 +517,31 @@ export default function PostTable({
           </div>
         </div>
       )}
+
+      <Modal
+        isVisible={previewVideo !== ""}
+        onCloseModal={() => {
+          setPreviewVideo("");
+        }}
+      >
+        <div className="w-[90vw] lg:w-150 flex justify-center items-center relative">
+          <button
+            type="button"
+            onClick={() => setPreviewVideo("")}
+            className="absolute top-5 right-5 z-50"
+          >
+            <CloseIcon color={"#fff"} strokeWidth={2.5} />
+          </button>
+          {previewVideo && (
+            <video
+              ref={previewVideoRef}
+              src={previewVideo}
+              controls
+              className="object-cover w-full h-[90vh] lg:w-full rounded-[8px] relative m-auto"
+            />
+          )}
+        </div>
+      </Modal>
     </div>
   );
 }

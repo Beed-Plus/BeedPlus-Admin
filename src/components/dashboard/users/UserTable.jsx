@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../../hooks/useAuth";
 import { usersApi } from "../../../utils/usersApi";
 import { categoriesApi } from "../../../utils/categoriesApi";
@@ -8,7 +8,7 @@ import Badge from "../../ui/Badge";
 import StatusBadge from "../../ui/StatusBadge";
 import UserAvatar from "./UserAvatar";
 import UserActions from "./UserActions";
-import { CloseIcon, DeleteIcon, SuspendIcon } from "../../icons";
+import { CloseIcon, DeleteIcon, InstagramIcon, SuspendIcon } from "../../icons";
 import { fmt } from "../../../utils/helper";
 
 const COL = "px-6 py-3 text-[11px] font-bold tracking-widest text-[#3A3A3AB2]";
@@ -406,9 +406,16 @@ export default function UserTable({
 
                     {/* Actions */}
                     <td
-                      className="px-6 py-4 text-right"
+                      className="px-6 py-4 text-right flex items-center justify-center gap-3 min-w-[172px] text-center"
                       onClick={(e) => e.stopPropagation()}
                     >
+                      <Link
+                        to={user?.instagramApproval?.instagramAccountLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <InstagramIcon />
+                      </Link>
                       <UserActions
                         approvalStatus={status}
                         onAction={(action) => handleAction(action, user)}

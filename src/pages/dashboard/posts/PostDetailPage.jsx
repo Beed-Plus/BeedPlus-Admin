@@ -238,7 +238,12 @@ export default function PostDetailPage() {
 
   useEffect(() => {
     if (previewVideo) {
-      previewVideoRef.current?.play();
+      previewVideoRef.current
+        ?.play()
+        .then()
+        .catch((err) => {
+          console.log("Failed to play preview video:", err);
+        });
     } else {
       previewVideoRef.current?.pause();
     }
