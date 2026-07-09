@@ -348,11 +348,11 @@ export default function PostDetailPage() {
       <div className="flex justify-between items-center">
         <div>
           <button
-            onClick={() => navigate("/dashboard/posts")}
+            onClick={() => navigate(-1)}
             className="flex items-center gap-1.5 rounded-xl dark:border-gray-700 px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-300  transition"
           >
             <BackArrowIcon />
-            Back to Posts
+            Back
           </button>
         </div>
 
