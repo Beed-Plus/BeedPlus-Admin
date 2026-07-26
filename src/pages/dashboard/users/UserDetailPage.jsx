@@ -1015,6 +1015,9 @@ export default function UserDetailPage() {
                       Beedplus Score
                     </th>
                     <th className="px-6 py-3 text-left text-[12px] font-bold tracking-widest text-[#3A3A3AB2] dark:text-gray-500 min-w-25">
+                      Instagram Views
+                    </th>
+                    <th className="px-6 py-3 text-left text-[12px] font-bold tracking-widest text-[#3A3A3AB2] dark:text-gray-500 min-w-25">
                       Submitted
                     </th>
                     <th className="px-6 py-3 text-left text-[12px] font-bold tracking-widest text-[#3A3A3AB2] dark:text-gray-500 min-w-25">
@@ -1136,6 +1139,16 @@ export default function UserDetailPage() {
                           {submittedMedia?.beedplusScore != null ? (
                             <span className="inline-flex px-2.5 py-0.5 text-xs font-bold text-[#3A3A3A]">
                               {fmtBeedScore(submittedMedia?.beedplusScore)}
+                            </span>
+                          ) : (
+                            <span className="text-[#3A3A3A] text-sm">—</span>
+                          )}
+                        </td>
+                        {/* Instagram Views */}
+                        <td className="px-6 py-4">
+                          {post?.insights.views != null ? (
+                            <span className="inline-flex px-2.5 py-0.5 text-xs font-bold text-[#3A3A3A]">
+                              {fmt(post?.insights.views)}
                             </span>
                           ) : (
                             <span className="text-[#3A3A3A] text-sm">—</span>
