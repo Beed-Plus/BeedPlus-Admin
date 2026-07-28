@@ -384,7 +384,7 @@ export default function UserTable({
                     {/* Actions */}
 
                     <td
-                      className="px-6 py-4 text-right  gap-3  text-center"
+                      className="px-6 py-4 w-6.5  gap-3"
                       onClick={(e) => e.stopPropagation()}
                     >
                       <Link
@@ -396,7 +396,7 @@ export default function UserTable({
                       </Link>
                     </td>
                     <td
-                      className="px-6 py-4 text-right  gap-3 text-center"
+                      className="px-6 py-4  gap-3 text-center"
                       onClick={(e) => e.stopPropagation()}
                     >
                       <UserActions
