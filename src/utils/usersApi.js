@@ -9,7 +9,7 @@ export const usersApi = {
   getUsers: (
     {
       page = 1,
-      limit = 20,
+      limit = 100,
       category,
       country,
       gender,

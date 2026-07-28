@@ -1,13 +1,18 @@
 import { useState, useEffect, useMemo } from "react";
 import { useAuth } from "../../../hooks/useAuth";
 import { usersApi } from "../../../utils/usersApi";
-import { categoriesApi } from "../../../utils/categoriesApi";
 import { countriesApi } from "../../../utils/countriesApi";
 import UserFilters from "../../../components/dashboard/users/UserFilters";
 import UserTable from "../../../components/dashboard/users/UserTable";
 import { useCategoriesProvider } from "../../../hooks/useCategoriesProvider";
 import { RetryIcon } from "../../../components/icons";
 import Loader from "../../../components/Loader";
+
+const ITEMS_PER_PAGE = 100;
+
+function cleanFilterValue(value) {
+  return value && value !== "All" ? value : "";
+}
 
 function applyFilters(users, { search, followerSort }) {
   let result = users;
@@ -39,10 +44,10 @@ export default function UsersPage() {
 
   const [users, setUsers] = useState([]);
   const [pagination, setPagination] = useState({ total: 0, page: 1, pages: 1 });
+  const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [isReloading, setIsReloading] = useState(false);
   const [error, setError] = useState(null);
-  const [retryKey, setRetryKey] = useState(0);
 
   const [search, setSearch] = useState("");
   const [followerSort, setFollowerSort] = useState("");
@@ -87,14 +92,24 @@ export default function UsersPage() {
         try {
           const res = await usersApi.getUsers(
             {
-              ...(category ? { category } : {}),
-              ...(gender ? { gender } : {}),
-              ...(country ? { country } : {}),
-              ...(approvalStatus ? { approvalStatus } : {}),
+              page: currentPage,
+              limit: ITEMS_PER_PAGE,
+              ...(cleanFilterValue(category)
+                ? { category: cleanFilterValue(category) }
+                : {}),
+              ...(cleanFilterValue(gender)
+                ? { gender: cleanFilterValue(gender) }
+                : {}),
+              ...(cleanFilterValue(country)
+                ? { country: cleanFilterValue(country) }
+                : {}),
+              ...(cleanFilterValue(approvalStatus)
+                ? { approvalStatus: cleanFilterValue(approvalStatus) }
+                : {}),
+              ...(search ? { search } : {}),
             },
             token,
           );
-          console.log("Fetched users:", JSON.stringify(res, null, 2));
           if (cancelled) return;
           setUsers(res?.users ?? []);
           setPagination(res?.pagination ?? { total: 0, page: 1, pages: 1 });
@@ -120,10 +135,19 @@ export default function UsersPage() {
     return () => {
       cancelled = true;
     };
-  }, [category, country, gender, approvalStatus, token, retryKey]);
+  }, [
+    category,
+    country,
+    gender,
+    approvalStatus,
+    search,
+    currentPage,
+    token,
+  ]);
 
   function handleFilter(setter) {
     return (val) => {
+      setCurrentPage(1);
       setter(val);
     };
   }
@@ -135,10 +159,21 @@ export default function UsersPage() {
     try {
       const res = await usersApi.getUsers(
         {
-          ...(category ? { category } : {}),
-          ...(gender ? { gender } : {}),
-          ...(country ? { country } : {}),
-          ...(approvalStatus ? { approvalStatus } : {}),
+          page: currentPage,
+          limit: ITEMS_PER_PAGE,
+          ...(cleanFilterValue(category)
+            ? { category: cleanFilterValue(category) }
+            : {}),
+          ...(cleanFilterValue(gender)
+            ? { gender: cleanFilterValue(gender) }
+            : {}),
+          ...(cleanFilterValue(country)
+            ? { country: cleanFilterValue(country) }
+            : {}),
+          ...(cleanFilterValue(approvalStatus)
+            ? { approvalStatus: cleanFilterValue(approvalStatus) }
+            : {}),
+          ...(search ? { search } : {}),
         },
         token,
       );
@@ -157,54 +192,19 @@ export default function UsersPage() {
     [users, search, followerSort],
   );
 
+  const loadingMore = loading;
+  const filteredTotalPages = Math.max(1, pagination?.pages ?? 1);
+  const paginatedData = visibleUsers;
+
+  useEffect(() => {
+    if (currentPage > filteredTotalPages) {
+      setCurrentPage(filteredTotalPages);
+    }
+  }, [currentPage, filteredTotalPages]);
+
   return (
     <div className="flex flex-col gap-6">
       {/* Header */}
-
-      {/* <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        {[
-          {
-            label: "Total Users",
-            value: loading ? "..." : users.length,
-            color: "text-[#FDD6B6] dark:text-gray-500",
-            boxColor: "bg-[#2F3134] shadow-lg",
-            headerColor: "text-[#DADADA]",
-          },
-          {
-            label: "Active Creator",
-            value: loading ? "..." : 0,
-            color: "text-[#2F3134] dark:text-white",
-            boxColor: "bg-[#F9F9F9] shadow-lg",
-            headerColor: "text-[#686969]",
-          },
-          {
-            label: "Suspended Account",
-            value: loading ? "..." : 0,
-            color: "text-[#2F3134] dark:text-white",
-            boxColor: "bg-[#F9F9F9] shadow-lg",
-            headerColor: "text-[#686969]",
-          },
-          {
-            label: "New Users Today",
-            value: loading ? "..." : 0,
-            color: "text-[#2F3134] dark:text-white",
-            boxColor: "bg-[#F9F9F9] shadow-lg",
-            headerColor: "text-[#686969]",
-          },
-        ].map(({ label, value, color, boxColor, headerColor }) => (
-          <div
-            key={label}
-            className={`rounded-[20px] flex flex-col gap-6  ${boxColor} p-5`}
-          >
-            <p
-              className={`text-base font-medium tracking-widest ${headerColor}`}
-            >
-              {label}
-            </p>
-            <p className={`mt-1 text-4xl font-bold ${color} `}>{value}</p>
-          </div>
-        ))}
-      </div> */}
       {isReloading && <Loader />}
       {/* Filters */}
 
@@ -236,12 +236,16 @@ export default function UsersPage() {
               subCategories={subCategories}
               countries={countries}
               followerSort={followerSort}
-              onSearchChange={setSearch}
+              onSearchChange={(val) => {
+                setCurrentPage(1);
+                setSearch(val);
+              }}
               onFollowerSortChange={setFollowerSort}
               onCategoryChange={handleFilter(setCategory)}
               onSubCategoryChange={handleFilter(setSubCategory)}
               onCountryChange={handleFilter(setCountry)}
               onApprovalStatusChange={handleFilter(setApprovalStatus)}
+              onGenderChange={handleFilter(setGender)}
               pagination={pagination}
             />
             <div className="flex items-center gap-2 mt-1">
@@ -262,7 +266,116 @@ export default function UsersPage() {
           </div>
         </div>
         {/* Table */}
-        <UserTable users={visibleUsers} loading={loading} />
+        <UserTable users={paginatedData} loading={loading} />
+
+        {filteredTotalPages > 1 && (
+          <div className="relative flex items-center justify-between border-t border-gray-100 dark:border-gray-800 px-6 py-4">
+            {/* Loading spinner overlay */}
+            {loadingMore && <Loader />}
+
+            <button
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              disabled={currentPage === 1 || loadingMore}
+              className="flex items-center gap-1.5 rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Prev
+            </button>
+
+            <div className="flex items-center gap-1.5">
+              {(() => {
+                const pageButtons = [];
+                const maxButtons = 5;
+                let startPage = Math.max(
+                  1,
+                  currentPage - Math.floor(maxButtons / 2),
+                );
+                let endPage = Math.min(
+                  filteredTotalPages,
+                  startPage + maxButtons - 1,
+                );
+
+                if (endPage - startPage + 1 < maxButtons) {
+                  startPage = Math.max(1, endPage - maxButtons + 1);
+                }
+
+                if (startPage > 1) {
+                  pageButtons.push(
+                    <button
+                      key="first"
+                      onClick={() => setCurrentPage(1)}
+                      disabled={loadingMore}
+                      className="rounded-lg border border-gray-200 dark:border-gray-700 px-2.5 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition disabled:opacity-50"
+                    >
+                      1
+                    </button>,
+                  );
+                  if (startPage > 2) {
+                    pageButtons.push(
+                      <span
+                        key="ellipsis-start"
+                        className="text-gray-400 dark:text-gray-600"
+                      >
+                        …
+                      </span>,
+                    );
+                  }
+                }
+
+                for (let page = startPage; page <= endPage; page++) {
+                  pageButtons.push(
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      disabled={loadingMore}
+                      className={`rounded-lg px-2.5 py-1.5 text-xs font-medium transition ${
+                        page === currentPage
+                          ? "bg-[#3A3A3A] text-white shadow-lg"
+                          : "border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50"
+                      }`}
+                    >
+                      {page}
+                    </button>,
+                  );
+                }
+
+                if (endPage < filteredTotalPages) {
+                  if (endPage < filteredTotalPages - 1) {
+                    pageButtons.push(
+                      <span
+                        key="ellipsis-end"
+                        className="text-gray-400 dark:text-gray-600"
+                      >
+                        …
+                      </span>,
+                    );
+                  }
+                  pageButtons.push(
+                    <button
+                      key="last"
+                      onClick={() => setCurrentPage(filteredTotalPages)}
+                      disabled={loadingMore}
+                      className="rounded-lg border border-gray-200 dark:border-gray-700 px-2.5 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition disabled:opacity-50"
+                    >
+                      {filteredTotalPages}
+                    </button>,
+                  );
+                }
+
+                return pageButtons;
+              })()}
+            </div>
+
+            <button
+              onClick={() =>
+                setCurrentPage((p) => Math.min(filteredTotalPages, p + 1))
+              }
+              disabled={currentPage === filteredTotalPages || loadingMore}
+              className="flex items-center gap-1.5 rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Next
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

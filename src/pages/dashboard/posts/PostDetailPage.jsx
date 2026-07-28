@@ -563,6 +563,10 @@ export default function PostDetailPage() {
             <span className="text-sm font-semibold">{post._id}</span>
             <h4 className="text-base font-medium text-[#0000004D]">Media Id</h4>
           </div>
+          <div className="flex flex-col gap-1">
+            <span className="text-sm font-semibold">{post.instagramMediaId}</span>
+            <h4 className="text-base font-medium text-[#0000004D]">Instagram Id</h4>
+          </div>
         </div>
       </div>
 
