@@ -146,14 +146,14 @@ export default function UserTable({
           : (user.category ?? ""),
       );
       setEditCountry(user.country ?? "");
-      
-      return
+
+      return;
     } else if (action === "Suspend User") {
       setSuspendUser(user);
-      return
+      return;
     } else if (action === "Delete User") {
       setConfirmDelete(user);
-      return
+      return;
     }
 
     await refreshData();
@@ -382,8 +382,10 @@ export default function UserTable({
                     </td>
 
                     {/* Actions */}
+
                     <td
                       className="px-6 py-4 text-right  gap-3  text-center"
+                      onClick={(e) => e.stopPropagation()}
                     >
                       <Link
                         to={user?.instagramApproval?.instagramAccountLink}
