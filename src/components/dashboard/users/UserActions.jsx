@@ -81,7 +81,7 @@ export default function UserActions({ onAction, approvalStatus }) {
                 <button
                   key={action}
                   onClick={() => {
-                    onAction?.(action);
+                    onAction(action);
                     setOpen(false);
                   }}
                   className={`w-full px-4 py-2 text-left text-sm transition hover:bg-gray-50 dark:hover:bg-gray-800 medium`}

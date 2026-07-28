@@ -134,7 +134,7 @@ export default function UserTable({
         setApprovingId(null);
       } catch (err) {
         setApprovingId(null);
-        alert(`Approve failed: ${err.message}`);
+        alert(`Defer failed: ${err.message}`);
       } finally {
         setApprovingId(null);
       }
@@ -146,10 +146,14 @@ export default function UserTable({
           : (user.category ?? ""),
       );
       setEditCountry(user.country ?? "");
+      
+      return
     } else if (action === "Suspend User") {
       setSuspendUser(user);
+      return
     } else if (action === "Delete User") {
       setConfirmDelete(user);
+      return
     }
 
     await refreshData();
@@ -218,6 +222,7 @@ export default function UserTable({
                 Instagram Status
               </th>
               <th className={`${COL} min-w-[172px] text-center`}>Joined</th>
+              <th className={`${COL} text-center`}></th>
               <th className={`${COL} text-center`}>Actions</th>
             </tr>
           </thead>
@@ -378,8 +383,7 @@ export default function UserTable({
 
                     {/* Actions */}
                     <td
-                      className="px-6 py-4 text-right flex items-center justify-center gap-3 min-w-[172px] text-center"
-                      onClick={(e) => e.stopPropagation()}
+                      className="px-6 py-4 text-right  gap-3  text-center"
                     >
                       <Link
                         to={user?.instagramApproval?.instagramAccountLink}
@@ -388,6 +392,11 @@ export default function UserTable({
                       >
                         <InstagramIcon />
                       </Link>
+                    </td>
+                    <td
+                      className="px-6 py-4 text-right  gap-3 text-center"
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       <UserActions
                         approvalStatus={status}
                         onAction={(action) => handleAction(action, user)}
