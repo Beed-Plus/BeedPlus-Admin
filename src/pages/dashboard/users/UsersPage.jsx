@@ -266,7 +266,7 @@ export default function UsersPage() {
           </div>
         </div>
         {/* Table */}
-        <UserTable users={paginatedData} loading={loading} />
+        <UserTable users={paginatedData} loading={loading} refreshData={refreshData} />
 
         {filteredTotalPages > 1 && (
           <div className="relative flex items-center justify-between border-t border-gray-100 dark:border-gray-800 px-6 py-4">
