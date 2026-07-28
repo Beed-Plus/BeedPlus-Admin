@@ -287,7 +287,7 @@ function displayName(user) {
 }
 
 // ─── Stat card ────────────────────────────────────────────────────────────────
-function StatCard({ label, globalValue, localValue }) {
+function StatCard({ label, globalValue, localValue, country }) {
   return (
     <div className="flex flex-col gap-4 rounded-[27px] border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 shadow-lg shadow-[#00000014]">
       <div className="flex items-center justify-center">
@@ -306,7 +306,7 @@ function StatCard({ label, globalValue, localValue }) {
           <p className="text-[31px] font-bold text-[#2F3134] leading-6 dark:text-white">
             {localValue}
           </p>
-          <h4 className="text-[15px] font-normal text-[#818080]">Nigeria</h4>
+          <h4 className="text-[15px] font-normal text-[#818080] capitalize">{country}</h4>
         </div>
       </div>
     </div>
@@ -831,6 +831,7 @@ export default function UserDetailPage() {
               localValue={
                 userStats?.countryRank ? `${userStats.countryRank}` : "—"
               }
+              country={user.country}
             />
             <StatCard
               label={`${user.category} Top Creators`}
@@ -842,6 +843,7 @@ export default function UserDetailPage() {
                   ? userStats?.categoryCountryRank
                   : "—"
               }
+              country={user.country}
             />
           </>
         )}
