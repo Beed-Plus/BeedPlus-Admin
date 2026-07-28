@@ -220,7 +220,7 @@ export default function UsersPage() {
           </button>
         </div>
       )}
-      <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900  shadow-lg shadow-[#0000001A] overflow-hidden py-2">
+      <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900  shadow-lg shadow-[#0000001A] overflow-hidden py-2 mb-40">
         <div className="flex justify-between items-center px-4 mb-2">
           <h3 className="text-xl font-bold">User List</h3>
 

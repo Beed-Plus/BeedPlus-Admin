@@ -78,6 +78,7 @@ export default function UserTable({
   totalPages,
   totalItems,
   onPageChange,
+  refreshData,
 }) {
   const navigate = useNavigate();
   const { auth } = useAuth();
@@ -112,29 +113,15 @@ export default function UserTable({
   }, []);
 
   async function handleAction(action, user) {
+    if (!action || !user) return;
     if (action === "View Profile") {
       navigate(`/dashboard/users/${user._id}`);
     } else if (action === "Approve User") {
       setApprovingId(user._id);
       try {
         const res = await usersApi.approveUser(user._id, token);
-        console.log("APPROVED RES", res);
         setApprovingId(null);
-        setLocalUsers((prev) =>
-          (prev ?? initialUsers).map((u) =>
-            u._id === user._id
-              ? {
-                  ...u,
-                  instagramApproval: {
-                    ...(u.instagramApproval ?? {}),
-                    status: "approved",
-                  },
-                }
-              : u,
-          ),
-        );
       } catch (err) {
-        console.log("ERROR FROM APPROVAL", err);
         setApprovingId(null);
         alert(`Approve failed: ${err.message}`);
       } finally {
@@ -144,23 +131,8 @@ export default function UserTable({
       setApprovingId(user._id);
       try {
         const res = await usersApi.deferUser(user._id, token);
-        console.log("DEFERRED RES", res);
         setApprovingId(null);
-        setLocalUsers((prev) =>
-          (prev ?? initialUsers).map((u) =>
-            u._id === user._id
-              ? {
-                  ...u,
-                  instagramApproval: {
-                    ...(u.instagramApproval ?? {}),
-                    status: "deferred",
-                  },
-                }
-              : u,
-          ),
-        );
       } catch (err) {
-        console.log("ERROR FROM APPROVAL", err);
         setApprovingId(null);
         alert(`Approve failed: ${err.message}`);
       } finally {
@@ -179,6 +151,8 @@ export default function UserTable({
     } else if (action === "Delete User") {
       setConfirmDelete(user);
     }
+
+    await refreshData();
   }
 
   async function saveEditUser() {
@@ -269,8 +243,6 @@ export default function UserTable({
                 const status = user.instagramApproval?.status ?? "pending";
                 const category = user.category;
                 const instagram = user.instagram;
-                console.log("status", status);
-
                 const statusColor = {
                   approved: {
                     label: "Approved",
