@@ -184,9 +184,10 @@ export default function UserTable({
       );
       setEditUser(null);
     } catch (err) {
-      alert(`Failed to update user: ${err.message}`);
+      alert(`Failed to edit user: ${err.message}`);
     } finally {
       setSaving(false);
+      setEditUser(null);
     }
   }
 
@@ -203,6 +204,7 @@ export default function UserTable({
       alert(`Delete failed: ${err.message}`);
     } finally {
       setDeleting(false);
+      setConfirmDelete(null);
     }
   }
 
