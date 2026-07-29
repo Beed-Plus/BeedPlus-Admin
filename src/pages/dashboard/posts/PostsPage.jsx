@@ -32,6 +32,7 @@ export default function PostsPage() {
   const [filterSubCategory, setSubCategory] = useState("");
   const [filterCountry, setFilterCountry] = useState("");
   const [filterBeedplusScore, setFilterBeedplusScore] = useState("");
+  const [filterIgViews, setFilterIgViews] = useState("");
   const [smallLoading, setSmallLoading] = useState(false);
   const [selectedPost, setSelectedPost] = useState(null);
 
@@ -119,8 +120,12 @@ export default function PostsPage() {
           return (b.beedplusScore ?? 0) - (a.beedplusScore ?? 0);
         } else if (filterBeedplusScore === "Lowest to Highest") {
           return (a.beedplusScore ?? 0) - (b.beedplusScore ?? 0);
+        } else if (filterIgViews === "Highest to Lowest") {
+          return (b.insights.views ?? 0) - (a.insights.views ?? 0);
+        } else if (filterIgViews === "Lowest to Highest") {
+          return (a.insights.views ?? 0) - (b.insights.views ?? 0);
         } else {
-          return a.createdAt - b.createdAt
+          return a.createdAt - b.createdAt;
         }
       });
   }, [
@@ -130,6 +135,7 @@ export default function PostsPage() {
     filterSubCategory,
     filterCountry,
     filterBeedplusScore,
+    filterIgViews,
   ]);
 
   function handleFilter(setter) {
@@ -216,6 +222,29 @@ export default function PostsPage() {
                   onChange={(val) => handleFilter(setSubCategory)(val)}
                   value={filterSubCategory}
                   items={["All", ...subCategories.map((s) => s.name)]}
+                />
+              </div>
+              <div className="min-w-22">
+                <CustomDropDownInput
+                  placeholder="Sort by IG views"
+                  value={filterIgViews}
+                  onChange={(e) => {
+                    handleFilter(setFilterIgViews)(e.target.value);
+                  }}
+                  items={[
+                    {
+                      label: "Default",
+                      value: "Default",
+                    },
+                    {
+                      label: "Highest to Lowest",
+                      value: "Highest to Lowest",
+                    },
+                    {
+                      label: "Lowest to Highest",
+                      value: "Lowest to Highest",
+                    },
+                  ]}
                 />
               </div>
               <div className="min-w-22">

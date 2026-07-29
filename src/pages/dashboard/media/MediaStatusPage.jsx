@@ -74,6 +74,9 @@ function PreviewModal({
   onReject,
   isApproving,
   isRejecting,
+  onDefer,
+  isDeferring,
+  status,
 }) {
   const overlayRef = useRef(null);
   const [cat, setCat] = useState(item.category ?? "");
@@ -278,68 +281,7 @@ function PreviewModal({
             </div>
           </div>
 
-          {/* Category override */}
-          {/* <div>
-            <label className="block text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-1">
-              Category <span className="text-red-400">*</span>
-            </label>
-            <select
-              value={cat}
-              onChange={(e) => setCat(e.target.value)}
-              className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-100"
-            >
-              <option value="">— Select category —</option>
-              {categories.map((c) => {
-                const name = c.name ?? c;
-                return (
-                  <option key={name} value={name}>
-                    {name}
-                  </option>
-                );
-              })}
-            </select>
-          </div> */}
-
-          {/* Sub-category autocomplete */}
-          {/* <div>
-            <label className="block text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-1">
-              Sub-category{" "}
-              <span className="text-gray-300 dark:text-gray-600">
-                (optional)
-              </span>
-            </label>
-            <div className="relative">
-              <input
-                type="text"
-                value={subCat}
-                onChange={(e) => {
-                  setSubCat(e.target.value);
-                  setSubCatOpen(true);
-                }}
-                onFocus={() => setSubCatOpen(true)}
-                onBlur={() => setTimeout(() => setSubCatOpen(false), 150)}
-                placeholder="Type to search or create new…"
-                className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-100"
-              />
-              {subCatOpen && filteredSubCats.length > 0 && (
-                <ul className="absolute z-20 top-full left-0 right-0 mt-1 max-h-36 overflow-y-auto rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-lg">
-                  {filteredSubCats.map((s) => (
-                    <li
-                      key={s._id}
-                      onMouseDown={() => {
-                        setSubCat(s.name);
-                        setSubCatOpen(false);
-                      }}
-                      className="px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-orange-50 dark:hover:bg-gray-700 cursor-pointer"
-                    >
-                      {s.name}
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          </div> */}
-
+          <p>Posted on: {fmtDate(item.media?.timestamp)}</p>
           <div className="flex-1" />
 
           {/* Action buttons */}
@@ -351,26 +293,44 @@ function PreviewModal({
                   subCategory: subCat || undefined,
                 })
               }
-              disabled={isApproving || isRejecting || !cat}
+              disabled={isApproving || isRejecting || !cat || isDeferring}
               className="flex-1 rounded-lg bg-[#1A9704] h-12 py-2.5 text-xl font-bold text-white hover:bg-green-600 transition disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {isApproving ? "Approving…" : "Approve"}
             </button>
             <button
               onClick={() => onReject(item)}
-              disabled={isApproving || isRejecting}
+              disabled={isApproving || isRejecting || isDeferring}
               className="flex-1 rounded-lg bg-[#FF0000] h-12 py-2.5 text-xl font-bold text-white hover:bg-red-600 transition disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {isRejecting ? "Rejecting…" : "Reject"}
             </button>
           </div>
 
-          <button
-            onClick={onClose}
-            className="text-center rounded-lg w-62 mx-auto h-12 border border-white dark:border-gray-600 py-2.5 shadow-lg shadow-[#0000001A] my-4 text-xl text-[#3A3A3A] font-bold hover:text-gray-500 transition"
+          <div
+            className={`flex gap-2 ${status == "deferred" ? "justify-center" : ""}`}
           >
-            Close
-          </button>
+            {status !== "deferred" && (
+              <button
+                onClick={() =>
+                  onDefer(item, {
+                    category: cat ? cat : undefined,
+                    subCategory: subCat || undefined,
+                  })
+                }
+                disabled={isApproving || isRejecting || !cat || isDeferring}
+                className="flex-1 rounded-lg bg-[#045097] h-12 py-2.5 text-xl font-bold text-white hover:bg-green-600 transition disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {isDeferring ? "Deferring..." : "Defer"}
+              </button>
+            )}
+            <button
+              onClick={onClose}
+              className={`text-center flex-1 rounded-lg h-12 border border-gray-300 dark:border-gray-600 py-2.5 shadow-lg shadow-[#0000001A] text-xl text-[#3A3A3A] font-bold hover:text-gray-500 transition ${status == "deferred" ? "max-w-1/2" : ""}`}
+            >
+              Close
+            </button>
+          </div>
         </div>
       </div>
     </div>,
@@ -424,6 +384,7 @@ export default function MediaStatusPage({ status }) {
   const { categories, subCategories } = useCategoriesProvider();
   const [expandCaption, setExpandCaption] = useState(false);
   const [isApproving, setIsApproving] = useState(false);
+  const [isDeferring, setisDeferring] = useState(false);
   const [isRejecting, setIsRejecting] = useState(false);
 
   const countries = useMemo(() => {
@@ -499,6 +460,25 @@ export default function MediaStatusPage({ status }) {
     } finally {
       setActionId(null);
       setIsApproving(false);
+    }
+  }
+
+  async function handleDefer(item, { category, subCategory } = {}) {
+    setActionId(item._id);
+    setisDeferring(true);
+    try {
+      await instagramApi.deferPendingMedia(
+        item._id,
+        { category, subCategory },
+        token,
+      );
+      setItems((prev) => prev.filter((i) => i._id !== item._id));
+      setViewModal(null);
+    } catch (err) {
+      alert(err.message ?? "Failed to defer");
+    } finally {
+      setActionId(null);
+      setisDeferring(false);
     }
   }
 
@@ -624,6 +604,9 @@ export default function MediaStatusPage({ status }) {
             onReject={handleReject}
             isApproving={isApproving}
             isRejecting={isRejecting}
+            onDefer={handleDefer}
+            isDeferring={isDeferring}
+            status={status}
           />
         )}
       </div>

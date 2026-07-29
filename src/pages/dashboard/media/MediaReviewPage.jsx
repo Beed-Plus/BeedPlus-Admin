@@ -341,7 +341,7 @@ function PreviewModal({
               )}
             </div>
           </div> */}
-
+          <p>Posted on: {fmtDate(item.media?.timestamp)}</p>
           <div className="flex-1" />
 
           {/* Action buttons */}

@@ -154,7 +154,8 @@ export default function MediaReviewTable({ posts, loading, review, actionId }) {
               <th className={COL}>Category</th>
               <th className={COL}>Subcategory</th>
               <th className={COL}>Country</th>
-              <th className={COL}>Views</th>
+              <th className={COL}>IG Views</th>
+              <th className={`${COL}`}>Views</th>
               <th className={COL}>Status</th>
               <th className={COL}>Submitted</th>
               <th className={`${COL} text-right`}>Actions</th>
@@ -189,7 +190,7 @@ export default function MediaReviewTable({ posts, loading, review, actionId }) {
                 const subCat =
                   post.subCategory?.name ?? post.subCategory ?? null;
                 const busy = actionId === post._id;
-
+console.log("post", post)
                 const statusColor = {
                   approved: {
                     label: "Approved",
@@ -219,7 +220,7 @@ export default function MediaReviewTable({ posts, loading, review, actionId }) {
                     }
                   >
                     {/* Post */}
-                    <td className="px-6 py-4 min-w-75">
+                    <td className="px-6 py-4 min-w-55">
                       <div className="flex items-center gap-3">
                         <div className="shrink-0">
                           <PostThumbnail
@@ -303,7 +304,14 @@ export default function MediaReviewTable({ posts, loading, review, actionId }) {
                     </td>
 
                     {/* Views */}
-                    <td className="px-6 py-4 min-w-25 text-sm font-semibold text-[#2F3134] dark:text-gray-100 font-mono">
+                    <td className="px-6 py-4 min-w-25 text-center text-sm font-semibold text-[#2F3134] dark:text-gray-100 font-mono">
+                      {fmt(post.insights?.views) ?? (
+                        <span className="text-gray-300 dark:text-gray-600">
+                          —
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 min-w-25 text-center text-sm font-semibold text-[#2F3134] dark:text-gray-100 font-mono">
                       {fmt(post.beedplusViews) ?? (
                         <span className="text-gray-300 dark:text-gray-600">
                           —

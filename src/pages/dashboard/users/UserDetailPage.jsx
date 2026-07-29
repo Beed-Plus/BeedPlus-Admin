@@ -1035,7 +1035,7 @@ export default function UserDetailPage() {
                     const submittedMedia = posts.find(
                       (p) => p.instagramMediaId == post.id,
                     );
-
+console.log(post)
                     return (
                       <tr
                         key={post.id ?? submittedMedia?.instagramMediaId}
@@ -1148,7 +1148,7 @@ export default function UserDetailPage() {
                         </td>
                         {/* Instagram Views */}
                         <td className="px-6 py-4">
-                          {post?.insights.views != null ? (
+                          {post?.insights?.views != null ? (
                             <span className="inline-flex px-2.5 py-0.5 text-xs font-bold text-[#3A3A3A]">
                               {fmt(post?.insights.views)}
                             </span>
