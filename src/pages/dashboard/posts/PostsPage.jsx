@@ -33,6 +33,7 @@ export default function PostsPage() {
   const [filterCountry, setFilterCountry] = useState("");
   const [filterBeedplusScore, setFilterBeedplusScore] = useState("");
   const [filterIgViews, setFilterIgViews] = useState("");
+  const [filterScenes, setFilterScenes] = useState("");
   const [smallLoading, setSmallLoading] = useState(false);
   const [selectedPost, setSelectedPost] = useState(null);
 
@@ -113,6 +114,13 @@ export default function PostsPage() {
           ).toLowerCase();
           if (!username.includes(q)) return false;
         }
+        if (filterScenes && filterScenes !== "All") {
+          if (filterScenes == "In Scenes") {
+            return p.inScenes.value == true;
+          } else if (filterScenes == "Not In Scenes") {
+            return p.inScenes.value == false;
+          }
+        }
         return true;
       })
       .sort((a, b) => {
@@ -136,6 +144,7 @@ export default function PostsPage() {
     filterCountry,
     filterBeedplusScore,
     filterIgViews,
+    filterScenes,
   ]);
 
   function handleFilter(setter) {
@@ -226,9 +235,33 @@ export default function PostsPage() {
               </div>
               <div className="min-w-22">
                 <CustomDropDownInput
+                  placeholder="Filter Scenes"
+                  value={filterScenes}
+                  onChange={(e) => {
+                    handleFilter(setFilterScenes)(e.target.value);
+                  }}
+                  items={[
+                    {
+                      label: "All",
+                      value: "All",
+                    },
+                    {
+                      label: "In Scenes",
+                      value: "In Scenes",
+                    },
+                    {
+                      label: "Not In Scenes",
+                      value: "Not In Scenes",
+                    },
+                  ]}
+                />
+              </div>
+              <div className="min-w-22">
+                <CustomDropDownInput
                   placeholder="Sort by IG views"
                   value={filterIgViews}
                   onChange={(e) => {
+                    setFilterBeedplusScore("Default");
                     handleFilter(setFilterIgViews)(e.target.value);
                   }}
                   items={[
@@ -252,6 +285,7 @@ export default function PostsPage() {
                   placeholder="Sort by BPS"
                   value={filterBeedplusScore}
                   onChange={(e) => {
+                    setFilterIgViews("Default");
                     handleFilter(setFilterBeedplusScore)(e.target.value);
                   }}
                   items={[

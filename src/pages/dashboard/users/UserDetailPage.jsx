@@ -17,6 +17,7 @@ import CustomButton from "../../../components/CustomButton";
 import { CloseIcon, InstagramIcon, RetryIcon } from "../../../components/icons";
 import Loader from "../../../components/Loader";
 import Modal from "../../../components/Modal";
+import { Tooltip } from "../../../components/Tooltip";
 
 const CRUMBS = [
   { label: "Users", to: "/dashboard/users" },
@@ -306,7 +307,9 @@ function StatCard({ label, globalValue, localValue, country }) {
           <p className="text-[31px] font-bold text-[#2F3134] leading-6 dark:text-white">
             {localValue}
           </p>
-          <h4 className="text-[15px] font-normal text-[#818080] capitalize">{country}</h4>
+          <h4 className="text-[15px] font-normal text-[#818080] capitalize">
+            {country}
+          </h4>
         </div>
       </div>
     </div>
@@ -1035,7 +1038,7 @@ export default function UserDetailPage() {
                     const submittedMedia = posts.find(
                       (p) => p.instagramMediaId == post.id,
                     );
-console.log(post)
+                    console.log(post);
                     return (
                       <tr
                         key={post.id ?? submittedMedia?.instagramMediaId}
@@ -1182,8 +1185,7 @@ console.log(post)
                         </td>
                         {/* View button → modal */}
                         <td className="px-6 py-4 text-right">
-                          {submittedMedia?.status == "approved" ||
-                          submittedMedia?.status == "pending" ? (
+                          {submittedMedia?.status == "approved" ? (
                             <button
                               onClick={() =>
                                 navigate(
@@ -1197,6 +1199,13 @@ console.log(post)
                             >
                               View
                             </button>
+                          ) : !post.insights ? (
+                            <div className="flex justify-center items-center">
+                              <Tooltip
+                                title="Can't Submit Video:"
+                                content="Videos posted before converting your instagram account to a professional/creator account do not contain insights, which are required to rank"
+                              />
+                            </div>
                           ) : (
                             <button
                               onClick={() => {
