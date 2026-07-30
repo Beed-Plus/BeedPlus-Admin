@@ -488,7 +488,6 @@ export default function UserDetailPage() {
 
   useEffect(() => {
     if (!id) return;
-    let cancelled = false;
 
     async function loadUser() {
       setLoading(true);
@@ -498,15 +497,14 @@ export default function UserDetailPage() {
           usersApi.getUserById(id, token),
           usersApi.getUserStats(id, token),
         ]);
-        if (!cancelled) {
-          setUser(res?.user ?? null);
-          console.log("RES STATS", resStats);
-          setUserStats(resStats);
-        }
+
+        setUser(res?.user ?? null);
+        console.log("RES STATS", resStats);
+        setUserStats(resStats);
       } catch (err) {
-        if (!cancelled) setError(err.message ?? "Failed to load user");
+        setError(err.message ?? "Failed to load user");
       } finally {
-        if (!cancelled) setLoading(false);
+        setLoading(false);
       }
     }
 
@@ -514,14 +512,12 @@ export default function UserDetailPage() {
       setPostsLoading(true);
       try {
         const res = await instagramApi.getSubmittedMedia(id, token);
-        if (!cancelled) {
-          const arr = Array.isArray(res) ? res : (res?.media ?? []);
-          setPosts(arr);
-        }
+        const arr = Array.isArray(res) ? res : (res?.media ?? []);
+        setPosts(arr);
       } catch {
-        if (!cancelled) setPosts([]);
+        setPosts([]);
       } finally {
-        if (!cancelled) setPostsLoading(false);
+        setPostsLoading(false);
       }
     }
 
@@ -530,16 +526,13 @@ export default function UserDetailPage() {
       setIgMediaError(null);
       try {
         const res = await instagramApi.adminGetUserInstagramMedia(id, token);
-        if (!cancelled) {
-          setIgMedia(Array.isArray(res.media) ? res.media : []);
-          setIgMediaCursor(res.pagination?.nextCursor ?? null);
-          setIgMediaHasMore(res.pagination?.hasMore ?? false);
-        }
+        setIgMedia(Array.isArray(res.media) ? res.media : []);
+        setIgMediaCursor(res.pagination?.nextCursor ?? null);
+        setIgMediaHasMore(res.pagination?.hasMore ?? false);
       } catch (err) {
-        if (!cancelled)
-          setIgMediaError(err.message ?? "Failed to load Instagram media");
+        setIgMediaError(err.message ?? "Failed to load Instagram media");
       } finally {
-        if (!cancelled) setIgMediaLoading(false);
+        setIgMediaLoading(false);
       }
     }
 
@@ -548,10 +541,7 @@ export default function UserDetailPage() {
     loadIgMedia();
     fetchCategories();
     fetchSubCategories();
-    return () => {
-      cancelled = true;
-    };
-  }, [id, token, retryKey]);
+  }, [id, token]);
 
   async function loadMoreIgMedia() {
     if (!igMediaCursor) return;

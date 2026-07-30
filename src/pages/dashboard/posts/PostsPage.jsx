@@ -55,7 +55,6 @@ export default function PostsPage() {
   }
 
   useEffect(() => {
-    let cancelled = false;
 
     async function load() {
       setLoading(true);
@@ -63,7 +62,6 @@ export default function PostsPage() {
 
       try {
         const res = await instagramApi.getAllSubmittedMediaForAdmin(token);
-        if (cancelled) return;
         setAllPosts(Array.isArray(res) ? res : []);
         setLoading(false);
       } catch (err) {

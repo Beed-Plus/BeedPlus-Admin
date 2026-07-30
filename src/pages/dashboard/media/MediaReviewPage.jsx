@@ -465,11 +465,11 @@ export default function MediaReviewPage() {
     const q = search.trim().toLowerCase();
     return items
       .filter((p) => {
-        if (filterCategory) {
+        if (filterCategory && filterCategory !== "All") {
           const cats = Array.isArray(p.category)
             ? p.category
             : [p.category].filter(Boolean);
-          if (filterCategory && filterCategory !== "All") return false;
+          if (!cats.includes(filterCategory)) return false;
         }
         if (filterSubCategory && filterSubCategory !== "All") {
           const sub = p.subCategory?.name ?? p.subCategory;

@@ -35,6 +35,8 @@ function applyFilters(users, { search, followerSort }) {
       return followerSort === "desc" ? bf - af : af - bf;
     });
   }
+  console.log("Filtered users count:", result.length);
+  console.log("Filtered users count:", result);
   return result;
 }
 
@@ -81,49 +83,39 @@ export default function UsersPage() {
   }, []);
 
   useEffect(() => {
-    let cancelled = false;
-
     async function load() {
       setLoading(true);
       setError(null);
 
       let lastErr = null;
-      for (let attempt = 1; attempt <= 3; attempt++) {
-        try {
-          const res = await usersApi.getUsers(
-            {
-              page: currentPage,
-              limit: ITEMS_PER_PAGE,
-              ...(cleanFilterValue(category)
-                ? { category: cleanFilterValue(category) }
-                : {}),
-              ...(cleanFilterValue(gender)
-                ? { gender: cleanFilterValue(gender) }
-                : {}),
-              ...(cleanFilterValue(country)
-                ? { country: cleanFilterValue(country) }
-                : {}),
-              ...(cleanFilterValue(approvalStatus)
-                ? { approvalStatus: cleanFilterValue(approvalStatus) }
-                : {}),
-              ...(search ? { search } : {}),
-            },
-            token,
-          );
-          if (cancelled) return;
-          setUsers(res?.users ?? []);
-          setPagination(res?.pagination ?? { total: 0, page: 1, pages: 1 });
-          setLoading(false);
-          return; // success
-        } catch (err) {
-          if (cancelled) return;
-          lastErr = err;
-          if (attempt < 3) {
-            // wait before next attempt: 1s, then 2s
-            await new Promise((r) => setTimeout(r, attempt * 1000));
-            if (cancelled) return;
-          }
-        }
+      try {
+        const res = await usersApi.getUsers(
+          {
+            page: currentPage,
+            limit: ITEMS_PER_PAGE,
+            ...(cleanFilterValue(category)
+              ? { category: cleanFilterValue(category) }
+              : {}),
+            ...(cleanFilterValue(gender)
+              ? { gender: cleanFilterValue(gender) }
+              : {}),
+            ...(cleanFilterValue(country)
+              ? { country: cleanFilterValue(country) }
+              : {}),
+            ...(cleanFilterValue(approvalStatus)
+              ? { approvalStatus: cleanFilterValue(approvalStatus) }
+              : {}),
+            ...(search ? { search } : {}),
+          },
+          token,
+        );
+
+        setUsers(res?.users ?? []);
+        setPagination(res?.pagination ?? { total: 0, page: 1, pages: 1 });
+        setLoading(false);
+        return; // success
+      } catch (err) {
+        lastErr = err;
       }
 
       // all attempts exhausted
@@ -132,18 +124,7 @@ export default function UsersPage() {
     }
 
     load();
-    return () => {
-      cancelled = true;
-    };
-  }, [
-    category,
-    country,
-    gender,
-    approvalStatus,
-    search,
-    currentPage,
-    token,
-  ]);
+  }, [category, country, gender, approvalStatus, search, currentPage, token]);
 
   function handleFilter(setter) {
     return (val) => {
@@ -266,7 +247,11 @@ export default function UsersPage() {
           </div>
         </div>
         {/* Table */}
-        <UserTable users={paginatedData} loading={loading} refreshData={refreshData} />
+        <UserTable
+          users={paginatedData}
+          loading={loading}
+          refreshData={refreshData}
+        />
 
         {filteredTotalPages > 1 && (
           <div className="relative flex items-center justify-between border-t border-gray-100 dark:border-gray-800 px-6 py-4">

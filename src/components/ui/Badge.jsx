@@ -5,7 +5,6 @@ const variants = {
 };
 
 export default function Badge({ label, variant = "gray", custom }) {
-  console.log("Badge render", { label, variant, custom });
   return (
     <span
       className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-medium ${custom ? custom : variants[variant]}`}
