@@ -346,7 +346,7 @@ const STATUS_META = {
     description: "Users who have been approved and have full platform access.",
   },
   pending: {
-    label: "Pending Users",
+    label: "Pending Media",
     color: "bg-amber-50 text-amber-600",
     dot: "bg-amber-400",
     description: "Users awaiting review and approval.",
