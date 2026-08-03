@@ -22,6 +22,7 @@ import {
 } from "../../../components/icons";
 import { useCategoriesProvider } from "../../../hooks/useCategoriesProvider";
 import { Link } from "react-router-dom";
+import { useScenes } from "../../../hooks/useScenes";
 
 function fmtDate(iso) {
   if (!iso) return "—";
@@ -78,6 +79,8 @@ function PreviewModal({
   onDefer,
   isDeferring,
   status,
+  inScenes,
+  setInScenes,
 }) {
   const overlayRef = useRef(null);
   const [cat, setCat] = useState(item.category ?? "");
@@ -215,6 +218,14 @@ function PreviewModal({
               </>
             )}
           </p>
+
+          <button
+            onClick={() => setInScenes(!inScenes)}
+            disabled={isApproving || isRejecting || !cat || isDeferring}
+            title={inScenes ? "Remove from scenes" : "Add to scenes"}
+          >
+            <BookmarkIcon fillColor={inScenes} />
+          </button>
 
           {/* Submitted category pills */}
           <div className=" gap-1.5">
@@ -387,6 +398,8 @@ export default function MediaStatusPage({ status }) {
   const [isApproving, setIsApproving] = useState(false);
   const [isDeferring, setisDeferring] = useState(false);
   const [isRejecting, setIsRejecting] = useState(false);
+  const [inScenes, setInScenes] = useState(false);
+  const { updateScene } = useScenes(token);
 
   const countries = useMemo(() => {
     const set = new Set();
@@ -455,6 +468,11 @@ export default function MediaStatusPage({ status }) {
         token,
       );
       setItems((prev) => prev.filter((i) => i._id !== item._id));
+      if (inScenes) {
+        await updateScene(item._id, item.inScenes.value);
+        setInScenes(false);
+      }
+
       setViewModal(null);
     } catch (err) {
       toast.error(err?.message ?? "Failed to approve");
@@ -591,7 +609,10 @@ export default function MediaStatusPage({ status }) {
         <MediaReviewTable
           posts={filtered}
           loading={loading}
-          review={(item) => setViewModal(item)}
+          review={(item) => {
+            setViewModal(item);
+            setInScenes(false)
+          }}
           actionId={actionId}
         />
 
@@ -608,6 +629,8 @@ export default function MediaStatusPage({ status }) {
             onDefer={handleDefer}
             isDeferring={isDeferring}
             status={status}
+            inScenes={inScenes}
+            setInScenes={setInScenes}
           />
         )}
       </div>
