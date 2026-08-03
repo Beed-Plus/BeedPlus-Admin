@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import toast from "react-hot-toast";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../../hooks/useAuth";
 import { usersApi } from "../../../utils/usersApi";
@@ -123,7 +124,7 @@ export default function UserTable({
         setApprovingId(null);
       } catch (err) {
         setApprovingId(null);
-        alert(`Approve failed: ${err.message}`);
+        toast.error(err?.message ?? "Approve failed");
       } finally {
         setApprovingId(null);
       }
@@ -134,7 +135,7 @@ export default function UserTable({
         setApprovingId(null);
       } catch (err) {
         setApprovingId(null);
-        alert(`Defer failed: ${err.message}`);
+        toast.error(err?.message ?? "Defer failed");
       } finally {
         setApprovingId(null);
       }
@@ -184,7 +185,7 @@ export default function UserTable({
       );
       setEditUser(null);
     } catch (err) {
-      alert(`Failed to edit user: ${err.message}`);
+      toast.error(err?.message ?? "Failed to edit user");
     } finally {
       setSaving(false);
       setEditUser(null);
@@ -201,7 +202,7 @@ export default function UserTable({
       );
       setConfirmDelete(null);
     } catch (err) {
-      alert(`Delete failed: ${err.message}`);
+      toast.error(err?.message ?? "Delete failed");
     } finally {
       setDeleting(false);
       setConfirmDelete(null);

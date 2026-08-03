@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../../hooks/useAuth";
 import { instagramApi } from "../../../utils/instagramApi";
@@ -137,7 +138,7 @@ export default function MediaReviewTable({ posts, loading, review, actionId }) {
       );
       setEditPost(null);
     } catch (err) {
-      alert(`Failed to update: ${err.message}`);
+      toast.error(err?.message ?? "Failed to update");
     } finally {
       setSaving(false);
     }

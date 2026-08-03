@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import toast from "react-hot-toast";
 import { createPortal } from "react-dom";
 import { useAuth } from "../../../hooks/useAuth";
 import { instagramApi } from "../../../utils/instagramApi";
@@ -456,7 +457,7 @@ export default function MediaStatusPage({ status }) {
       setItems((prev) => prev.filter((i) => i._id !== item._id));
       setViewModal(null);
     } catch (err) {
-      alert(err.message ?? "Failed to approve");
+      toast.error(err?.message ?? "Failed to approve");
     } finally {
       setActionId(null);
       setIsApproving(false);
@@ -475,7 +476,7 @@ export default function MediaStatusPage({ status }) {
       setItems((prev) => prev.filter((i) => i._id !== item._id));
       setViewModal(null);
     } catch (err) {
-      alert(err.message ?? "Failed to defer");
+      toast.error(err?.message ?? "Failed to defer");
     } finally {
       setActionId(null);
       setisDeferring(false);
@@ -490,7 +491,7 @@ export default function MediaStatusPage({ status }) {
       setItems((prev) => prev.filter((i) => i._id !== item._id));
       setViewModal(null);
     } catch (err) {
-      alert(err.message ?? "Failed to reject");
+      toast.error(err?.message ?? "Failed to reject");
     } finally {
       setIsRejecting(false);
       setActionId(null);

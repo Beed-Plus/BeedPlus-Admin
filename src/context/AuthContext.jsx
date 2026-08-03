@@ -1,7 +1,8 @@
 import { createContext, useState, useCallback, useMemo, useEffect } from 'react'
 import { apiFetch } from '../utils/api'
 
-export const AuthContext = createContext(null)
+const AuthContext = createContext(null)
+export { AuthContext }
 
 const ADMIN_ROLES = ['admin', 'superadmin']
 const STORAGE_KEY = 'beedplus_admin_auth'

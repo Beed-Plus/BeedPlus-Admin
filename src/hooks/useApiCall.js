@@ -8,9 +8,9 @@ import { useState, useCallback } from 'react'
  *   await run(arg1, arg2)
  */
 export function useApiCall(fn) {
-  const [data, setData]       = useState(null)
+  const [data, setData] = useState(null)
   const [loading, setLoading] = useState(false)
-  const [error, setError]     = useState(null)
+  const [error, setError] = useState(null)
 
   const run = useCallback(async (...args) => {
     setLoading(true)

@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import toast from "react-hot-toast";
 import { useAuth } from "../../../hooks/useAuth";
 import { instagramApi } from "../../../utils/instagramApi";
 import { useScenes } from "../../../hooks/useScenes";
@@ -175,7 +176,7 @@ export default function PostsPage() {
       await instagramApi.rejectPendingMedia(item._id, {}, token);
       await refreshData();
     } catch (err) {
-      alert(err.message ?? "Failed to delete");
+      toast.error(err?.message ?? "Failed to delete");
     } finally {
       setSmallLoading(false);
     }
