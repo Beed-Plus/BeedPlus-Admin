@@ -1,6 +1,6 @@
 import { apiFetch } from './api'
 
-const WL = '/api/scenes'
+const WL = '/api/scenes?limit=100'
 
 export const scenesApi = {
   /** GET /api/scenes  (admin) */
