@@ -7,6 +7,7 @@ import UserTable from "../../../components/dashboard/users/UserTable";
 import { useCategoriesProvider } from "../../../hooks/useCategoriesProvider";
 import { RetryIcon } from "../../../components/icons";
 import Loader from "../../../components/Loader";
+import toast from "react-hot-toast";
 
 const ITEMS_PER_PAGE = 100;
 
@@ -87,7 +88,6 @@ export default function UsersPage() {
       setLoading(true);
       setError(null);
 
-      let lastErr = null;
       try {
         const res = await usersApi.getUsers(
           {
@@ -115,11 +115,11 @@ export default function UsersPage() {
         setLoading(false);
         return; // success
       } catch (err) {
-        lastErr = err;
+        toast.error(err?.message ?? "Failed to load users");
       }
 
       // all attempts exhausted
-      setError(lastErr?.message ?? "Failed to load users");
+
       setLoading(false);
     }
 
@@ -162,7 +162,7 @@ export default function UsersPage() {
       setPagination(res?.pagination ?? { total: 0, page: 1, pages: 1 });
       setIsReloading(false);
     } catch (err) {
-      setError(err?.message ?? "Failed to refresh users");
+      toast.error(err?.message ?? "Failed to refresh users");
     } finally {
       setIsReloading(false);
     }
@@ -189,18 +189,7 @@ export default function UsersPage() {
       {isReloading && <Loader />}
       {/* Filters */}
 
-      {/* Error */}
-      {error && (
-        <div className="flex items-center justify-between gap-4 rounded-xl border border-red-100 bg-red-50 dark:bg-red-500/10 dark:border-red-500/20 px-4 py-3">
-          <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
-          <button
-            onClick={() => refreshData()}
-            className="shrink-0 rounded-lg bg-red-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-600 transition"
-          >
-            Retry
-          </button>
-        </div>
-      )}
+
       <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900  shadow-lg shadow-[#0000001A] overflow-hidden py-2 mb-40">
         <div className="flex justify-between items-center px-4 mb-2">
           <h3 className="text-xl font-bold">User List</h3>

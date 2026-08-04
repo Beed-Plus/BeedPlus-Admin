@@ -24,8 +24,6 @@ export default function PostsPage() {
   const [loading, setLoading] = useState(true);
   const [isReloading, setIsReloading] = useState(false);
   const [isSavingScene, setIsSavingScene] = useState(false);
-  const [error, setError] = useState(null);
-  const [retryKey, setRetryKey] = useState(0);
 
   // Filters
   const [search, setSearch] = useState("");
@@ -42,14 +40,13 @@ export default function PostsPage() {
 
   async function refreshData() {
     setSmallLoading(true);
-    setError(null);
 
     try {
       const res = await instagramApi.getAllSubmittedMediaForAdmin(token);
       setAllPosts(Array.isArray(res) ? res : []);
       setSmallLoading(false);
     } catch (err) {
-      setError(err?.message ?? "Failed to load posts");
+      toast.error(err?.message ?? "Failed to load posts");
     } finally {
       setSmallLoading(false);
     }
@@ -59,14 +56,13 @@ export default function PostsPage() {
 
     async function load() {
       setLoading(true);
-      setError(null);
 
       try {
         const res = await instagramApi.getAllSubmittedMediaForAdmin(token);
         setAllPosts(Array.isArray(res) ? res : []);
         setLoading(false);
       } catch (err) {
-        setError(err?.message ?? "Failed to load posts");
+        toast.error(err?.message ?? "Failed to load posts");
       } finally {
         setLoading(false);
       }
@@ -364,18 +360,7 @@ export default function PostsPage() {
         </datalist> */}
         </div>
 
-        {/* Error */}
-        {error && (
-          <div className="flex items-center justify-between gap-4 rounded-xl border border-red-100 bg-red-50 dark:bg-red-500/10 dark:border-red-500/20 px-4 py-3">
-            <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
-            <button
-              onClick={() => refreshData()}
-              className="shrink-0 rounded-lg bg-red-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-600 transition"
-            >
-              Retry
-            </button>
-          </div>
-        )}
+
 
         {/* Table */}
         <PostTable

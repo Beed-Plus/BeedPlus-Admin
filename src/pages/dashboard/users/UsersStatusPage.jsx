@@ -8,6 +8,7 @@ import UserTable from "../../../components/dashboard/users/UserTable";
 import { useCategoriesProvider } from "../../../hooks/useCategoriesProvider";
 import { RetryIcon } from "../../../components/icons";
 import Loader from "../../../components/Loader";
+import toast from "react-hot-toast";
 
 const STATUS_META = {
   approved: {
@@ -111,7 +112,6 @@ export default function UsersStatusPage({ status }) {
   useEffect(() => {
     async function load() {
       setLoading(true);
-      setError(null);
       try {
         const res = await usersApi.getUsers(
           {
@@ -137,7 +137,7 @@ export default function UsersStatusPage({ status }) {
         setUsers(res?.users ?? []);
         setPagination(res?.pagination ?? { total: 0, page: 1, pages: 1 });
       } catch (err) {
-        setError(err.message ?? "Failed to load users");
+        toast.error(err?.message ?? "Failed to load users");
       } finally {
         setLoading(false);
       }
@@ -163,7 +163,6 @@ export default function UsersStatusPage({ status }) {
 
   async function refreshData() {
     setIsReloading(true);
-    setError(null);
 
     try {
       const res = await usersApi.getUsers(
@@ -191,7 +190,7 @@ export default function UsersStatusPage({ status }) {
       setPagination(res?.pagination ?? { total: 0, page: 1, pages: 1 });
       setIsReloading(false);
     } catch (err) {
-      setError(err?.message ?? "Failed to refresh users");
+      toast.error(err?.message ?? "Failed to refresh users");
     } finally {
       setIsReloading(false);
     }

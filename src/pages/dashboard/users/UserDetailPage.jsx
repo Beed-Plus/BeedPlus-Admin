@@ -18,6 +18,7 @@ import { CloseIcon, InstagramIcon, RetryIcon } from "../../../components/icons";
 import Loader from "../../../components/Loader";
 import Modal from "../../../components/Modal";
 import { Tooltip } from "../../../components/Tooltip";
+import toast from "react-hot-toast";
 
 const CRUMBS = [
   { label: "Users", to: "/dashboard/users" },
@@ -502,7 +503,7 @@ export default function UserDetailPage() {
         console.log("RES STATS", resStats);
         setUserStats(resStats);
       } catch (err) {
-        setError(err.message ?? "Failed to load user");
+        toast.error(err.message ?? "Failed to load user");
       } finally {
         setLoading(false);
       }
@@ -676,22 +677,7 @@ export default function UserDetailPage() {
     }
   }, [previewVideo]);
 
-  if (error) {
-    return (
-      <div className="flex flex-col gap-6">
-        <Breadcrumb crumbs={CRUMBS} />
-        <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-12 text-center shadow-lg">
-          <p className="text-sm text-red-500">{error}</p>
-          <button
-            onClick={() => navigate("/dashboard/users")}
-            className="mt-4 text-sm text-orange-500 hover:underline"
-          >
-            Back to Users
-          </button>
-        </div>
-      </div>
-    );
-  }
+
 
   const name = user ? displayName(user) : "—";
   const status = user?.instagramApproval?.status ?? "pending";

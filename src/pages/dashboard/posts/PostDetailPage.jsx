@@ -23,6 +23,7 @@ import {
 } from "../../../components/icons";
 import CustomDropDownInput from "../../../components/CustomDropDownInput";
 import Modal from "../../../components/Modal";
+import toast from "react-hot-toast";
 
 const CRUMBS = [
   { label: "Posts", to: "/dashboard/posts" },
@@ -187,51 +188,28 @@ export default function PostDetailPage() {
   const [post, setPost] = useState(location.state.post);
 
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
   const [watchlistBusy, setWatchlistBusy] = useState(false);
   const [smallLoading, setSmallLoading] = useState(false);
   const [mediaStats, setMediaStats] = useState(null);
   const [previewVideo, setPreviewVideo] = useState("");
   const previewVideoRef = useRef(null);
 
-  // Always fetch full data so dailyInsights (excluded from list endpoint) are included
-  // useEffect(() => {
-  //   let cancelled = false;
-  //   setLoading(true);
-  //   instagramApi
-  //     .getMediaByIdForAdmin(id, token)
-  //     .then((res) => {
-  //       if (cancelled) return;
-  //       if (res?.media?._id) setPost(res.media);
-  //       else setError("Post not found");
-  //     })
-  //     .catch((err) => {
-  //       if (!cancelled) setError(err.message ?? "Failed to load post");
-  //     })
-  //     .finally(() => {
-  //       if (!cancelled) setLoading(false);
-  //     });
-  //   return () => {
-  //     cancelled = true;
-  //   };
-  // }, [id, token]);
 
   async function getMediaStats() {
     setLoading(true);
     try {
       let result = await instagramApi.getMediaStats(id, token);
-      console.log("MEDIA STATS", result);
       setLoading(false);
       setMediaStats(result);
     } catch (e) {
-      console.log("error fetching media stats", e);
+      toast.error( e.message ?? "error fetching media stats");
     } finally {
       setLoading(false);
     }
   }
 
   useEffect(() => {
-    if (id && token) {
+    if (id) {
       Promise.all([load(), getMediaStats()]);
     }
   }, [id]);
@@ -251,7 +229,7 @@ export default function PostDetailPage() {
 
   if (loading) return <PageSkeleton />;
 
-  if (error || !post) {
+  if (!post) {
     return (
       <div className="flex gap-6">
         <BackArrowIcon />
@@ -289,7 +267,6 @@ export default function PostDetailPage() {
 
   async function refreshData() {
     setSmallLoading(true);
-    setError(null);
 
     try {
       const res = await instagramApi.getMediaByIdForAdmin(id, token);
@@ -297,14 +274,13 @@ export default function PostDetailPage() {
       if (res?.media?._id) setPost(res.media);
       setSmallLoading(false);
     } catch (err) {
-      setError(err?.message ?? "Failed to load posts");
+      toast.error(err?.message ?? "Failed to load posts");
     } finally {
       setSmallLoading(false);
     }
   }
   async function load() {
     setLoading(true);
-    setError(null);
 
     try {
       const res = await instagramApi.getMediaByIdForAdmin(id, token);
@@ -312,7 +288,7 @@ export default function PostDetailPage() {
       if (res?.media?._id) setPost(res.media);
       setLoading(false);
     } catch (err) {
-      setError(err?.message ?? "Failed to load posts");
+      toast.error(err?.message ?? "Failed to load posts");
     } finally {
       setLoading(false);
     }
@@ -342,7 +318,6 @@ export default function PostDetailPage() {
     );
   }
 
-  console.log("POST", post);
   return (
     <div className="flex flex-col gap-6">
       <div className="flex justify-between items-center">

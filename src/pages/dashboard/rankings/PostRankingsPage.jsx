@@ -7,6 +7,7 @@ import "react-day-picker/style.css";
 import { useCategoriesProvider } from "../../../hooks/useCategoriesProvider";
 import CustomDropDownInput from "../../../components/CustomDropDownInput";
 import SelectSearch from "../../../components/SelectSearch";
+import toast from "react-hot-toast";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 function fmt(n) {
@@ -120,10 +121,6 @@ function MediaModal({ item, onClose }) {
 
   // Fetch oEmbed HTML from our backend proxy
   useEffect(() => {
-    if (!permalink) {
-      setLoadError(true);
-      return;
-    }
     instagramApi
       .getOembed(permalink)
       .then((res) => setHtml(res.html))
@@ -324,47 +321,26 @@ export default function PostRankingsPage() {
   // const { categories, subCategories } = useCategoriesProvider();
 
   useEffect(() => {
-    let cancelled = false;
     setLoading(true);
-    setError(null);
 
     async function load() {
       try {
         // Fetch latest chart (critical) + available dates (non-critical) in parallel
         const res = await instagramApi.getMediaChart();
-        if (cancelled) return;
-        console.log("API response", res.rankings);
         const rawRankings = res?.rankings ?? [];
         const categories = groupByCategory(rawRankings);
         setData({ date: res?.date ?? null, categories });
         setRankings(res?.rankings ?? []);
         setActiveTab(0);
       } catch (err) {
-        if (cancelled) return;
-        console.log(JSON.stringify(err, null, 2));
-        // Auto-retry once after 3s (handles Render.com cold-start wake-up)
-        if (retryCount === 0) {
-          setTimeout(() => {
-            if (!cancelled) setRetryCount(1);
-          }, 3000);
-        } else {
-          if (err.message == "No Rankings founds") {
-            setRankings([]);
-            return;
-          } else {
-            setError(err.message ?? "Failed to load rankings");
-          }
-        }
+        toast.error(err?.message ?? "Failed to load chart");
       } finally {
-        if (!cancelled) setLoading(false);
+        setLoading(false);
       }
     }
 
     load();
-    return () => {
-      cancelled = true;
-    };
-  }, [retryCount]);
+  }, []);
 
   async function selectDate(iso) {
     // iso = YYYY-MM-DD
@@ -382,24 +358,7 @@ export default function PostRankingsPage() {
     }
   }
 
-  // Tabs: "All" + one per category
 
-  // const data = categories
-  //   .flatMap((c) => c.rankings)
-  //   .sort((a, b) => (a.rank ?? Infinity) - (b.rank ?? Infinity));
-
-  // Unique countries from current day's rankings
-  // const availableCountries = useMemo(() => {
-  //   const set = new Set();
-  //   rankings?.forEach((r) => {
-  //     if (r.userData?.country) set.add(r.userData.country);
-  //   });
-  //   return [...set].sort();
-  // }, [rankings]);
-
-  // const rankings = filterCountry
-  //   ? tabRankings.filter((r) => r.userData?.country === filterCountry)
-  //   : tabRankings;
 
   const categories = useMemo(() => {
     const seen = new Set();
@@ -572,18 +531,6 @@ export default function PostRankingsPage() {
         </div>
       </div>
 
-      {/* Error */}
-      {/* {error && (
-        <div className="rounded-2xl border border-red-100 bg-red-50 px-5 py-4 text-sm text-red-500 flex items-center justify-between gap-4">
-          <span>{error}</span>
-          <button
-            onClick={() => setRetryCount((c) => c + 1)}
-            className="shrink-0 rounded-lg bg-red-100 px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-200 transition"
-          >
-            Retry
-          </button>
-        </div>
-      )} */}
 
       {/* Media modal */}
       {selectedItem && (

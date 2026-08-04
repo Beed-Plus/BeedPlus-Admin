@@ -13,6 +13,7 @@ import {
   ReachIcon,
   LikeIcon,
 } from "../../../components/icons";
+import toast from "react-hot-toast";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function fmt(n) {
@@ -293,7 +294,7 @@ function PostSelectorPanel({
     const isVideo =
       mediaType?.toUpperCase() === "VIDEO" ||
       mediaType?.toUpperCase() === "REELS";
-console.log("selected", selected)
+    console.log("selected", selected);
     return (
       <div
         className={`flex flex-col rounded-2xl p-5 bg-[#FFFEFC] dark:bg-gray-900 overflow-hidden shadow-lg shadow-[#0000000D]`}
@@ -457,10 +458,7 @@ console.log("selected", selected)
               value={fmtBeedScore(selected.beedplusScore)}
             />
             <StatCard label="Beed+ Clicks" value={fmt(selected.clicks)} />
-            <StatCard
-              label="Beed+ Views"
-              value={fmt(selected.beedplusViews)}
-            />
+            <StatCard label="Beed+ Views" value={fmt(selected.beedplusViews)} />
           </div>
 
           <div className="flex flex-col gap-3">
@@ -716,6 +714,7 @@ export default function ComparePostsPage() {
         if (!cancelled) setFullA(data);
         return data;
       } catch (error) {
+        toast.error(error.message ?? "ERROR loading stats");
         if (!cancelled) setFullA(postA);
         return postA;
       }
@@ -726,7 +725,6 @@ export default function ComparePostsPage() {
         fetchMedia(),
         getMediaStats(postA.instagramMediaId),
       ]);
-      console.log("POST A MEDIA STAT", mediaStat);
       setPostAMediaStat(mediaStat);
     };
 
@@ -753,6 +751,7 @@ export default function ComparePostsPage() {
         if (!cancelled) setFullB(data);
         return data;
       } catch (error) {
+        toast.error(error.message ?? "ERROR loading stats");
         if (!cancelled) setFullB(postB);
         return postB;
       }
@@ -762,7 +761,6 @@ export default function ComparePostsPage() {
         fetchMedia(),
         getMediaStats(postB.instagramMediaId),
       ]);
-      console.log("POST B MEDIA STAT", mediaStat);
       setPostBMediaStat(mediaStat);
     };
 
@@ -776,11 +774,10 @@ export default function ComparePostsPage() {
     setLoading(true);
     try {
       let result = await instagramApi.getMediaStats(id, token);
-      console.log("MEDIA STATS", result);
       setLoading(false);
       return result;
     } catch (e) {
-      console.log("ERROR loading stats", e);
+      toast.error(e.message ?? "ERROR loading stats");
       return null;
     } finally {
       setLoading(false);
