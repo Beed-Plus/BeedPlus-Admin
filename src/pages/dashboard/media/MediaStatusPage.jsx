@@ -392,6 +392,7 @@ export default function MediaStatusPage({ status }) {
   const [filterCategory, setCategory] = useState("");
   const [filterSubCategory, setSubCategory] = useState("");
   const [filterCountry, setFilterCountry] = useState("");
+  const [filterIgViews, setFilterIgViews] = useState("");
 
   const { categories, subCategories } = useCategoriesProvider();
   const [expandCaption, setExpandCaption] = useState(false);
@@ -455,8 +456,23 @@ export default function MediaStatusPage({ status }) {
         }
         return true;
       })
-      .sort((a, b) => new Date(b.createdAt ?? 0) - new Date(a.createdAt ?? 0));
-  }, [items, filterCategory, filterSubCategory, search, filterCountry]);
+      .sort((a, b) => {
+        if (filterIgViews === "Highest to Lowest") {
+          return (b.insights.views ?? 0) - (a.insights.views ?? 0);
+        } else if (filterIgViews === "Lowest to Highest") {
+          return (a.insights.views ?? 0) - (b.insights.views ?? 0);
+        } else {
+          new Date(b.createdAt ?? 0) - new Date(a.createdAt ?? 0);
+        }
+      });
+  }, [
+    items,
+    filterCategory,
+    filterSubCategory,
+    search,
+    filterCountry,
+    filterIgViews,
+  ]);
 
   async function handleApprove(item, { category, subCategory } = {}) {
     setActionId(item._id);
@@ -562,6 +578,29 @@ export default function MediaStatusPage({ status }) {
                   items={["All", ...subCategories.map((s) => s.name)]}
                 />
               </div>
+              <div className="min-w-22">
+                <CustomDropDownInput
+                  placeholder="Sort by IG views"
+                  value={filterIgViews}
+                  onChange={(e) => {
+                    handleFilter(setFilterIgViews)(e.target.value);
+                  }}
+                  items={[
+                    {
+                      label: "Default",
+                      value: "Default",
+                    },
+                    {
+                      label: "Highest to Lowest",
+                      value: "Highest to Lowest",
+                    },
+                    {
+                      label: "Lowest to Highest",
+                      value: "Lowest to Highest",
+                    },
+                  ]}
+                />
+              </div>
               <div className="min-w-30">
                 <CustomDropDownInput
                   placeholder="Country"
@@ -611,7 +650,7 @@ export default function MediaStatusPage({ status }) {
           loading={loading}
           review={(item) => {
             setViewModal(item);
-            setInScenes(false)
+            setInScenes(false);
           }}
           actionId={actionId}
         />

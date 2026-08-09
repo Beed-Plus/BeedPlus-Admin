@@ -281,11 +281,11 @@ function MediaModal({ post, onClose }) {
 }
 
 function displayName(user) {
-  return user.instagram?.instagramUsername
-    ? `${user.instagram.instagramUsername}`
-    : user.instagramUsername
-      ? `${user.instagramUsername}`
-      : (user.email ?? "—");
+  return user?.instagram?.instagramUsername
+    ? `${user?.instagram.instagramUsername}`
+    : user?.instagramUsername
+      ? `${user?.instagramUsername}`
+      : (user?.email ?? "—");
 }
 
 // ─── Stat card ────────────────────────────────────────────────────────────────
@@ -498,7 +498,7 @@ export default function UserDetailPage() {
           usersApi.getUserById(id, token),
           usersApi.getUserStats(id, token),
         ]);
-
+console.log("USER RES", res)
         setUser(res?.user ?? null);
         console.log("RES STATS", resStats);
         setUserStats(resStats);
@@ -709,12 +709,12 @@ export default function UserDetailPage() {
               <div className="mt-2 flex flex-wrap gap-x-2 gap-y-1 text-xs text-[#000000B2]">
                 {user?.category && (
                   <span className="rounded-lg bg-[#2F3134] dark:bg-gray-800 px-2.5 py-1 text-sm font-medium capitalize text-white dark:text-gray-400">
-                    {user.category}
+                    {user?.category}
                   </span>
                 )}
                 {user?.country && (
                   <span className="flex items-center gap-1 border border-[#000000B2] rounded-lg px-2.5 py-0.5">
-                    {user.country}
+                    {user?.country}
                   </span>
                 )}
                 <span className="flex items-center gap-1 border border-[#000000B2] rounded-lg px-2.5 py-0.5">
@@ -785,7 +785,7 @@ export default function UserDetailPage() {
                   <InstagramIcon />
                 </Link>
                 <p className="text-base font-medium text-[#00000080] dark:text-gray-500">
-                  {fmt(user.monthlyReach)} monthly viewers
+                  {fmt(user?.monthlyReach)} monthly viewers
                 </p>
                 <p className="text-base font-medium text-[#00000080] dark:text-gray-500">
                   ID: {user?._id}
@@ -810,10 +810,10 @@ export default function UserDetailPage() {
               localValue={
                 userStats?.countryRank ? `${userStats.countryRank}` : "—"
               }
-              country={user.country}
+              country={user?.country}
             />
             <StatCard
-              label={`${user.category} Top Creators`}
+              label={`${user?.category} Top Creators`}
               globalValue={
                 userStats?.categoryRank ? `${userStats.categoryRank}` : "—"
               }
@@ -822,7 +822,7 @@ export default function UserDetailPage() {
                   ? userStats?.categoryCountryRank
                   : "—"
               }
-              country={user.country}
+              country={user?.country}
             />
           </>
         )}
