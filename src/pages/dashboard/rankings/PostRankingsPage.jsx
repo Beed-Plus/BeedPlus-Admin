@@ -342,24 +342,6 @@ export default function PostRankingsPage() {
     load();
   }, []);
 
-  async function selectDate(iso) {
-    // iso = YYYY-MM-DD
-    if (!iso) return;
-    setDateLoading(true);
-    try {
-      const res = await instagramApi.getMediaChartByDate(iso);
-      const categories = groupByCategory(res?.rankings ?? []);
-      setData({ date: res?.date ?? iso, categories });
-      setActiveTab(0);
-    } catch (err) {
-      console.error("Failed to load chart for date:", err);
-    } finally {
-      setDateLoading(false);
-    }
-  }
-
-
-
   const categories = useMemo(() => {
     const seen = new Set();
     const cats = [];

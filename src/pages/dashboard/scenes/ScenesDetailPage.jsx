@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useParams, useNavigate, useLocation, Link } from "react-router-dom";
 import { useAuth } from "../../../hooks/useAuth";
 import { instagramApi } from "../../../utils/instagramApi";
@@ -168,38 +168,11 @@ export default function PostDetailPage() {
 
   const [post, setPost] = useState(location.state.post);
 
-  useEffect(() => {
-    console.log(
-      "PostDetailPage received post via location state:",
-      JSON.stringify(post, null, 2),
-    );
-  }, [post]);
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [watchlistBusy, setWatchlistBusy] = useState(false);
   const [smallLoading, setSmallLoading] = useState(false);
-
-  // Always fetch full data so dailyInsights (excluded from list endpoint) are included
-  // useEffect(() => {
-  //   let cancelled = false;
-  //   setLoading(true);
-  //   instagramApi
-  //     .getMediaByIdForAdmin(id, token)
-  //     .then((res) => {
-  //       if (cancelled) return;
-  //       if (res?.media?._id) setPost(res.media);
-  //       else setError("Post not found");
-  //     })
-  //     .catch((err) => {
-  //       if (!cancelled) setError(err.message ?? "Failed to load post");
-  //     })
-  //     .finally(() => {
-  //       if (!cancelled) setLoading(false);
-  //     });
-  //   return () => {
-  //     cancelled = true;
-  //   };
-  // }, [id, token]);
 
   if (loading) return <PageSkeleton />;
 

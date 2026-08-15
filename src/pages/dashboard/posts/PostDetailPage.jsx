@@ -185,9 +185,11 @@ export default function PostDetailPage() {
 
   const { updateScene } = useScenes(token);
 
-  const [post, setPost] = useState(location.state.post);
+  const initialPost = location.state?.post ?? null;
+  const [post, setPost] = useState(initialPost);
 
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(!initialPost);
+  const [error, setError] = useState(null);
   const [watchlistBusy, setWatchlistBusy] = useState(false);
   const [smallLoading, setSmallLoading] = useState(false);
   const [mediaStats, setMediaStats] = useState(null);

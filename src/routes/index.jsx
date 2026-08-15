@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/react";
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import AuthLayout from "../layouts/AuthLayout";
 import DashboardLayout from "../layouts/DashboardLayout";
@@ -25,15 +26,19 @@ import WatchPage from "../pages/dashboard/watch/WatchPage";
 import MediaReviewPage from "../pages/dashboard/media/MediaReviewPage";
 import ProtectedRoute from "../components/router/ProtectedRoute";
 import GuestRoute from "../components/router/GuestRoute";
+import RouteErrorBoundary from "../components/router/RouteErrorBoundary";
 import ScenesPage from "../pages/dashboard/scenes/ScenesPage";
 import ScenesDetailPage from "../pages/dashboard/scenes/ScenesDetailPage";
 import MediaStatusPage from "../pages/dashboard/media/MediaStatusPage";
-import Support from "../pages/dashboard/support";
+// import Support from "../pages/dashboard/support";
 
-const router = createBrowserRouter([
+const sentryCreateBrowserRouter = Sentry.wrapCreateBrowserRouter(createBrowserRouter);
+
+const router = sentryCreateBrowserRouter([
   {
     path: "/",
     element: <Navigate to="/dashboard" replace />,
+    errorElement: <RouteErrorBoundary />,
   },
   {
     path: "/login",
@@ -42,6 +47,7 @@ const router = createBrowserRouter([
         <AuthLayout />
       </GuestRoute>
     ),
+    errorElement: <RouteErrorBoundary />,
     children: [{ index: true, element: <LoginPage /> }],
   },
   {
@@ -51,6 +57,7 @@ const router = createBrowserRouter([
         <DashboardLayout />
       </ProtectedRoute>
     ),
+    errorElement: <RouteErrorBoundary />,
     children: [
       { index: true, element: <DashboardPage /> },
       { path: "users", element: <UsersPage /> },

@@ -63,86 +63,9 @@ function SkeletonRow() {
 export default function MediaReviewTable({ posts, loading, review, actionId }) {
   const navigate = useNavigate();
   const { auth } = useAuth();
-  const token = auth?.token;
-
   const [localPosts, setLocalPosts] = useState(null);
-  const [editPost, setEditPost] = useState(null);
-  const [editCategory, setEditCategory] = useState("");
-  const [editSubCategory, setEditSubCategory] = useState("");
-  const [categories, setCategories] = useState([]);
-  const [subCategories, setSubCategories] = useState([]);
-  const [saving, setSaving] = useState(false);
   const displayPosts = localPosts ?? posts;
 
-  useEffect(() => {
-    categoriesApi
-      .getCategories()
-      .then((res) =>
-        setCategories(Array.isArray(res) ? res : (res.categories ?? [])),
-      )
-      .catch(() => {});
-  }, []);
-
-  useEffect(() => {
-    if (!editCategory) {
-      setSubCategories([]);
-      return;
-    }
-    const cat = categories.find((c) => c.name === editCategory);
-    if (!cat?._id) return;
-    subCategoriesApi
-      .getSubCategories(cat._id)
-      .then((res) =>
-        setSubCategories(Array.isArray(res) ? res : (res.subCategories ?? [])),
-      )
-      .catch(() => {});
-  }, [editCategory, categories]);
-
-  function openEdit(post) {
-    const cat = Array.isArray(post.category)
-      ? (post.category[0] ?? "")
-      : (post.category ?? "");
-    setEditPost(post);
-    setEditCategory(cat);
-    setEditSubCategory(post.subCategory?.name ?? "");
-  }
-
-  async function saveEdit() {
-    if (!editPost || !editCategory) return;
-    setSaving(true);
-    try {
-      let subCategoryId = null;
-      if (editSubCategory.trim()) {
-        const cat = categories.find((c) => c.name === editCategory);
-        const found = await subCategoriesApi.findOrCreate(
-          { name: editSubCategory.trim(), categoryId: cat?._id },
-          token,
-        );
-        subCategoryId = found?._id ?? found?.subCategory?._id ?? null;
-      }
-      const res = await instagramApi.updateMediaCategory(
-        editPost._id,
-        { category: editCategory, subCategory: subCategoryId },
-        token,
-      );
-      setLocalPosts((prev) =>
-        (prev ?? posts).map((p) =>
-          p._id === editPost._id
-            ? {
-                ...p,
-                category: [editCategory],
-                subCategory: res.media?.subCategory ?? null,
-              }
-            : p,
-        ),
-      );
-      setEditPost(null);
-    } catch (err) {
-      toast.error(err?.message ?? "Failed to update");
-    } finally {
-      setSaving(false);
-    }
-  }
 
   return (
     <div className="rounded-2xl bg-white dark:bg-gray-900 overflow-hidden">
@@ -191,7 +114,7 @@ export default function MediaReviewTable({ posts, loading, review, actionId }) {
                 const subCat =
                   post.subCategory?.name ?? post.subCategory ?? null;
                 const busy = actionId === post._id;
-console.log("post", post)
+                console.log("post", post);
                 const statusColor = {
                   approved: {
                     label: "Approved",

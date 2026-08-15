@@ -18,7 +18,6 @@ export function useScenes(token) {
       try {
         const res = await scenesApi.getScenes(token);
         setScenes(Array.isArray(res) ? res : (res?.scenes ?? []));
-        console.log("getScenes res", res);
       } catch (err) {
         throw new Error(err);
       } finally {
@@ -27,32 +26,20 @@ export function useScenes(token) {
     };
   }, [token]);
 
-  const updateScene = useCallback(
-    async (id, inScenes) => {
-      try {
-        console.log("id", id);
-        console.log("inScenes", inScenes);
-        const res = await scenesApi.updateScene(id, inScenes, token);
-        console.log("updateScene res", res);
-      } catch (err) {
-        console.log("error from scenes update", err);
-        throw new Error(err);
-      }
-    },
-    [token],
-  );
+  const updateScene = async (id, inScenes) => {
+    try {
+      const res = await scenesApi.updateScene(id, inScenes, token);
+    } catch (err) {
+      throw new Error(err);
+    }
+  };
 
   async function refreshData() {
-    for (let attempt = 1; attempt <= 3; attempt++) {
-      try {
-        const res = await scenesApi.getScenes(token);
-        setScenes(Array.isArray(res) ? res : (res?.scenes ?? []));
-        return;
-      } catch (err) {
-        if (attempt < 3) {
-          await new Promise((r) => setTimeout(r, attempt * 1000));
-        }
-      }
+    try {
+      const res = await scenesApi.getScenes(token);
+      setScenes(Array.isArray(res) ? res : (res?.scenes ?? []));
+    } catch (err) {
+      throw new Error(err);
     }
   }
 

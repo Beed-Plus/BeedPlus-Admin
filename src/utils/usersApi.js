@@ -26,7 +26,6 @@ export const usersApi = {
     if (isVerified !== undefined) params.set("isVerified", isVerified);
     if (approvalStatus) params.set("approvalStatus", approvalStatus);
     if (search) params.set("search", search);
-    console.log("USER PAGE params", params);
     return apiFetch(`${USERS}?${params}`, { token });
   },
 

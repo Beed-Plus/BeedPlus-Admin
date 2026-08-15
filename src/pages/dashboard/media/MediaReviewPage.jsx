@@ -102,9 +102,6 @@ function PreviewModal({
     if (e.target === overlayRef.current) onClose();
   }
 
-  const filterSubCategory = subCategories.filter(
-    (s) => !subCat || s.name.toLowerCase().includes(subCat.toLowerCase()),
-  );
 
   const isVideo = item.media?.mediaType?.toUpperCase() === "VIDEO";
 
@@ -292,67 +289,6 @@ function PreviewModal({
             </div>
           </div>
 
-          {/* Category override */}
-          {/* <div>
-            <label className="block text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-1">
-              Category <span className="text-red-400">*</span>
-            </label>
-            <select
-              value={cat}
-              onChange={(e) => setCat(e.target.value)}
-              className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-100"
-            >
-              <option value="">— Select category —</option>
-              {categories.map((c) => {
-                const name = c.name ?? c;
-                return (
-                  <option key={name} value={name}>
-                    {name}
-                  </option>
-                );
-              })}
-            </select>
-          </div> */}
-
-          {/* Sub-category autocomplete */}
-          {/* <div>
-            <label className="block text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-1">
-              Sub-category{" "}
-              <span className="text-gray-300 dark:text-gray-600">
-                (optional)
-              </span>
-            </label>
-            <div className="relative">
-              <input
-                type="text"
-                value={subCat}
-                onChange={(e) => {
-                  setSubCat(e.target.value);
-                  setSubCatOpen(true);
-                }}
-                onFocus={() => setSubCatOpen(true)}
-                onBlur={() => setTimeout(() => setSubCatOpen(false), 150)}
-                placeholder="Type to search or create new…"
-                className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-100"
-              />
-              {subCatOpen && filteredSubCats.length > 0 && (
-                <ul className="absolute z-20 top-full left-0 right-0 mt-1 max-h-36 overflow-y-auto rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-lg">
-                  {filteredSubCats.map((s) => (
-                    <li
-                      key={s._id}
-                      onMouseDown={() => {
-                        setSubCat(s.name);
-                        setSubCatOpen(false);
-                      }}
-                      className="px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-orange-50 dark:hover:bg-gray-700 cursor-pointer"
-                    >
-                      {s.name}
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          </div> */}
           <p>Posted on: {fmtDate(item.media?.timestamp)}</p>
           <div className="flex-1" />
 
@@ -429,22 +365,6 @@ export default function MediaReviewPage() {
   const [inScenes, setInScenes] = useState(false);
   const { updateScene } = useScenes(token);
 
-  // Get full and truncated captions
-
-  // useEffect(() => {
-  //   categoriesApi
-  //     .getCategories()
-  //     .then((res) =>
-  //       setCategories(Array.isArray(res) ? res : (res?.categories ?? [])),
-  //     )
-  //     .catch(() => {});
-  //   subCategoriesApi
-  //     .getSubCategories()
-  //     .then((res) =>
-  //       setSubCatOptions(Array.isArray(res) ? res : (res?.subCategories ?? [])),
-  //     )
-  //     .catch(() => {});
-  // }, []);
 
   const countries = useMemo(() => {
     const set = new Set();
@@ -461,8 +381,6 @@ export default function MediaReviewPage() {
         instagramApi.getPendingMediaForAdmin(token, "pending"),
         instagramApi.getPendingMediaForAdmin(token, "deferred"),
       ]);
-      console.log("res1", res1);
-      console.log("res2", res2);
       setItems([...(res1.pending ?? []), ...(res2.pending ?? [])]);
     } catch {
       setItems([]);

@@ -111,7 +111,7 @@ export default function TopCreatorsTable({
       </Wrapper>
     );
   }
-
+console.log("CREATORS", creators)
   return (
     <Wrapper>
       <table className="w-full">
@@ -130,7 +130,7 @@ export default function TopCreatorsTable({
         <tbody>
           {creators.map((creator, index) => (
             <tr
-              key={creator.userId}
+              key={creator.instagramUsername}
               className="border-b border-gray-50 dark:border-gray-800/50 last:border-0 hover:bg-gray-50/40 dark:hover:bg-gray-800/40 transition-colors"
             >
               {/* Rank */}
@@ -191,7 +191,7 @@ export default function TopCreatorsTable({
               {/* Action */}
               <td className="px-6 py-4">
                 <Link
-                  to={`/dashboard/users/${creator.userId}`}
+                  to={`/dashboard/users/${creator.instagramUsername}`}
                   className="inline-flex items-center rounded-xl bg-[#FFEFD0] px-4 py-2 text-xs font-semibold text-[#9B5A0A] transition"
                 >
                   View Profile

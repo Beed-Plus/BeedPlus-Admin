@@ -498,9 +498,7 @@ export default function UserDetailPage() {
           usersApi.getUserById(id, token),
           usersApi.getUserStats(id, token),
         ]);
-console.log("USER RES", res)
         setUser(res?.user ?? null);
-        console.log("RES STATS", resStats);
         setUserStats(resStats);
       } catch (err) {
         toast.error(err.message ?? "Failed to load user");
